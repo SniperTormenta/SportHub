@@ -1,0 +1,226 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using Newtonsoft.Json;
+using SportHubBase.Models;
+
+namespace SportHubBase
+{
+    public partial class CreateTournamentWindow : Window
+    {
+        public CreateTournamentWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadAdministratorsBlock();
+            UpdateTournamentTypeDescription("Круговой"); // Теперь здесь точно все инициализировано
+        }
+
+        private void LoadAdministratorsBlock()
+        {
+            var block = new StackPanel { Margin = new Thickness(0, 0, 0, 20) };
+
+            var label = new TextBlock
+            {
+                Text = "Администраторы *",
+                FontWeight = FontWeights.Bold,
+                FontSize = 14
+            };
+            block.Children.Add(label);
+
+            var adminsText = new TextBlock
+            {
+                Text = "Владелец - Фарватер", // можно из VM
+                Foreground = Brushes.Gray,
+                Margin = new Thickness(0, 4, 0, 0)
+            };
+            block.Children.Add(adminsText);
+
+            AdministratorsPlaceholder.Content = block;
+        }
+
+        private void RadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is RadioButton radioButton)
+            {
+                UpdateTournamentTypeDescription(radioButton.Content?.ToString() ?? "");
+            }
+        }
+
+        private void UpdateTournamentTypeDescription(string selectedType)
+        {
+            string description;
+
+            if (selectedType == "Круговой")
+            {
+                description = "Круговой турнир - каждый участник играет с каждым и получает очки. Места распределяются по количеству очков и другим показателям";
+            }
+            else if (selectedType == "Олимпийский")
+            {
+                description = "Олимпийская система — проиграл и вылетел. Плей-офф с выбыванием.";
+            }
+            else if (selectedType == "Швейцарский")
+            {
+                description = "Швейцарская система — участники с равным количеством очков играют между собой.";
+            }
+            else if (selectedType == "Многоэтапный")
+            {
+                description = "Турнир состоит из нескольких этапов (группы + плей-офф и т.д.).";
+            }
+            else
+            {
+                description = "";
+            }
+
+            // Проверяем, что TournamentTypeDescriptionPlaceholder инициализирован
+            if (TournamentTypeDescriptionPlaceholder == null)
+                return;
+
+            var newBorder = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(241, 245, 249)),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12),
+                Margin = new Thickness(0, 8, 0, 0),
+                // Фиксируем ширину Border, чтобы она не менялась
+                Width = double.NaN, // Auto
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+
+            var textBlock = new TextBlock
+            {
+                Text = description,
+                TextWrapping = TextWrapping.Wrap,
+                FontSize = 13,
+                Foreground = new SolidColorBrush(Color.FromRgb(55, 65, 81)),
+                // Ограничиваем ширину текста, чтобы он переносился
+                MaxWidth = 600 // или другое значение
+            };
+
+            newBorder.Child = textBlock;
+            TournamentTypeDescriptionPlaceholder.Content = newBorder;
+        }
+
+        private void CreateTournament_Click(object sender, RoutedEventArgs e)
+        {
+            // Проверка обязательных полей
+            if (string.IsNullOrWhiteSpace(NameTextBox.Text))
+            {
+                MessageBox.Show("Поле 'Название' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (StatusComboBox.SelectedItem == null)
+            {
+                MessageBox.Show("Поле 'Статус' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (SportTypeComboBox.SelectedItem == null)
+            {
+                MessageBox.Show("Поле 'Вид спорта' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            string selectedType = GetSelectedTournamentType();
+            if (string.IsNullOrEmpty(selectedType))
+            {
+                MessageBox.Show("Поле 'Тип' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (EditModeComboBox.SelectedItem == null)
+            {
+                MessageBox.Show("Поле 'Режим редактирования игр' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (AccessModeComboBox.SelectedItem == null)
+            {
+                MessageBox.Show("Поле 'Режим доступа' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (StartDatePicker.SelectedDate == null)
+            {
+                MessageBox.Show("Поле 'Дата начала' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            // Если всё OK, собираем объект
+            var tournament = new Tournament
+            {
+                Name = NameTextBox.Text,
+                Admins = new List<Admin> { new Admin { Name = "Фарватер", IsOwner = true } }, // Динамически, если нужно
+                LogoUrl = "", // Если есть поле для логотипа
+                Status = ((ComboBoxItem)StatusComboBox.SelectedItem).Content.ToString(),
+                SportType = ((ComboBoxItem)SportTypeComboBox.SelectedItem).Content.ToString(),
+                Type = selectedType,
+                EditMode = ((ComboBoxItem)EditModeComboBox.SelectedItem).Content.ToString(),
+                AccessMode = ((ComboBoxItem)AccessModeComboBox.SelectedItem).Content.ToString(),
+                NoScore = NoScoreCheckBox.IsChecked ?? false,
+                Description = DescriptionTextBox.Text,
+                City = ((ComboBoxItem)CityComboBox.SelectedItem)?.Content.ToString() ?? "",
+                Contacts = ContactsTextBox.Text,
+                StartDate = StartDatePicker.SelectedDate.Value
+            };
+
+            // Сохранение в JSON
+            SaveTournamentToJson(tournament);
+
+            // Открыть окно турнира (как было)
+            Window TournamentWindow = new TournamentWindow();
+            TournamentWindow.Show();
+            this.Close(); // Закрыть текущее окно
+        }
+
+        private string GetSelectedTournamentType()
+        {
+            if (TournamentTypeRadioPanel == null) return "";
+
+            foreach (RadioButton rb in TournamentTypeRadioPanel.Children)
+            {
+                if (rb.IsChecked == true)
+                {
+                    return rb.Content.ToString();
+                }
+            }
+            return "";
+        }
+
+        private void SaveTournamentToJson(Tournament tournament)
+        {
+            string filePath = "tournaments.json";
+            List<Tournament> tournaments;
+
+            if (File.Exists(filePath))
+            {
+                string json = File.ReadAllText(filePath);
+                tournaments = JsonConvert.DeserializeObject<List<Tournament>>(json) ?? new List<Tournament>();
+            }
+            else
+            {
+                tournaments = new List<Tournament>();
+            }
+
+            tournaments.Add(tournament);
+
+            string newJson = JsonConvert.SerializeObject(tournaments, Formatting.Indented);
+            File.WriteAllText(filePath, newJson);
+        }
+    }
+}
