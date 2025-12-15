@@ -20,22 +20,22 @@ namespace SportHubBase.Models
         public string LogoUrl { get; set; }
 
         [JsonProperty("status")]
-        public string Status { get; set; } // "Активный" / "Неактивный"
+        public string Status { get; set; }
 
         [JsonProperty("sportType")]
-        public string SportType { get; set; } // "Футбол" и т.д.
+        public string SportType { get; set; }
 
         [JsonProperty("type")]
-        public string Type { get; set; } // "Круговой" и т.д.
+        public string Type { get; set; } // Формат турнира
 
         [JsonProperty("editMode")]
-        public string EditMode { get; set; } // "Только администраторы"
+        public string EditMode { get; set; }
 
         [JsonProperty("accessMode")]
-        public string AccessMode { get; set; } // "Доступно всем"
+        public string AccessMode { get; set; }
 
         [JsonProperty("noScore")]
-        public bool NoScore { get; set; } // Без счета
+        public bool NoScore { get; set; }
 
         [JsonProperty("description")]
         public string Description { get; set; }
@@ -49,11 +49,14 @@ namespace SportHubBase.Models
         [JsonProperty("startDate")]
         public DateTime StartDate { get; set; }
 
+        [JsonProperty("endDate")]
+        public DateTime? EndDate { get; set; } // Может быть null — турнир идёт
+
         [JsonProperty("teams")]
         public List<Team> Teams { get; set; } = new List<Team>();
 
-        // Для статуса Live (динамический)
-        [JsonIgnore] // Не сохраняем в JSON, вычисляем
-        public bool IsLive => DateTime.Now >= StartDate; // Пример логики
+        // Live — только если сейчас между началом и концом (или конец не указан)
+        [JsonIgnore]
+        public bool IsLive => DateTime.Now >= StartDate && (EndDate == null || DateTime.Now <= EndDate.Value);
     }
 }

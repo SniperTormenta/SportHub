@@ -1,8 +1,11 @@
-﻿// ViewModels/TournamentViewModel.cs (для окна турнира)
+﻿// ViewModels/TournamentViewModel.cs
 using SportHubBase.Models;
 using SportHubBase.Services;
+using SportHubBase.View;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 
 namespace SportHubBase.ViewModels
@@ -12,10 +15,31 @@ namespace SportHubBase.ViewModels
         private readonly JsonStorageService _storage = new JsonStorageService();
 
         public Tournament CurrentTournament { get; private set; }
-
         public ObservableCollection<Team> Teams { get; } = new ObservableCollection<Team>();
 
-        public bool IsLive { get { return CurrentTournament.IsLive; } }
+        // Вычисляемые свойства для UI
+        public int TeamsCount => Teams.Count;
+        public string FormatText => CurrentTournament?.Type ?? "";
+        public string DatesText
+        {
+            get
+            {
+                if (CurrentTournament == null) return "";
+
+                string start = CurrentTournament.StartDate.ToString("d MMMM yyyy");
+
+                if (CurrentTournament.EndDate.HasValue)
+                {
+                    string end = CurrentTournament.EndDate.Value.ToString("d MMMM yyyy");
+                    return $"{start} – {end}";
+                }
+
+                // Если нет конца — начало + текст на новой строке
+                return $"{start}\nтурнир продолжается";
+            }
+        }
+
+        public bool IsLive => CurrentTournament?.IsLive ?? false;
 
         public ICommand AddTeamCommand { get; }
 
@@ -23,6 +47,7 @@ namespace SportHubBase.ViewModels
         {
             var tournaments = _storage.LoadTournaments();
             CurrentTournament = tournaments.Find(t => t.Id == tournamentId);
+
             if (CurrentTournament != null)
             {
                 foreach (var team in CurrentTournament.Teams)
@@ -31,17 +56,35 @@ namespace SportHubBase.ViewModels
                 }
             }
 
-            AddTeamCommand = new RelayCommand(AddTeam);
-            OnPropertyChanged(nameof(IsLive)); // Для обновления UI
+            AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
         }
 
-        private void AddTeam(object parameter)
+        private void OpenAddTeamWindow(object parameter)
         {
-            // Логика добавления команды
-            var newTeam = new Team { Name = "New Team", Captain = "Capt. New", LogoUrl = "default.png" };
-            Teams.Add(newTeam);
-            CurrentTournament.Teams.Add(newTeam);
-            _storage.UpdateTournament(CurrentTournament);
+            var currentWindow = Application.Current.Windows
+                .OfType<TournamentWindow>()
+                .FirstOrDefault(w => w.IsActive);
+
+            if (currentWindow != null)
+            {
+                var addTeamWindow = new AddTeamWindow(currentWindow, CurrentTournament.Id);
+
+                if (addTeamWindow.ShowDialog() == true)
+                {
+                    // Перезагружаем команды из JSON (самый надёжный способ)
+                    var updated = _storage.LoadTournaments().Find(t => t.Id == CurrentTournament.Id);
+                    if (updated != null)
+                    {
+                        Teams.Clear();
+                        foreach (var team in updated.Teams)
+                        {
+                            Teams.Add(team);
+                        }
+                    }
+
+                    OnPropertyChanged(nameof(TeamsCount));
+                }
+            }
         }
     }
 }

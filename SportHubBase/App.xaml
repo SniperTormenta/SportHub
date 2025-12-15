@@ -4,8 +4,10 @@
              xmlns:local="clr-namespace:SportHubBase"
              StartupUri="MainWindow.xaml">
 
+    
+    
     <Application.Resources>
-
+               
         <Style x:Key="ModernComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderBrush" Value="#E2E8F0"/>
@@ -696,3 +698,4 @@
 
     </Application.Resources>
 </Application>
+    
