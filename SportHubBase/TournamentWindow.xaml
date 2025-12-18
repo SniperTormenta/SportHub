@@ -123,12 +123,137 @@
                 </Grid>
             </TabItem>
 
-            <!-- Остальные вкладки -->
+            <!-- Вкладка расписания -->
             <TabItem Header="Расписание" Style="{StaticResource TailwindTabItem}">
-                <TextBlock Text="Расписание — в разработке" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+                <Grid Margin="40,32">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Сообщение (для заглушек и ошибок) -->
+                    <TextBlock Text="{Binding ScheduleMessage}"
+                               FontSize="16"
+                               Foreground="#617589"
+                               Margin="0,0,0,16"
+                               TextWrapping="Wrap"/>
+
+                    <!-- Простое отображение туров и матчей -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Schedule}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,8" Padding="12" Background="White" CornerRadius="8">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Round, StringFormat='Тур {0}'}"
+                                                       Width="100"
+                                                       FontWeight="Bold"
+                                                       Foreground="#111418"/>
+                                            <TextBlock Text="{Binding Team1}"
+                                                       Margin="8,0,4,0"
+                                                       FontWeight="SemiBold"/>
+                                            <TextBlock Text="vs"
+                                                       Margin="0,0,4,0"
+                                                       Foreground="#617589"/>
+                                            <TextBlock Text="{Binding Team2}"
+                                                       FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
             </TabItem>
             <TabItem Header="Результаты" Style="{StaticResource TailwindTabItem}">
-                <TextBlock Text="Результаты — в разработке" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+                <Grid Margin="40,32">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Сообщение (для заглушек и ошибок) -->
+                    <TextBlock Text="{Binding ResultsMessage}"
+                               FontSize="16"
+                               Foreground="#617589"
+                               Margin="0,0,0,16"
+                               TextWrapping="Wrap"/>
+
+                    <!-- Шахматная таблица результатов для кругового турнира -->
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <!-- Левая колонка (индекс + название команды) -->
+                                <ColumnDefinition Width="220"/>
+                                <!-- Правая часть с динамическими столбцами -->
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Заголовок: пустая ячейка слева + номера столбцов -->
+                            <Grid Grid.Row="0" Grid.Column="0">
+                                <TextBlock Text="#" FontWeight="Bold" Margin="4" />
+                            </Grid>
+                            <ScrollViewer Grid.Row="0" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                <ItemsControl ItemsSource="{Binding ResultsHeaderNumbers}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Width="40" Padding="4" Background="#F3F4F6" BorderBrush="#E5E7EB" BorderThickness="1" Margin="0,0,2,0">
+                                                <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <!-- Левая часть с командами -->
+                            <ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ResultsTable}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E5E7EB" BorderThickness="0,0,1,1" Padding="4">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Index}" Width="24" FontWeight="Bold" Margin="0,0,4,0"/>
+                                                <TextBlock Text="{Binding TeamName}" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Правая часть с ячейками результатов -->
+                            <ScrollViewer Grid.Row="1" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
+                                <ItemsControl ItemsSource="{Binding ResultsTable}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ItemsControl ItemsSource="{Binding Cells}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Width="40" Height="28" BorderBrush="#E5E7EB" BorderThickness="1" Margin="0,0,2,2" Background="White">
+                                                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
             </TabItem>
             <TabItem Header="Настройки" Style="{StaticResource TailwindTabItem}">
                 <TextBlock Text="Настройки — в разработке" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>

@@ -1,8 +1,10 @@
 ﻿// ViewModels/TournamentViewModel.cs
 using SportHubBase.Models;
 using SportHubBase.Services;
+using SportHubBase.Services.Scheduling;
 using SportHubBase.View;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -16,6 +18,41 @@ namespace SportHubBase.ViewModels
 
         public Tournament CurrentTournament { get; private set; }
         public ObservableCollection<Team> Teams { get; } = new ObservableCollection<Team>();
+
+        // Расписание
+        public ObservableCollection<Match> Schedule { get; } = new ObservableCollection<Match>();
+
+        private string _scheduleMessage;
+        public string ScheduleMessage
+        {
+            get => _scheduleMessage;
+            private set
+            {
+                if (_scheduleMessage != value)
+                {
+                    _scheduleMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        // Результаты (шахматная таблица для кругового формата)
+        public ObservableCollection<int> ResultsHeaderNumbers { get; } = new ObservableCollection<int>();
+        public ObservableCollection<ResultRow> ResultsTable { get; } = new ObservableCollection<ResultRow>();
+
+        private string _resultsMessage;
+        public string ResultsMessage
+        {
+            get => _resultsMessage;
+            private set
+            {
+                if (_resultsMessage != value)
+                {
+                    _resultsMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         // Вычисляемые свойства для UI
         public int TeamsCount => Teams.Count;
@@ -59,6 +96,9 @@ namespace SportHubBase.ViewModels
 
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
             EditTeamCommand = new RelayCommand(EditTeam, t => t is Team);
+
+            GenerateSchedule();
+            GenerateResults();
         }
 
         private void OpenAddTeamWindow(object parameter)
@@ -118,6 +158,123 @@ namespace SportHubBase.ViewModels
 
                     OnPropertyChanged(nameof(TeamsCount));
                 }
+            }
+        }
+
+        /// <summary>
+        /// Генерация таблицы результатов (пока только структура, без очков).
+        /// Для кругового турнира — шахматная таблица (команды по алфавиту).
+        /// Для остальных форматов — заглушка.
+        /// </summary>
+        private void GenerateResults()
+        {
+            ResultsHeaderNumbers.Clear();
+            ResultsTable.Clear();
+            ResultsMessage = string.Empty;
+
+            if (CurrentTournament == null)
+            {
+                ResultsMessage = "Турнир не найден.";
+                return;
+            }
+
+            if (Teams.Count == 0)
+            {
+                ResultsMessage = "Команды ещё не добавлены.";
+                return;
+            }
+
+            if (!string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase))
+            {
+                ResultsMessage = $"Формат \"{CurrentTournament.Type}\" — результаты в разработке.";
+                return;
+            }
+
+            // Круговой формат: строим шахматную таблицу
+            var sortedTeams = Teams
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            int teamCount = sortedTeams.Count;
+
+            for (int i = 1; i <= teamCount; i++)
+            {
+                ResultsHeaderNumbers.Add(i);
+            }
+
+            for (int i = 0; i < teamCount; i++)
+            {
+                var row = new ResultRow
+                {
+                    Index = i + 1,
+                    TeamName = sortedTeams[i].Name
+                };
+
+                // Пока просто создаём пустые ячейки под будущие результаты
+                for (int j = 0; j < teamCount; j++)
+                {
+                    row.Cells.Add(string.Empty);
+                }
+
+                ResultsTable.Add(row);
+            }
+        }
+
+        /// <summary>
+        /// Генерация расписания на основе выбранного формата турнира.
+        /// Используется паттерн "Стратегия".
+        /// </summary>
+        private void GenerateSchedule()
+        {
+            Schedule.Clear();
+            ScheduleMessage = string.Empty;
+
+            if (CurrentTournament == null)
+            {
+                ScheduleMessage = "Турнир не найден.";
+                return;
+            }
+
+            if (Teams.Count < 2)
+            {
+                ScheduleMessage = "Недостаточно команд для генерации расписания.";
+                return;
+            }
+
+            IScheduleStrategy strategy = ScheduleStrategyFactory.GetStrategy(CurrentTournament.Type);
+
+            if (strategy == null)
+            {
+                ScheduleMessage = $"Формат \"{CurrentTournament.Type}\" не поддерживается.";
+                return;
+            }
+
+            if (!strategy.IsImplemented)
+            {
+                // Для швейцарского, олимпийского, поэтапного и других заглушек
+                ScheduleMessage = $"Формат \"{strategy.Name}\" — расписание в разработке.";
+                return;
+            }
+
+            IEnumerable<Match> matches;
+            try
+            {
+                matches = strategy.GenerateSchedule(Teams.ToList()) ?? Enumerable.Empty<Match>();
+            }
+            catch (Exception)
+            {
+                ScheduleMessage = "Произошла ошибка при генерации расписания.";
+                return;
+            }
+
+            foreach (var match in matches)
+            {
+                Schedule.Add(match);
+            }
+
+            if (Schedule.Count == 0)
+            {
+                ScheduleMessage = "Не удалось сгенерировать расписание.";
             }
         }
     }
