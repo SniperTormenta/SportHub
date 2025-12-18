@@ -42,6 +42,7 @@ namespace SportHubBase.ViewModels
         public bool IsLive => CurrentTournament?.IsLive ?? false;
 
         public ICommand AddTeamCommand { get; }
+        public ICommand EditTeamCommand { get; }
 
         public TournamentViewModel(Guid tournamentId)
         {
@@ -57,6 +58,7 @@ namespace SportHubBase.ViewModels
             }
 
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
+            EditTeamCommand = new RelayCommand(EditTeam, t => t is Team);
         }
 
         private void OpenAddTeamWindow(object parameter)
@@ -79,6 +81,38 @@ namespace SportHubBase.ViewModels
                         foreach (var team in updated.Teams)
                         {
                             Teams.Add(team);
+                        }
+                    }
+
+                    OnPropertyChanged(nameof(TeamsCount));
+                }
+            }
+        }
+
+        private void EditTeam(object parameter)
+        {
+            var team = parameter as Team;
+            if (team == null)
+                return;
+
+            var currentWindow = Application.Current.Windows
+                .OfType<TournamentWindow>()
+                .FirstOrDefault(w => w.IsActive);
+
+            if (currentWindow != null)
+            {
+                var editTeamWindow = new AddTeamWindow(currentWindow, CurrentTournament.Id, team);
+
+                if (editTeamWindow.ShowDialog() == true)
+                {
+                    // Перезагружаем команды из JSON
+                    var updated = _storage.LoadTournaments().Find(t => t.Id == CurrentTournament.Id);
+                    if (updated != null)
+                    {
+                        Teams.Clear();
+                        foreach (var t in updated.Teams)
+                        {
+                            Teams.Add(t);
                         }
                     }
 

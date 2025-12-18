@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using SportHubBase.Models;
 using SportHubBase.Services;
@@ -11,6 +12,7 @@ namespace SportHubBase.ViewModels
     {
         private readonly JsonStorageService _storage = new JsonStorageService();
         private readonly Guid _tournamentId;
+        private readonly Team _existingTeam;
 
         public string TeamName { get; set; }
 
@@ -34,18 +36,63 @@ namespace SportHubBase.ViewModels
         public ICommand AddPlayerCommand { get; }
         public ICommand RemovePlayerCommand { get; }
         public ICommand SaveTeamCommand { get; }
+        public ICommand DeleteTeamCommand { get; }
         public ICommand CancelCommand { get; }
 
         public event Action<bool> RequestClose;
 
-        public AddTeamViewModel(Guid tournamentId)
+        // Режим редактирования, если передана существующая команда
+        public bool IsEditMode => _existingTeam != null;
+
+        public AddTeamViewModel(Guid tournamentId, Team existingTeam = null)
         {
             _tournamentId = tournamentId;
+            _existingTeam = existingTeam;
 
             AddPlayerCommand = new RelayCommand(_ => AddPlayer());
             RemovePlayerCommand = new RelayCommand(RemovePlayer, p => p is Player);
             SaveTeamCommand = new RelayCommand(_ => SaveTeam(), _ => CanSaveTeam());
             CancelCommand = new RelayCommand(_ => RequestClose?.Invoke(false));
+
+            DeleteTeamCommand = new RelayCommand(_ => DeleteTeam(), _ => IsEditMode);
+
+            // Если редактируем существующую команду — подставляем её данные
+            if (_existingTeam != null)
+            {
+                TeamName = _existingTeam.Name;
+                OnPropertyChanged(nameof(TeamName));
+
+                // Загружаем сохранённый состав, если есть
+                if (_existingTeam.Players != null && _existingTeam.Players.Any())
+                {
+                    foreach (var p in _existingTeam.Players)
+                    {
+                        Players.Add(p);
+                    }
+
+                    OnPropertyChanged(nameof(PlayersCount));
+
+                    var captain = _existingTeam.Players.FirstOrDefault(p => p.IsCaptain)
+                                  ?? _existingTeam.Players.FirstOrDefault();
+                    if (captain != null)
+                    {
+                        SelectedCaptainName = captain.Name;
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(_existingTeam.Captain))
+                {
+                    // Если старые данные без списка игроков — создаём капитана как единственного игрока
+                    var captainPlayer = new Player
+                    {
+                        Name = _existingTeam.Captain,
+                        IsCaptain = true
+                    };
+                    Players.Add(captainPlayer);
+                    OnPropertyChanged(nameof(PlayersCount));
+
+                    SelectedCaptainName = captainPlayer.Name;
+                }
+            }
         }
 
         private void AddPlayer()
@@ -77,45 +124,95 @@ namespace SportHubBase.ViewModels
         {
             return !string.IsNullOrWhiteSpace(TeamName) &&
                    Players.Count > 0 &&
-                   !string.IsNullOrWhiteSpace(SelectedCaptainName) &&
-                   Players.Any(p => p.Name == SelectedCaptainName);
+                   !string.IsNullOrWhiteSpace(SelectedCaptainName);
         }
 
         private void SaveTeam()
         {
-            var newTeam = new Team
+            var tournaments = _storage.LoadTournaments();
+            var tournament = tournaments.Find(t => t.Id == _tournamentId);
+            if (tournament != null)
             {
-                Name = TeamName,
-                Captain = SelectedCaptainName ?? "Капитан не выбран"
-            };
+                if (_existingTeam == null)
+                {
+                    // Создание новой команды
+                    var newTeam = new Team
+                    {
+                        Name = TeamName,
+                        Captain = SelectedCaptainName ?? "Капитан не выбран"
+                    };
+
+                    // Сохраняем состав игроков
+                    newTeam.Players = Players
+                        .Select(p => new Player
+                        {
+                            Name = p.Name,
+                            Role = p.Role,
+                            IsCaptain = p.Name == SelectedCaptainName
+                        })
+                        .ToList();
+
+                    tournament.Teams.Add(newTeam);
+                }
+                else
+                {
+                    // Обновление существующей команды
+                    var teamToUpdate = tournament.Teams
+                        .FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
+
+                    if (teamToUpdate != null)
+                    {
+                        teamToUpdate.Name = TeamName;
+                        teamToUpdate.Captain = SelectedCaptainName ?? "Капитан не выбран";
+
+                        // Обновляем состав игроков
+                        teamToUpdate.Players = Players
+                            .Select(p => new Player
+                            {
+                                Name = p.Name,
+                                Role = p.Role,
+                                IsCaptain = p.Name == SelectedCaptainName
+                            })
+                            .ToList();
+                    }
+                }
+
+                _storage.UpdateTournament(tournament);
+            }
+
+            RequestClose?.Invoke(true);
+        }
+
+        private void DeleteTeam()
+        {
+            if (!IsEditMode || _existingTeam == null)
+                return;
+
+            var result = MessageBox.Show(
+                "Вы уверены, что хотите удалить эту команду?",
+                "Удаление команды",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
 
             var tournaments = _storage.LoadTournaments();
             var tournament = tournaments.Find(t => t.Id == _tournamentId);
             if (tournament != null)
             {
-                tournament.Teams.Add(newTeam);
-                _storage.UpdateTournament(tournament);
+                var teamToRemove = tournament.Teams
+                    .FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
+
+                if (teamToRemove != null)
+                {
+                    tournament.Teams.Remove(teamToRemove);
+                    _storage.UpdateTournament(tournament);
+                }
             }
 
             RequestClose?.Invoke(true);
         }
     }
 
-    // Player с IsCaptain
-    public class Player : BaseViewModel
-    {
-        private string _name = "";
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                _name = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(IsCaptain)); // Обновляем при смене имени
-            }
-        }
-
-        public bool IsCaptain { get; set; } // Управляется из VM
-    }
 }

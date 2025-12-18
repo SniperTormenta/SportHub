@@ -50,6 +50,8 @@
                             Foreground="#617589"
                             Content="X"/>
                 </Grid>
+                
+                
 
                 <!-- Body -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -64,9 +66,10 @@
                         <!-- Капитан -->
                         <StackPanel Margin="0,0,0,24">
                             <TextBlock Text="Выберите капитана" FontSize="13" FontWeight="Medium" Foreground="#111418"/>
-                            <ComboBox SelectedItem="{Binding SelectedCaptainName}"
-                                      ItemsSource="{Binding Players}"
+                            <ComboBox ItemsSource="{Binding Players}"
                                       DisplayMemberPath="Name"
+                                      SelectedValue="{Binding SelectedCaptainName, UpdateSourceTrigger=PropertyChanged}"
+                                      SelectedValuePath="Name"
                                       Height="44" Margin="0,8,0,0" Padding="12,0"/>
                             <TextBlock Text="Капитан будет иметь права на управление составом команды."
                                        FontSize="12" Foreground="#617589" Margin="0,4,0,0"/>
@@ -149,15 +152,28 @@
                 <!-- Footer -->
                 <Grid Grid.Row="2" Margin="0,24,0,0">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="Отмена"
+
+                    <!-- Кнопка удаления команды (только в режиме редактирования) -->
+                    <Button Grid.Column="0"
+                            Content="Удалить команду"
+                            Command="{Binding DeleteTeamCommand}"
+                            Background="#EF4444"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            Padding="16,12"
+                            Margin="0,0,12,0"
+                            Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                    <Button Grid.Column="1" Content="Отмена"
                             Command="{Binding CancelCommand}"
                             Background="Transparent"
                             BorderBrush="#E5E7EB"
                             Padding="20,12"/>
-                    <Button Grid.Column="1" Content="Сохранить команду"
+                    <Button Grid.Column="2" Content="Сохранить команду"
                             Command="{Binding SaveTeamCommand}"
                             Background="#137FEC" Foreground="White"
                             FontWeight="Bold" Padding="20,12"/>

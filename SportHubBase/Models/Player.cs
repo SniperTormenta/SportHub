@@ -22,5 +22,12 @@ namespace SportHubBase.Models
             get => _role;
             set { _role = value; OnPropertyChanged(); }
         }
+
+        private bool _isCaptain;
+        public bool IsCaptain
+        {
+            get => _isCaptain;
+            set { _isCaptain = value; OnPropertyChanged(); }
+        }
     }
 }

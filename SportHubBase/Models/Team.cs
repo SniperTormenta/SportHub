@@ -1,5 +1,6 @@
 ﻿// Models/Team.cs (для окна турнира)
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace SportHubBase.Models
 {
@@ -13,5 +14,8 @@ namespace SportHubBase.Models
 
         [JsonProperty("logoUrl")]
         public string LogoUrl { get; set; }
+
+        [JsonProperty("players")]
+        public List<Player> Players { get; set; } = new List<Player>();
     }
 }

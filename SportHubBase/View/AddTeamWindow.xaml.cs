@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using SportHubBase.Models;
 using SportHubBase.ViewModels;
 
 namespace SportHubBase.View // или SportHubBase, если в корне
@@ -8,13 +9,13 @@ namespace SportHubBase.View // или SportHubBase, если в корне
     {
         private readonly AddTeamViewModel _viewModel;
 
-        public AddTeamWindow(Window owner, Guid tournamentId)
+        public AddTeamWindow(Window owner, Guid tournamentId, Team team = null)
         {
             InitializeComponent();
             Owner = owner;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
-            _viewModel = new AddTeamViewModel(tournamentId);
+            _viewModel = new AddTeamViewModel(tournamentId, team);
             DataContext = _viewModel;
 
             _viewModel.RequestClose += result =>
@@ -24,7 +25,7 @@ namespace SportHubBase.View // или SportHubBase, если в корне
             };
         }
 
-        public AddTeamWindow() : this(null, Guid.Empty) { }
+        public AddTeamWindow() : this(null, Guid.Empty, null) { }
 
         // Оставляем только крестик
         private void CloseButton_Click(object sender, RoutedEventArgs e)

@@ -65,17 +65,23 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="8" Padding="12" CornerRadius="8"
-                                                Background="#F9FAFB">
-                                            <StackPanel>
-                                                <Border Width="80" Height="80" CornerRadius="40" Margin="0,0,0,12" Background="#F0F2F4">
-                                                    <TextBlock Text="T" Foreground="#617589" FontSize="24" FontWeight="Bold"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <TextBlock Text="{Binding Name}" FontWeight="Medium" TextAlignment="Center" Foreground="#111418"/>
-                                                <TextBlock Text="{Binding Captain}" FontSize="13" Foreground="#617589" TextAlignment="Center"/>
-                                            </StackPanel>
-                                        </Border>
+                                        <Button Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="0"
+                                                Command="{Binding DataContext.EditTeamCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}">
+                                            <Border Margin="8" Padding="12" CornerRadius="8"
+                                                    Background="#F9FAFB">
+                                                <StackPanel>
+                                                    <Border Width="80" Height="80" CornerRadius="40" Margin="0,0,0,12" Background="#F0F2F4">
+                                                        <TextBlock Text="T" Foreground="#617589" FontSize="24" FontWeight="Bold"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="Medium" TextAlignment="Center" Foreground="#111418"/>
+                                                    <TextBlock Text="{Binding Captain}" FontSize="13" Foreground="#617589" TextAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
