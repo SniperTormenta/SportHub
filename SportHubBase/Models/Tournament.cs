@@ -55,6 +55,9 @@ namespace SportHubBase.Models
         [JsonProperty("teams")]
         public List<Team> Teams { get; set; } = new List<Team>();
 
+        [JsonProperty("matches")]
+        public List<Match> Matches { get; set; } = new List<Match>();
+
         // Live — только если сейчас между началом и концом (или конец не указан)
         [JsonIgnore]
         public bool IsLive => DateTime.Now >= StartDate && (EndDate == null || DateTime.Now <= EndDate.Value);

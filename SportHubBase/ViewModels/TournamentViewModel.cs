@@ -80,6 +80,168 @@ namespace SportHubBase.ViewModels
 
         public bool IsLive => CurrentTournament?.IsLive ?? false;
 
+        // Статистика
+        public int TotalMatchesPlayed => Schedule.Count(m => !string.IsNullOrWhiteSpace(m.Status) && 
+            string.Equals(m.Status, "Сыгран", StringComparison.OrdinalIgnoreCase));
+        
+        public int TotalSetsPlayed
+        {
+            get
+            {
+                int total = 0;
+                foreach (var match in Schedule)
+                {
+                    if (!string.IsNullOrWhiteSpace(match.SetsBySet))
+                    {
+                        var sets = match.SetsBySet.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                        total += sets.Length;
+                    }
+                }
+                return total;
+            }
+        }
+        
+        public int TotalPointsScored
+        {
+            get
+            {
+                int total = 0;
+                foreach (var match in Schedule)
+                {
+                    if (!string.IsNullOrWhiteSpace(match.TotalScore))
+                    {
+                        var parts = match.TotalScore.Split(':');
+                        if (parts.Length == 2)
+                        {
+                            if (int.TryParse(parts[0].Trim(), out int p1) && 
+                                int.TryParse(parts[1].Trim(), out int p2))
+                            {
+                                total += p1 + p2;
+                            }
+                        }
+                    }
+                }
+                return total;
+            }
+        }
+        
+        public string MostValuablePlayerName
+        {
+            get
+            {
+                var mvpCounts = Schedule
+                    .Where(m => !string.IsNullOrWhiteSpace(m.Mvp))
+                    .GroupBy(m => m.Mvp)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault();
+                return mvpCounts?.Key ?? "—";
+            }
+        }
+        
+        public string MostValuablePlayerTeam
+        {
+            get
+            {
+                var mvp = MostValuablePlayerName;
+                if (mvp == "—") return "—";
+                
+                var team = Teams.FirstOrDefault(t => 
+                    t.Players != null && t.Players.Any(p => 
+                        string.Equals(p.Name, mvp, StringComparison.OrdinalIgnoreCase)));
+                return team?.Name ?? "—";
+            }
+        }
+        
+        public string MostPopularTeamName
+        {
+            get
+            {
+                var wins = new Dictionary<string, int>();
+                foreach (var match in Schedule)
+                {
+                    if (string.IsNullOrWhiteSpace(match.Status) || 
+                        !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    
+                    var outcome = GetOutcome(match);
+                    if (outcome == 1d)
+                    {
+                        int currentWins;
+                        wins.TryGetValue(match.Team1, out currentWins);
+                        wins[match.Team1] = currentWins + 1;
+                    }
+                    else if (outcome == 0d)
+                    {
+                        int currentWins;
+                        wins.TryGetValue(match.Team2, out currentWins);
+                        wins[match.Team2] = currentWins + 1;
+                    }
+                }
+                
+                var topTeam = wins.OrderByDescending(kvp => kvp.Value).FirstOrDefault();
+                return topTeam.Key ?? "—";
+            }
+        }
+        
+        public int MostPopularTeamWins
+        {
+            get
+            {
+                var teamName = MostPopularTeamName;
+                if (teamName == "—") return 0;
+                
+                int wins = 0;
+                foreach (var match in Schedule)
+                {
+                    if (string.IsNullOrWhiteSpace(match.Status) || 
+                        !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    
+                    var outcome = GetOutcome(match);
+                    if ((outcome == 1d && match.Team1 == teamName) || 
+                        (outcome == 0d && match.Team2 == teamName))
+                        wins++;
+                }
+                return wins;
+            }
+        }
+
+        public int MostPopularTeamMatchesPlayed
+        {
+            get
+            {
+                var teamName = MostPopularTeamName;
+                if (teamName == "—") return 0;
+                
+                int played = 0;
+                foreach (var match in Schedule)
+                {
+                    if (string.IsNullOrWhiteSpace(match.Status) || 
+                        !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    
+                    if (match.Team1 == teamName || match.Team2 == teamName)
+                        played++;
+                }
+                return played;
+            }
+        }
+
+        public double MostPopularTeamWinPercentage
+        {
+            get
+            {
+                var teamName = MostPopularTeamName;
+                if (teamName == "—") return 0;
+                
+                int played = MostPopularTeamMatchesPlayed;
+                if (played == 0) return 0;
+                
+                int wins = MostPopularTeamWins;
+                return Math.Round((double)wins / played * 100, 1);
+            }
+        }
+
         public ICommand AddTeamCommand { get; }
         public ICommand EditTeamCommand { get; }
         public ICommand OpenMatchCommand { get; }
@@ -106,6 +268,7 @@ namespace SportHubBase.ViewModels
             Schedule.CollectionChanged += OnScheduleCollectionChanged;
             SubscribeToMatches(Schedule);
             UpdateResultsFromMatches();
+            UpdateStatistics();
         }
 
         private void OpenAddTeamWindow(object parameter)
@@ -239,6 +402,7 @@ namespace SportHubBase.ViewModels
         /// <summary>
         /// Генерация расписания на основе выбранного формата турнира.
         /// Используется паттерн "Стратегия".
+        /// Загружает сохраненные матчи и обновляет их данными.
         /// </summary>
         private void GenerateSchedule()
         {
@@ -272,10 +436,10 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
-            IEnumerable<Match> matches;
+            IEnumerable<Match> generatedMatches;
             try
             {
-                matches = strategy.GenerateSchedule(Teams.ToList()) ?? Enumerable.Empty<Match>();
+                generatedMatches = strategy.GenerateSchedule(Teams.ToList()) ?? Enumerable.Empty<Match>();
             }
             catch (Exception)
             {
@@ -283,9 +447,40 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
-            foreach (var match in matches)
+            // Создаем словарь сохраненных матчей для быстрого поиска
+            var savedMatchesDict = new Dictionary<string, Match>();
+            if (CurrentTournament.Matches != null)
             {
-                Schedule.Add(match);
+                foreach (var savedMatch in CurrentTournament.Matches)
+                {
+                    // Используем ключ: Team1|Team2|Round
+                    string key = $"{savedMatch.Team1}|{savedMatch.Team2}|{savedMatch.Round}";
+                    savedMatchesDict[key] = savedMatch;
+                }
+            }
+
+            // Объединяем сгенерированные матчи с сохраненными данными
+            foreach (var generatedMatch in generatedMatches)
+            {
+                string key = $"{generatedMatch.Team1}|{generatedMatch.Team2}|{generatedMatch.Round}";
+                
+                if (savedMatchesDict.TryGetValue(key, out Match savedMatch))
+                {
+                    // Обновляем сгенерированный матч данными из сохраненного
+                    generatedMatch.Id = savedMatch.Id;
+                    generatedMatch.Status = savedMatch.Status;
+                    generatedMatch.Team1QuickScore = savedMatch.Team1QuickScore;
+                    generatedMatch.Team2QuickScore = savedMatch.Team2QuickScore;
+                    generatedMatch.SetsScore = savedMatch.SetsScore;
+                    generatedMatch.SetsBySet = savedMatch.SetsBySet;
+                    generatedMatch.TotalScore = savedMatch.TotalScore;
+                    generatedMatch.Duration = savedMatch.Duration;
+                    generatedMatch.Referee = savedMatch.Referee;
+                    generatedMatch.Location = savedMatch.Location;
+                    generatedMatch.Mvp = savedMatch.Mvp;
+                }
+
+                Schedule.Add(generatedMatch);
             }
 
             if (Schedule.Count == 0)
@@ -313,6 +508,7 @@ namespace SportHubBase.ViewModels
             }
 
             UpdateResultsFromMatches();
+            UpdateStatistics();
         }
 
         private void SubscribeToMatches(IEnumerable<Match> matches)
@@ -329,21 +525,44 @@ namespace SportHubBase.ViewModels
             if (e.PropertyName == nameof(Match.SetsScore) ||
                 e.PropertyName == nameof(Match.Team1QuickScore) ||
                 e.PropertyName == nameof(Match.Team2QuickScore) ||
-                e.PropertyName == nameof(Match.Status))
+                e.PropertyName == nameof(Match.Status) ||
+                e.PropertyName == nameof(Match.SetsBySet) ||
+                e.PropertyName == nameof(Match.TotalScore) ||
+                e.PropertyName == nameof(Match.Mvp))
             {
                 var match = sender as Match;
-                if (match != null && string.Equals(match.Status, "Не сыгран", StringComparison.OrdinalIgnoreCase))
+                if (match != null)
                 {
-                    // Если появился счёт — меняем статус автоматически
-                    var outcome = GetOutcome(match);
-                    if (outcome.HasValue)
+                    if (string.Equals(match.Status, "Не сыгран", StringComparison.OrdinalIgnoreCase))
                     {
-                        match.Status = "Сыгран";
+                        // Если появился счёт — меняем статус автоматически
+                        var outcome = GetOutcome(match);
+                        if (outcome.HasValue)
+                        {
+                            match.Status = "Сыгран";
+                        }
                     }
+
+                    // Сохраняем изменения матча
+                    SaveMatchToTournament(match);
                 }
 
                 UpdateResultsFromMatches();
+                UpdateStatistics();
             }
+        }
+        
+        private void UpdateStatistics()
+        {
+            OnPropertyChanged(nameof(TotalMatchesPlayed));
+            OnPropertyChanged(nameof(TotalSetsPlayed));
+            OnPropertyChanged(nameof(TotalPointsScored));
+            OnPropertyChanged(nameof(MostValuablePlayerName));
+            OnPropertyChanged(nameof(MostValuablePlayerTeam));
+            OnPropertyChanged(nameof(MostPopularTeamName));
+            OnPropertyChanged(nameof(MostPopularTeamWins));
+            OnPropertyChanged(nameof(MostPopularTeamMatchesPlayed));
+            OnPropertyChanged(nameof(MostPopularTeamWinPercentage));
         }
 
         private void OpenMatchCard(object parameter)
@@ -366,9 +585,65 @@ namespace SportHubBase.ViewModels
                         match.Status = "Сыгран";
                     }
 
+                    // Сохраняем матч в турнир
+                    SaveMatchToTournament(match);
                     UpdateResultsFromMatches();
+                    UpdateStatistics();
                 }
             }
+        }
+
+        private void SaveMatchToTournament(Match match)
+        {
+            if (CurrentTournament == null || match == null) return;
+
+            if (CurrentTournament.Matches == null)
+                CurrentTournament.Matches = new List<Match>();
+
+            // Ищем существующий матч по Id или по командам и раунду
+            var existingMatch = CurrentTournament.Matches.FirstOrDefault(m => 
+                m.Id == match.Id || 
+                (m.Team1 == match.Team1 && m.Team2 == match.Team2 && m.Round == match.Round));
+
+            if (existingMatch != null)
+            {
+                // Обновляем существующий матч
+                existingMatch.Status = match.Status ?? existingMatch.Status;
+                existingMatch.Team1QuickScore = match.Team1QuickScore ?? existingMatch.Team1QuickScore;
+                existingMatch.Team2QuickScore = match.Team2QuickScore ?? existingMatch.Team2QuickScore;
+                existingMatch.SetsScore = match.SetsScore ?? existingMatch.SetsScore;
+                existingMatch.SetsBySet = match.SetsBySet ?? existingMatch.SetsBySet;
+                existingMatch.TotalScore = match.TotalScore ?? existingMatch.TotalScore;
+                existingMatch.Duration = match.Duration ?? existingMatch.Duration;
+                existingMatch.Referee = match.Referee ?? existingMatch.Referee;
+                existingMatch.Location = match.Location ?? existingMatch.Location;
+                existingMatch.Mvp = match.Mvp ?? existingMatch.Mvp;
+            }
+            else
+            {
+                // Добавляем новый матч (создаем копию)
+                var newMatch = new Match
+                {
+                    Id = match.Id,
+                    Round = match.Round,
+                    Team1 = match.Team1,
+                    Team2 = match.Team2,
+                    Status = match.Status,
+                    Team1QuickScore = match.Team1QuickScore,
+                    Team2QuickScore = match.Team2QuickScore,
+                    SetsScore = match.SetsScore,
+                    SetsBySet = match.SetsBySet,
+                    TotalScore = match.TotalScore,
+                    Duration = match.Duration,
+                    Referee = match.Referee,
+                    Location = match.Location,
+                    Mvp = match.Mvp
+                };
+                CurrentTournament.Matches.Add(newMatch);
+            }
+
+            // Сохраняем турнир
+            _storage.UpdateTournament(CurrentTournament);
         }
 
         private void UpdateResultsFromMatches()

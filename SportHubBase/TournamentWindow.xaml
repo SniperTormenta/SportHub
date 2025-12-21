@@ -599,7 +599,237 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Статистика" Style="{StaticResource TailwindTabItem}">
-                
+                <Grid Margin="40,32">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Сетка карточек -->
+                    <Grid Grid.Row="0" Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Tournament Overview -->
+                        <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Обзор турнира" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
+                                
+                                <!-- Total Matches Played -->
+                                <StackPanel Margin="0,0,0,16">
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Всего матчей сыграно" FontSize="13" Foreground="#617589"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TotalMatchesPlayed}" FontSize="13" FontWeight="Bold" Foreground="#111418"/>
+                                    </Grid>
+                                    <Border Height="10" Background="#E5E7EB" CornerRadius="5" ClipToBounds="True">
+                                        <Border Width="{Binding TotalMatchesPlayed, Converter={StaticResource ProgressConverter}, ConverterParameter=120}" 
+                                                Height="10" Background="#137FEC" CornerRadius="5" HorizontalAlignment="Left"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Total Sets Played -->
+                                <StackPanel Margin="0,0,0,16">
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Всего сетов сыграно" FontSize="13" Foreground="#617589"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TotalSetsPlayed}" FontSize="13" FontWeight="Bold" Foreground="#111418"/>
+                                    </Grid>
+                                    <Border Height="10" Background="#E5E7EB" CornerRadius="5" ClipToBounds="True">
+                                        <Border Width="{Binding TotalSetsPlayed, Converter={StaticResource ProgressConverter}, ConverterParameter=458}" 
+                                                Height="10" Background="#137FEC" CornerRadius="5" HorizontalAlignment="Left"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Total Points Scored -->
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Всего очков набрано" FontSize="13" Foreground="#617589"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TotalPointsScored, StringFormat='{}{0:N0}'}" FontSize="13" FontWeight="Bold" Foreground="#111418"/>
+                                    </Grid>
+                                    <Border Height="10" Background="#E5E7EB" CornerRadius="5" ClipToBounds="True">
+                                        <Border Width="{Binding TotalPointsScored, Converter={StaticResource ProgressConverter}, ConverterParameter=12430}" 
+                                                Height="10" Background="#137FEC" CornerRadius="5" HorizontalAlignment="Left"/>
+                                    </Border>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Most Valuable Player -->
+                        <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Самый ценный игрок" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
+                                
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <Border Width="80" Height="80" CornerRadius="40" Background="#F0F2F4" Margin="0,0,16,0">
+                                        <TextBlock Text="P" Foreground="#617589" FontSize="24" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding MostValuablePlayerName}" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
+                                        <TextBlock Text="{Binding MostValuablePlayerTeam, StringFormat='из команды {0}'}" FontSize="13" Foreground="#617589"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Border Background="#F9FAFB" CornerRadius="8" Padding="12">
+                                    <StackPanel>
+                                        <TextBlock Text="МАКС. ЭЙСОВ" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
+                                        <TextBlock Text="32" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Most Popular Team -->
+                        <Border Grid.Column="4" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Самая популярная команда" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
+                                
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <Border Width="80" Height="80" CornerRadius="40" Background="#F0F2F4" Margin="0,0,16,0">
+                                        <TextBlock Text="T" Foreground="#617589" FontSize="24" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding MostPopularTeamName}" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="8" Padding="12">
+                                        <StackPanel>
+                                            <TextBlock Text="МАТЧЕЙ СЫГРАНО" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
+                                            <TextBlock Text="{Binding MostPopularTeamMatchesPlayed}" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <Border Grid.Column="2" Background="#F9FAFB" CornerRadius="8" Padding="12">
+                                        <StackPanel>
+                                            <TextBlock Text="% ПОБЕД" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
+                                            <TextBlock Text="{Binding MostPopularTeamWinPercentage, StringFormat='{}{0:F1}%'}" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Leaderboard Table -->
+                    <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Таблица лидеров" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
+                            
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Header -->
+                                    <Border Grid.Column="0" Grid.Row="0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="#F9FAFB">
+                                        <TextBlock Text="Ранг" FontSize="11" FontWeight="SemiBold" Foreground="#617589"/>
+                                    </Border>
+                                    <Border Grid.Column="1" Grid.Row="0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="#F9FAFB">
+                                        <TextBlock Text="Игрок" FontSize="11" FontWeight="SemiBold" Foreground="#617589"/>
+                                    </Border>
+                                    <Border Grid.Column="2" Grid.Row="0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="#F9FAFB">
+                                        <TextBlock Text="Убийства" FontSize="11" FontWeight="SemiBold" Foreground="#617589" TextAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="3" Grid.Row="0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="#F9FAFB">
+                                        <TextBlock Text="Блоки" FontSize="11" FontWeight="SemiBold" Foreground="#617589" TextAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="4" Grid.Row="0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="#F9FAFB">
+                                        <TextBlock Text="Эйсы" FontSize="11" FontWeight="SemiBold" Foreground="#617589" TextAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="5" Grid.Row="0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="#F9FAFB">
+                                        <TextBlock Text="Дайги" FontSize="11" FontWeight="SemiBold" Foreground="#617589" TextAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="6" Grid.Row="0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="#F9FAFB">
+                                        <TextBlock Text="Ассисты" FontSize="11" FontWeight="SemiBold" Foreground="#617589" TextAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="7" Grid.Row="0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="#F9FAFB">
+                                        <TextBlock Text="Ошибки" FontSize="11" FontWeight="SemiBold" Foreground="#617589" TextAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Placeholder row -->
+                                    <Border Grid.Column="0" Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="White">
+                                        <TextBlock Text="1" FontWeight="Bold" Foreground="#111418"/>
+                                    </Border>
+                                    <Border Grid.Column="1" Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="White">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Width="32" Height="32" CornerRadius="16" Background="#F0F2F4" Margin="0,0,12,0">
+                                                <TextBlock Text="P" Foreground="#617589" FontSize="14" FontWeight="Bold"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="—" FontWeight="Medium" Foreground="#111418"/>
+                                                <TextBlock Text="—" FontSize="11" Foreground="#617589"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="2" Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="White">
+                                        <TextBlock Text="—" TextAlignment="Center" Foreground="#111418"/>
+                                    </Border>
+                                    <Border Grid.Column="3" Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="White">
+                                        <TextBlock Text="—" TextAlignment="Center" Foreground="#111418"/>
+                                    </Border>
+                                    <Border Grid.Column="4" Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="White">
+                                        <TextBlock Text="—" TextAlignment="Center" Foreground="#111418"/>
+                                    </Border>
+                                    <Border Grid.Column="5" Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="White">
+                                        <TextBlock Text="—" TextAlignment="Center" Foreground="#111418"/>
+                                    </Border>
+                                    <Border Grid.Column="6" Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="White">
+                                        <TextBlock Text="—" TextAlignment="Center" Foreground="#111418"/>
+                                    </Border>
+                                    <Border Grid.Column="7" Grid.Row="1" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="12,14" Background="White">
+                                        <TextBlock Text="—" TextAlignment="Center" FontWeight="Bold" Foreground="#F43F5E"/>
+                                    </Border>
+
+                                    <TextBlock Grid.Column="0" Grid.ColumnSpan="8" Grid.Row="2" 
+                                               Text="Статистика игроков будет доступна после добавления детальной статистики в матчи" 
+                                               FontSize="14" Foreground="#617589" 
+                                               TextAlignment="Center" 
+                                               Margin="0,24,0,0"
+                                               TextWrapping="Wrap"/>
+                                </Grid>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </TabItem>
             <TabItem Header="Настройки" Style="{StaticResource TailwindTabItem}">
                 <TextBlock Text="Настройки — в разработке" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
