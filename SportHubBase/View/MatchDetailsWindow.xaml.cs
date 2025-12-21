@@ -1,36 +1,28 @@
-using System.Windows;
+// View/MatchDetailsWindow.xaml.cs
 using SportHubBase.Models;
+using SportHubBase.ViewModels;
+using System;
+using System.Windows;
 
 namespace SportHubBase.View
 {
     public partial class MatchDetailsWindow : Window
     {
-        private readonly Match _match;
+        private readonly MatchDetailsViewModel _viewModel;
 
-        public MatchDetailsWindow(Window owner, Match match)
+        public MatchDetailsWindow(Window owner, Match match, Guid tournamentId)
         {
             InitializeComponent();
             Owner = owner;
-            _match = match;
-            DataContext = _match;
-        }
 
-        private void OnSaveClick(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(_match.Status))
+            _viewModel = new MatchDetailsViewModel(match, tournamentId);
+            DataContext = _viewModel;
+
+            _viewModel.RequestClose += () =>
             {
-                _match.Status = "Сыгран";
-            }
-
-            DialogResult = true;
-            Close();
-        }
-
-        private void OnCancelClick(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-            Close();
+                DialogResult = true; // или false при Cancel, но у нас одинаково закрываем
+                Close();
+            };
         }
     }
 }
-

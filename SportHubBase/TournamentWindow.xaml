@@ -1,6 +1,7 @@
 ﻿<Window x:Class="SportHubBase.TournamentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:converters="clr-namespace:SportHubBase.Converters"
         Title="{Binding CurrentTournament.Name}"
         Height="950" Width="1400"
         WindowStartupLocation="CenterScreen"
@@ -22,16 +23,9 @@
                         <TextBlock Text="C" Foreground="White" FontWeight="Bold" FontSize="18"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="CyberTournaments" FontWeight="Bold" FontSize="18" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="Share" Background="#137FEC" Foreground="White" FontWeight="Bold" Padding="16,10" Margin="0,0,12,0"/>
-                    <Button Content="Edit Tournament" Background="#F0F2F4" Foreground="#111418" FontWeight="Bold" Padding="16,10" Margin="0,0,12,0"/>
-                    <Border Width="40" Height="40" CornerRadius="20" Background="#137FEC">
-                        <TextBlock Text="A" Foreground="White" FontWeight="Bold" FontSize="16"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
                 </StackPanel>
             </Grid>
         </Border>
@@ -133,122 +127,156 @@
 
                     <!-- Сообщение (для заглушек и ошибок) -->
                     <TextBlock Text="{Binding ScheduleMessage}"
-                               FontSize="16"
-                               Foreground="#617589"
-                               Margin="0,0,0,16"
-                               TextWrapping="Wrap"/>
+                   FontSize="16"
+                   Foreground="#617589"
+                   Margin="0,0,0,16"
+                   TextWrapping="Wrap"/>
 
                     <!-- Карточки матчей -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding Schedule}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
+                                    <!-- Основная карточка с hover-эффектом -->
                                     <Border Margin="0,0,0,12"
-                                            Padding="14"
-                                            Background="White"
-                                            CornerRadius="10"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="1">
+                                Padding="16"
+                                Background="White"
+                                CornerRadius="12"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="1">
+                                        <!-- Hover-эффект: утолщение и смена цвета границы -->
+                                        <Border.Triggers>
+                                            <EventTrigger RoutedEvent="MouseEnter">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ThicknessAnimation Storyboard.TargetProperty="BorderThickness" To="2" Duration="0:0:0.2"/>
+                                                        <ColorAnimation Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#137FEC" Duration="0:0:0.2"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                            <EventTrigger RoutedEvent="MouseLeave">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <ThicknessAnimation Storyboard.TargetProperty="BorderThickness" To="1" Duration="0:0:0.2"/>
+                                                        <ColorAnimation Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#E5E7EB" Duration="0:0:0.2"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Border.Triggers>
+
                                         <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <!-- Статус -->
+                                                <ColumnDefinition Width="*"/>
+                                                <!-- Команды + счёт -->
+                                                <ColumnDefinition Width="Auto"/>
+                                                <!-- Кнопка -->
+                                            </Grid.ColumnDefinitions>
 
-                                            <!-- Шапка карточки -->
-                                            <StackPanel Orientation="Horizontal"
-                                                        Grid.Row="0"
-                                                        HorizontalAlignment="Stretch">
-                                                <TextBlock Text="{Binding Round, StringFormat='Тур {0}'}"
-                                                           FontWeight="SemiBold"
-                                                           Foreground="#111418"/>
-                                                <Border Background="#EEF2F7"
-                                                        CornerRadius="6"
-                                                        Padding="8,4"
-                                                        Margin="12,0,0,0">
-                                                    <TextBlock Text="{Binding Status}"
-                                                               FontSize="12"
-                                                               Foreground="#617589"/>
-                                                </Border>
-                                            </StackPanel>
+                                            <!-- Статус матча (слева) -->
+                                            <TextBlock Grid.Column="0"
+                                           Text="{Binding Status}"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="#617589"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,32,0"/>
 
-                                            <!-- Основной блок с командами и быстрым счётом -->
-                                            <Grid Grid.Row="1" Margin="0,12,0,12">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="70"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="90"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="70"/>
-                                                </Grid.ColumnDefinitions>
-
-                                                <TextBox Grid.Column="0"
-                                                         Margin="0,0,8,0"
-                                                         Padding="6"
-                                                         HorizontalContentAlignment="Center"
-                                                         Text="{Binding Team1QuickScore, UpdateSourceTrigger=PropertyChanged}"
-                                                         BorderBrush="#E5E7EB"/>
-
-                                                <StackPanel Grid.Column="1"
-                                                            HorizontalAlignment="Right"
-                                                            VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Team1}"
-                                                               FontWeight="SemiBold"
-                                                               FontSize="14"
-                                                               Foreground="#111418"/>
-                                                </StackPanel>
-
-                                                <StackPanel Grid.Column="2"
-                                                            HorizontalAlignment="Center"
-                                                            VerticalAlignment="Center">
-                                                    <TextBlock Text="VS"
-                                                               FontWeight="Bold"
-                                                               Foreground="#137FEC"/>
-                                                    <TextBlock Text="{Binding SetsScore, StringFormat='Счёт: {0}'}"
-                                                               FontSize="11"
-                                                               Foreground="#617589"
-                                                               Margin="0,4,0,0"/>
-                                                </StackPanel>
-
-                                                <StackPanel Grid.Column="3"
-                                                            HorizontalAlignment="Left"
-                                                            VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Team2}"
-                                                               FontWeight="SemiBold"
-                                                               FontSize="14"
-                                                               Foreground="#111418"/>
-                                                </StackPanel>
-
-                                                <TextBox Grid.Column="4"
-                                                         Margin="8,0,0,0"
-                                                         Padding="6"
-                                                         HorizontalContentAlignment="Center"
-                                                         Text="{Binding Team2QuickScore, UpdateSourceTrigger=PropertyChanged}"
-                                                         BorderBrush="#E5E7EB"/>
-                                            </Grid>
-
-                                            <!-- Низ карточки: краткое info + кнопка -->
-                                            <Grid Grid.Row="2">
+                                            <!-- Центральная часть: команды + быстрый счёт -->
+                                            <Grid Grid.Column="1">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
+                                                    <!-- Команда 1 -->
                                                     <ColumnDefinition Width="Auto"/>
+                                                    <!-- Счёт -->
+                                                    <ColumnDefinition Width="*"/>
+                                                    <!-- Команда 2 -->
                                                 </Grid.ColumnDefinitions>
 
-                                                <TextBlock Text="{Binding TotalScore, StringFormat='Общий счёт: {0}'}"
-                                                           Foreground="#617589"
-                                                           FontSize="12"
-                                                           VerticalAlignment="Center"/>
+                                                <!-- Команда 1 (выровнена вправо) -->
+                                                <TextBlock Grid.Column="0"
+                                               Text="{Binding Team1}"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="#111418"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,24,0"
+                                               TextTrimming="CharacterEllipsis"/>
 
-                                                <Button Grid.Column="1"
-                                                        Content="Открыть карточку"
-                                                        Padding="10,6"
-                                                        Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"
-                                                        Background="#137FEC20"
-                                                        Foreground="#137FEC"
-                                                        FontWeight="SemiBold"/>
+                                                <!-- Быстрый счёт по центру -->
+                                                <StackPanel Grid.Column="1"
+                                                Orientation="Horizontal"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                                    <!-- Поле ввода 1 со скруглением -->
+                                                    <Border Width="48"
+                                                Height="48"
+                                                CornerRadius="8"
+                                                Background="#F8F9FA"
+                                                BorderBrush="#E5E7EB"
+                                                BorderThickness="2"
+                                                Margin="0,0,12,0">
+                                                        <TextBox Text="{Binding Team1QuickScore, UpdateSourceTrigger=PropertyChanged}"
+                                                     Background="Transparent"
+                                                     BorderThickness="0"
+                                                     FontSize="18"
+                                                     FontWeight="Bold"
+                                                     HorizontalContentAlignment="Center"
+                                                     VerticalContentAlignment="Center"/>
+                                                    </Border>
+
+                                                    <TextBlock Text="-"
+                                                   FontSize="20"
+                                                   FontWeight="Bold"
+                                                   Foreground="#617589"
+                                                   VerticalAlignment="Center"/>
+
+                                                    <!-- Поле ввода 2 со скруглением -->
+                                                    <Border Width="48"
+                                                Height="48"
+                                                CornerRadius="8"
+                                                Background="#F8F9FA"
+                                                BorderBrush="#E5E7EB"
+                                                BorderThickness="2"
+                                                Margin="12,0,0,0">
+                                                        <TextBox Text="{Binding Team2QuickScore, UpdateSourceTrigger=PropertyChanged}"
+                                                     Background="Transparent"
+                                                     BorderThickness="0"
+                                                     FontSize="18"
+                                                     FontWeight="Bold"
+                                                     HorizontalContentAlignment="Center"
+                                                     VerticalContentAlignment="Center"/>
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <!-- Команда 2 (выровнена влево) -->
+                                                <TextBlock Grid.Column="2"
+                                               Text="{Binding Team2}"
+                                               FontSize="15"
+                                               FontWeight="SemiBold"
+                                               Foreground="#111418"
+                                               HorizontalAlignment="Left"
+                                               VerticalAlignment="Center"
+                                               Margin="24,0,0,0"
+                                               TextTrimming="CharacterEllipsis"/>
                                             </Grid>
+
+                                            <!-- Кнопка "Открыть карточку" справа -->
+                                            <Border Grid.Column="2"
+                                        CornerRadius="8"
+                                        Background="#137FEC20">
+                                                <Button Content="Открыть карточку"
+                                            Padding="12,8"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Foreground="#137FEC"
+                                            FontWeight="SemiBold"
+                                            VerticalAlignment="Center"
+                                            Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"/>
+                                            </Border>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -431,6 +459,7 @@
                                                             <ItemsControl.ItemsPanel>
                                                                 <ItemsPanelTemplate>
                                                                     <StackPanel Orientation="Horizontal"/>
+                                                                    
                                                                 </ItemsPanelTemplate>
                                                             </ItemsControl.ItemsPanel>
                                                             <ItemsControl.ItemTemplate>

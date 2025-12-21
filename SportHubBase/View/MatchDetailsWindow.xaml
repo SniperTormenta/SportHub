@@ -1,144 +1,315 @@
 <Window x:Class="SportHubBase.View.MatchDetailsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Карточка матча"
-        Height="520"
-        Width="520"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:converters="clr-namespace:SportHubBase.Converters"
+        Title="Match Statistics"
+        Height="900" Width="900"
         WindowStartupLocation="CenterOwner"
         Background="#F6F7F8"
         FontFamily="Inter, Segoe UI">
-    <Grid Margin="20">
+
+    <Window.Resources>
+        <!-- Конвертер для видимости "Нет сетов" -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Grid Margin="32">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <StackPanel>
-            <TextBlock Text="{Binding Team1}"
-                       FontSize="20"
-                       FontWeight="SemiBold"
-                       Foreground="#111418"/>
-            <TextBlock Text="vs"
-                       FontSize="14"
-                       Foreground="#617589"
-                       Margin="0,2,0,0"/>
-            <TextBlock Text="{Binding Team2}"
-                       FontSize="20"
-                       FontWeight="SemiBold"
-                       Foreground="#111418"/>
-        </StackPanel>
 
-        <ScrollViewer Grid.Row="1"
-                      VerticalScrollBarVisibility="Auto"
-                      Margin="0,16,0,16">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <TextBlock Text="Статус"
-                               Width="140"
-                               VerticalAlignment="Center"
-                               Foreground="#617589"/>
-                    <ComboBox Width="220"
-                              SelectedValue="{Binding Status, UpdateSourceTrigger=PropertyChanged}"
-                              SelectedValuePath="Content">
-                        <ComboBoxItem Content="Не сыгран" />
-                        <ComboBoxItem Content="Идёт" />
-                        <ComboBoxItem Content="Сыгран" />
-                        <ComboBoxItem Content="Перенесён" />
+        <!-- Заголовок: команды + большой счёт сетов -->
+        <Grid Margin="0,0,0,40">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Левая команда -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Ellipse Width="80" Height="80" Margin="0,0,20,0">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="{Binding Team1Logo}" Stretch="UniformToFill"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <TextBlock Text="{Binding Team1}"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="#111418"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Центральный счёт по сетам -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Sets Won"
+                           FontSize="14"
+                           Foreground="#617589"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Border Width="100" Height="80"
+                            Background="White" BorderBrush="#137FEC" BorderThickness="2"
+                            Margin="0,0,20,0">
+                        <TextBlock Text="{Binding SetsScoreLeft}"
+                                 FontSize="40" FontWeight="Black"
+                                 TextAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="–" FontSize="48" Foreground="#617589" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                    <Border Width="100" Height="80"
+                            Background="White" BorderBrush="#E5E7EB" BorderThickness="2">
+                        <TextBlock Text="{Binding SetsScoreRight}"
+                                 FontSize="40" FontWeight="Black"
+                                 TextAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 HorizontalAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Правая команда -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Team2}"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="#111418"
+                           VerticalAlignment="Center"/>
+                <Ellipse Width="80" Height="80" Margin="20,0,0,0">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="{Binding Team2Logo}" Stretch="UniformToFill"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+            </StackPanel>
+        </Grid>
+
+        <!-- Основная часть -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,0,32">
+
+                <!-- Статус матча -->
+                <StackPanel Margin="0,0,0,32">
+                    <TextBlock Text="Статус матча" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <ComboBox SelectedItem="{Binding Status, UpdateSourceTrigger=PropertyChanged}"
+                              Width="300" HorizontalAlignment="Left">
+                        <sys:String>Не сыгран</sys:String>
+                        <sys:String>Идёт</sys:String>
+                        <sys:String>Сыгран</sys:String>
+                        <sys:String>Перенесён</sys:String>
                     </ComboBox>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <TextBlock Text="Счёт сетов"
-                               Width="140"
-                               VerticalAlignment="Center"
-                               Foreground="#617589"/>
-                    <TextBox Width="220"
-                             Text="{Binding SetsScore, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Например, 3:1"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <TextBlock Text="Счёт по сетам"
-                               Width="140"
-                               VerticalAlignment="Top"
+                <!-- Быстрый счет (синхронизируется с расписанием) -->
+                <StackPanel Margin="0,0,0,32">
+                    <TextBlock Text="Quick Score (Games)" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" 
+                                Width="120" 
+                                Height="60" 
+                                CornerRadius="8" 
+                                Background="White" 
+                                BorderBrush="#137FEC" 
+                                BorderThickness="2"
+                                HorizontalAlignment="Right"
+                                Margin="0,0,20,0">
+                            <TextBox Text="{Binding Team1QuickScore, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     FontSize="24"
+                                     FontWeight="Bold"
+                                     HorizontalContentAlignment="Center"
+                                     VerticalContentAlignment="Center"/>
+                        </Border>
+                        <TextBlock Grid.Column="1" 
+                                   Text="–" 
+                                   FontSize="32" 
+                                   Foreground="#617589" 
+                                   VerticalAlignment="Center" 
+                                   Margin="0,0,20,0"/>
+                        <Border Grid.Column="2" 
+                                Width="120" 
+                                Height="60" 
+                                CornerRadius="8" 
+                                Background="White" 
+                                BorderBrush="#E5E7EB" 
+                                BorderThickness="2"
+                                HorizontalAlignment="Left">
+                            <TextBox Text="{Binding Team2QuickScore, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     FontSize="24"
+                                     FontWeight="Bold"
+                                     HorizontalContentAlignment="Center"
+                                     VerticalContentAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                    <TextBlock Text="Этот счет синхронизируется с расписанием. При вводе сетов счет обновляется автоматически."
+                               FontSize="12"
                                Foreground="#617589"
-                               Margin="0,4,0,0"/>
-                    <TextBox Width="300"
-                             Height="70"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             Text="{Binding SetsBySet, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Например, 25:20, 21:25, 25:18, 25:22"/>
+                               FontStyle="Italic"
+                               Margin="0,8,0,0"
+                               TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <TextBlock Text="Общий счёт мячей"
-                               Width="140"
-                               VerticalAlignment="Center"
-                               Foreground="#617589"/>
-                    <TextBox Width="220"
-                             Text="{Binding TotalScore, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Например, 75:68"/>
+                <!-- Детальные сеты -->
+                <StackPanel Margin="0,0,0,32">
+                    <!-- Заголовок + кнопка -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="Set Scores (Points)"
+                                   FontSize="16"
+                                   FontWeight="Bold"
+                                   Foreground="#617589"
+                                   VerticalAlignment="Center"/>
+                        <Button Content="Add Set"
+                                Padding="16,10"
+                                Background="#137FEC"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                Command="{Binding AddSetCommand}"/>
+                    </Grid>
+
+                    <!-- Список сетов -->
+                    <ItemsControl ItemsSource="{Binding SetsList}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="White"
+                                        CornerRadius="8"
+                                        Padding="16"
+                                        Margin="0,0,0,12"
+                                        BorderBrush="#E5E7EB"
+                                        BorderThickness="1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Number, StringFormat='Set {0}'}"
+                                                   FontWeight="Bold"
+                                                   Foreground="#617589"
+                                                   VerticalAlignment="Center"/>
+
+                                        <TextBox Grid.Column="1"
+                                                 Text="{Binding Score1, UpdateSourceTrigger=PropertyChanged}"
+                                                 Width="120"
+                                                 FontSize="18"
+                                                 FontWeight="SemiBold"
+                                                 TextAlignment="Center"
+                                                 Margin="20,0"/>
+
+                                        <TextBlock Grid.Column="2"
+                                                   Text="–"
+                                                   FontSize="24"
+                                                   Foreground="#617589"
+                                                   VerticalAlignment="Center"/>
+
+                                        <TextBox Grid.Column="3"
+                                                 Text="{Binding Score2, UpdateSourceTrigger=PropertyChanged}"
+                                                 Width="120"
+                                                 FontSize="18"
+                                                 FontWeight="SemiBold"
+                                                 TextAlignment="Center"
+                                                 Margin="20,0"/>
+
+                                        <Button Grid.Column="4"
+                                                Content="delete"
+                                                FontFamily="Segoe UI Symbol"
+                                                Width="40" Height="40"
+                                                Background="Transparent"
+                                                Foreground="#617589"
+                                                Command="{Binding RemoveSetCommand}"
+                                                CommandParameter="{Binding}"/>
+                                     </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Сообщение, если сетов нет -->
+                    <TextBlock Text="Нет добавленных сетов"
+                               Foreground="#617589"
+                               FontStyle="Italic"
+                               Margin="0,20,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasSets}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <TextBlock Text="Длительность матча"
-                               Width="140"
-                               VerticalAlignment="Center"
-                               Foreground="#617589"/>
-                    <TextBox Width="220"
-                             Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="90 мин или 01:30"/>
+                <!-- Total Ball Score -->
+                <StackPanel Margin="0,0,0,32">
+                    <TextBlock Text="Total Ball Score" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding TotalScoreLeft}" Height="50" FontSize="20" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="–" FontSize="32" Foreground="#617589" VerticalAlignment="Center" Margin="24,0"/>
+                        <TextBlock Grid.Column="2" Text="{Binding TotalScoreRight}" Height="50" FontSize="20" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <TextBlock Text="Судья"
-                               Width="140"
-                               VerticalAlignment="Center"
-                               Foreground="#617589"/>
-                    <TextBox Width="220"
-                             Text="{Binding Referee, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="ФИО судьи"/>
-                </StackPanel>
+                <!-- MVP и Referee -->
+                <Grid Margin="0,0,0,32">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Text="Match MVP" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                        <ComboBox ItemsSource="{Binding PlayersList}"
+                                  SelectedItem="{Binding Mvp, UpdateSourceTrigger=PropertyChanged}"
+                                  Height="48"
+                                  Padding="12"
+                                  IsEditable="True"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                        <TextBlock Text="Referee" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding Referee}" Height="48" Padding="12"/>
+                    </StackPanel>
+                </Grid>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <TextBlock Text="Локация"
-                               Width="140"
-                               VerticalAlignment="Center"
-                               Foreground="#617589"/>
-                    <TextBox Width="220"
-                             Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Арена / город"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <TextBlock Text="MVP матча"
-                               Width="140"
-                               VerticalAlignment="Center"
-                               Foreground="#617589"/>
-                    <TextBox Width="220"
-                             Text="{Binding Mvp, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Игрок турнира"/>
+                <!-- Venue -->
+                <StackPanel>
+                    <TextBlock Text="Venue" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <TextBox Text="{Binding Location}" Height="48" Padding="12"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Отмена"
-                    Width="90"
-                    Padding="10,6"
-                    Click="OnCancelClick"
-                    Background="#E5E7EB"
-                    Foreground="#111418"
-                    Margin="0,0,8,0"/>
-            <Button Content="Сохранить"
-                    Width="110"
-                    Padding="10,6"
-                    Click="OnSaveClick"
-                    Background="#137FEC"
-                    Foreground="White"
-                    FontWeight="SemiBold"/>
+        <!-- Кнопки внизу -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,32,0,0">
+            <Button Content="Cancel"
+                    Command="{Binding CancelCommand}"/>
+            <Button Content="Save Statistics"
+                    Command="{Binding SaveCommand}"/>
         </StackPanel>
     </Grid>
 </Window>
-

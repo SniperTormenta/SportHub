@@ -77,6 +77,7 @@
     <Compile Include="ViewModels\AddTeamViewModel.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\CreateTournamentViewModel.cs" />
+    <Compile Include="ViewModels\MatchDetailsViewModel.cs" />
     <Compile Include="ViewModels\TournamentViewModel.cs" />
     <Compile Include="View\MatchDetailsWindow.xaml.cs">
       <DependentUpon>MatchDetailsWindow.xaml</DependentUpon>

@@ -356,9 +356,9 @@ namespace SportHubBase.ViewModels
                 .OfType<TournamentWindow>()
                 .FirstOrDefault(w => w.IsActive);
 
-            if (currentWindow != null)
+            if (currentWindow != null && CurrentTournament != null)
             {
-                var detailsWindow = new MatchDetailsWindow(currentWindow, match);
+                var detailsWindow = new MatchDetailsWindow(currentWindow, match, CurrentTournament.Id);
                 if (detailsWindow.ShowDialog() == true)
                 {
                     if (string.IsNullOrWhiteSpace(match.Status))
