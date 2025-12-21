@@ -6,6 +6,8 @@ using SportHubBase.View;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -80,6 +82,7 @@ namespace SportHubBase.ViewModels
 
         public ICommand AddTeamCommand { get; }
         public ICommand EditTeamCommand { get; }
+        public ICommand OpenMatchCommand { get; }
 
         public TournamentViewModel(Guid tournamentId)
         {
@@ -96,9 +99,13 @@ namespace SportHubBase.ViewModels
 
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
             EditTeamCommand = new RelayCommand(EditTeam, t => t is Team);
+            OpenMatchCommand = new RelayCommand(OpenMatchCard, m => m is Match);
 
             GenerateSchedule();
             GenerateResults();
+            Schedule.CollectionChanged += OnScheduleCollectionChanged;
+            SubscribeToMatches(Schedule);
+            UpdateResultsFromMatches();
         }
 
         private void OpenAddTeamWindow(object parameter)
@@ -210,10 +217,19 @@ namespace SportHubBase.ViewModels
                     TeamName = sortedTeams[i].Name
                 };
 
-                // Пока просто создаём пустые ячейки под будущие результаты
+                // Создаём ячейки под результаты
                 for (int j = 0; j < teamCount; j++)
                 {
-                    row.Cells.Add(string.Empty);
+                    if (i == j)
+                    {
+                        // Self ячейка (команда против себя) - помечаем специальным значением
+                        row.Cells.Add("SELF");
+                    }
+                    else
+                    {
+                        // Обычная ячейка - пока пустая
+                        row.Cells.Add(string.Empty);
+                    }
                 }
 
                 ResultsTable.Add(row);
@@ -276,6 +292,205 @@ namespace SportHubBase.ViewModels
             {
                 ScheduleMessage = "Не удалось сгенерировать расписание.";
             }
+        }
+
+        private void OnScheduleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+            {
+                foreach (var item in e.OldItems.OfType<Match>())
+                {
+                    item.PropertyChanged -= OnMatchPropertyChanged;
+                }
+            }
+
+            if (e.NewItems != null)
+            {
+                foreach (var item in e.NewItems.OfType<Match>())
+                {
+                    item.PropertyChanged += OnMatchPropertyChanged;
+                }
+            }
+
+            UpdateResultsFromMatches();
+        }
+
+        private void SubscribeToMatches(IEnumerable<Match> matches)
+        {
+            foreach (var match in matches)
+            {
+                match.PropertyChanged -= OnMatchPropertyChanged;
+                match.PropertyChanged += OnMatchPropertyChanged;
+            }
+        }
+
+        private void OnMatchPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Match.SetsScore) ||
+                e.PropertyName == nameof(Match.Team1QuickScore) ||
+                e.PropertyName == nameof(Match.Team2QuickScore) ||
+                e.PropertyName == nameof(Match.Status))
+            {
+                var match = sender as Match;
+                if (match != null && string.Equals(match.Status, "Не сыгран", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Если появился счёт — меняем статус автоматически
+                    var outcome = GetOutcome(match);
+                    if (outcome.HasValue)
+                    {
+                        match.Status = "Сыгран";
+                    }
+                }
+
+                UpdateResultsFromMatches();
+            }
+        }
+
+        private void OpenMatchCard(object parameter)
+        {
+            var match = parameter as Match;
+            if (match == null)
+                return;
+
+            var currentWindow = Application.Current.Windows
+                .OfType<TournamentWindow>()
+                .FirstOrDefault(w => w.IsActive);
+
+            if (currentWindow != null)
+            {
+                var detailsWindow = new MatchDetailsWindow(currentWindow, match);
+                if (detailsWindow.ShowDialog() == true)
+                {
+                    if (string.IsNullOrWhiteSpace(match.Status))
+                    {
+                        match.Status = "Сыгран";
+                    }
+
+                    UpdateResultsFromMatches();
+                }
+            }
+        }
+
+        private void UpdateResultsFromMatches()
+        {
+            if (CurrentTournament == null ||
+                !string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase) ||
+                Teams.Count == 0)
+            {
+                return;
+            }
+
+            // Перестраиваем таблицу (алфавитный порядок) и очищаем значения
+            GenerateResults();
+
+            if (ResultsTable.Count == 0)
+                return;
+
+            var sortedTeams = Teams
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            var nameToIndex = sortedTeams
+                .Select((team, index) => new { team.Name, index })
+                .ToDictionary(k => k.Name, v => v.index, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var match in Schedule)
+            {
+                if (match == null || string.IsNullOrWhiteSpace(match.Team1) || string.IsNullOrWhiteSpace(match.Team2))
+                    continue;
+
+                if (!nameToIndex.TryGetValue(match.Team1, out int t1) ||
+                    !nameToIndex.TryGetValue(match.Team2, out int t2))
+                {
+                    continue;
+                }
+
+                var outcome = GetOutcome(match);
+                if (!outcome.HasValue)
+                    continue;
+
+                string team1Cell;
+                string team2Cell;
+
+                if (outcome.Value == 1d)
+                {
+                    team1Cell = "1";
+                    team2Cell = "0";
+                }
+                else if (outcome.Value == 0d)
+                {
+                    team1Cell = "0";
+                    team2Cell = "1";
+                }
+                else
+                {
+                    team1Cell = "½";
+                    team2Cell = "½";
+                }
+
+                if (ResultsTable.ElementAtOrDefault(t1)?.Cells.Count > t2 &&
+                    ResultsTable.ElementAtOrDefault(t2)?.Cells.Count > t1)
+                {
+                    ResultsTable[t1].Cells[t2] = team1Cell;
+                    ResultsTable[t2].Cells[t1] = team2Cell;
+                }
+            }
+        }
+
+        private double? GetOutcome(Match match)
+        {
+            var fromSets = ParsePair(match.SetsScore);
+            if (fromSets.left.HasValue && fromSets.right.HasValue)
+            {
+                return CompareScores(fromSets.left.Value, fromSets.right.Value);
+            }
+
+            var fromQuick = ParsePair(match.Team1QuickScore, match.Team2QuickScore);
+            if (fromQuick.left.HasValue && fromQuick.right.HasValue)
+            {
+                return CompareScores(fromQuick.left.Value, fromQuick.right.Value);
+            }
+
+            return null;
+        }
+
+        private (int? left, int? right) ParsePair(string score)
+        {
+            if (string.IsNullOrWhiteSpace(score))
+                return (null, null);
+
+            var parts = score.Split(':');
+            if (parts.Length != 2)
+                return (null, null);
+
+            if (int.TryParse(parts[0].Trim(), out var left) &&
+                int.TryParse(parts[1].Trim(), out var right))
+            {
+                return (left, right);
+            }
+
+            return (null, null);
+        }
+
+        private (int? left, int? right) ParsePair(string leftRaw, string rightRaw)
+        {
+            if (string.IsNullOrWhiteSpace(leftRaw) || string.IsNullOrWhiteSpace(rightRaw))
+                return (null, null);
+
+            if (int.TryParse(leftRaw.Trim(), out var left) &&
+                int.TryParse(rightRaw.Trim(), out var right))
+            {
+                return (left, right);
+            }
+
+            return (null, null);
+        }
+
+        private double? CompareScores(int left, int right)
+        {
+            if (left > right) return 1d;
+            if (left < right) return 0d;
+            return 0.5d;
         }
     }
 }

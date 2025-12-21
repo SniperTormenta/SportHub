@@ -1,5 +1,5 @@
 // Models/ResultRow.cs
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace SportHubBase.Models
 {
@@ -14,10 +14,12 @@ namespace SportHubBase.Models
         public string TeamName { get; set; }
 
         /// <summary>
-        /// Ячейки по соперникам (по столбцам). Сейчас заполняются пустыми строками.
+        /// Ячейки по соперникам (по столбцам). ObservableCollection, чтобы UI обновлялся при замене значений.
         /// </summary>
-        public IList<string> Cells { get; set; } = new List<string>();
+        public ObservableCollection<string> Cells { get; set; } = new ObservableCollection<string>();
     }
 }
+
+
 
 

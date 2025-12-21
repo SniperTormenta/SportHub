@@ -1,0 +1,144 @@
+<Window x:Class="SportHubBase.View.MatchDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Карточка матча"
+        Height="520"
+        Width="520"
+        WindowStartupLocation="CenterOwner"
+        Background="#F6F7F8"
+        FontFamily="Inter, Segoe UI">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Text="{Binding Team1}"
+                       FontSize="20"
+                       FontWeight="SemiBold"
+                       Foreground="#111418"/>
+            <TextBlock Text="vs"
+                       FontSize="14"
+                       Foreground="#617589"
+                       Margin="0,2,0,0"/>
+            <TextBlock Text="{Binding Team2}"
+                       FontSize="20"
+                       FontWeight="SemiBold"
+                       Foreground="#111418"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      Margin="0,16,0,16">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="Статус"
+                               Width="140"
+                               VerticalAlignment="Center"
+                               Foreground="#617589"/>
+                    <ComboBox Width="220"
+                              SelectedValue="{Binding Status, UpdateSourceTrigger=PropertyChanged}"
+                              SelectedValuePath="Content">
+                        <ComboBoxItem Content="Не сыгран" />
+                        <ComboBoxItem Content="Идёт" />
+                        <ComboBoxItem Content="Сыгран" />
+                        <ComboBoxItem Content="Перенесён" />
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="Счёт сетов"
+                               Width="140"
+                               VerticalAlignment="Center"
+                               Foreground="#617589"/>
+                    <TextBox Width="220"
+                             Text="{Binding SetsScore, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Например, 3:1"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="Счёт по сетам"
+                               Width="140"
+                               VerticalAlignment="Top"
+                               Foreground="#617589"
+                               Margin="0,4,0,0"/>
+                    <TextBox Width="300"
+                             Height="70"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             Text="{Binding SetsBySet, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Например, 25:20, 21:25, 25:18, 25:22"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="Общий счёт мячей"
+                               Width="140"
+                               VerticalAlignment="Center"
+                               Foreground="#617589"/>
+                    <TextBox Width="220"
+                             Text="{Binding TotalScore, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Например, 75:68"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="Длительность матча"
+                               Width="140"
+                               VerticalAlignment="Center"
+                               Foreground="#617589"/>
+                    <TextBox Width="220"
+                             Text="{Binding Duration, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="90 мин или 01:30"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="Судья"
+                               Width="140"
+                               VerticalAlignment="Center"
+                               Foreground="#617589"/>
+                    <TextBox Width="220"
+                             Text="{Binding Referee, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="ФИО судьи"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="Локация"
+                               Width="140"
+                               VerticalAlignment="Center"
+                               Foreground="#617589"/>
+                    <TextBox Width="220"
+                             Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Арена / город"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="MVP матча"
+                               Width="140"
+                               VerticalAlignment="Center"
+                               Foreground="#617589"/>
+                    <TextBox Width="220"
+                             Text="{Binding Mvp, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Игрок турнира"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Отмена"
+                    Width="90"
+                    Padding="10,6"
+                    Click="OnCancelClick"
+                    Background="#E5E7EB"
+                    Foreground="#111418"
+                    Margin="0,0,8,0"/>
+            <Button Content="Сохранить"
+                    Width="110"
+                    Padding="10,6"
+                    Click="OnSaveClick"
+                    Background="#137FEC"
+                    Foreground="White"
+                    FontWeight="SemiBold"/>
+        </StackPanel>
+    </Grid>
+</Window>
+

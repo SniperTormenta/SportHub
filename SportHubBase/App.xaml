@@ -2,11 +2,16 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:SportHubBase"
+             xmlns:converters="clr-namespace:SportHubBase.Converters"
              StartupUri="MainWindow.xaml">
 
     
     
     <Application.Resources>
+        <!-- Конвертеры для таблицы результатов -->
+        <converters:ResultCellColorConverter x:Key="ResultCellColorConverter"/>
+        <converters:ResultCellBackgroundConverter x:Key="ResultCellBackgroundConverter"/>
+        <converters:IsSelfCellConverter x:Key="IsSelfCellConverter"/>
                
         <Style x:Key="ModernComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="White"/>

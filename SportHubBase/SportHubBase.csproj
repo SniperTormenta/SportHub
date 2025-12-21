@@ -70,6 +70,7 @@
     <Compile Include="Services\Scheduling\RoundRobinBergerScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\ScheduleStrategyFactory.cs" />
     <Compile Include="Services\Scheduling\StubStrategies.cs" />
+    <Compile Include="Converters\ResultCellColorConverter.cs" />
     <Compile Include="TournamentWindow.xaml.cs">
       <DependentUpon>TournamentWindow.xaml</DependentUpon>
     </Compile>
@@ -77,6 +78,9 @@
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\CreateTournamentViewModel.cs" />
     <Compile Include="ViewModels\TournamentViewModel.cs" />
+    <Compile Include="View\MatchDetailsWindow.xaml.cs">
+      <DependentUpon>MatchDetailsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\AddTeamWindow.xaml.cs">
       <DependentUpon>AddTeamWindow.xaml</DependentUpon>
     </Compile>
@@ -104,6 +108,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\AddTeamWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\MatchDetailsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
