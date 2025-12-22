@@ -47,7 +47,7 @@
 
                         <StackPanel Grid.Column="0" Margin="0,0,12,0">
                             <TextBlock Text="Статус *" FontWeight="Bold" FontSize="14"/>
-                            <ComboBox x:Name="StatusComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="0">
+                            <ComboBox x:Name="StatusComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="0" Style="{StaticResource ModernComboBox}">
                                 <ComboBoxItem>Активный</ComboBoxItem>
                                 <ComboBoxItem>Неактивный</ComboBoxItem>
                             </ComboBox>
@@ -55,10 +55,9 @@
 
                         <StackPanel Grid.Column="1" Margin="12,0,0,0">
                             <TextBlock Text="Вид спорта *" FontWeight="Bold" FontSize="14"/>
-                            <ComboBox x:Name="SportTypeComboBox" Height="36" Margin="0,8,0,0">
+                            <ComboBox x:Name="SportTypeComboBox" Height="36" Margin="0,8,0,0" Style="{StaticResource ModernComboBox}">
                                 <ComboBoxItem>Другое</ComboBoxItem>
-                                <ComboBoxItem>Футбол</ComboBoxItem>
-                                <ComboBoxItem>Баскетбол</ComboBoxItem>
+                                <ComboBoxItem>Волейбол</ComboBoxItem>
                             </ComboBox>
                         </StackPanel>
                     </Grid>
@@ -86,14 +85,14 @@
 
                         <StackPanel Grid.Column="0" Margin="0,0,12,0">
                             <TextBlock Text="Режим редактирования игр *" FontWeight="Bold" FontSize="14"/>
-                            <ComboBox x:Name="EditModeComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="0">
+                            <ComboBox x:Name="EditModeComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="0" Style="{StaticResource ModernComboBox}">
                                 <ComboBoxItem>Только администраторы турнира</ComboBoxItem>
                             </ComboBox>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Margin="12,0,0,0">
                             <TextBlock Text="Режим доступа *" FontWeight="Bold" FontSize="14"/>
-                            <ComboBox x:Name="AccessModeComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="0">
+                            <ComboBox x:Name="AccessModeComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="0" Style="{StaticResource ModernComboBox}">
                                 <ComboBoxItem>Доступно всем</ComboBoxItem>
                                 <ComboBoxItem>Приватный</ComboBoxItem>
                             </ComboBox>
@@ -128,6 +127,7 @@
                                        Grid.Column="0"/>
 
                             <ComboBox x:Name="CityComboBox" Grid.Column="1"
+                                      Style="{StaticResource ModernComboBox}"
                                       HorizontalAlignment="Right"
                                       Width="200"
                                       Height="36"
@@ -159,12 +159,14 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                         <Button Content="Создать турнир"
                                 x:Name="CreateTournament"
+                                Style="{StaticResource DefaultModernButton}"
                                 Click="CreateTournament_Click"
                                 FontWeight="Medium" 
                                 Padding="28,12" 
                                 FontSize="14" 
                                 Margin="0,0,16,0"/>
                         <Button Content="Отмена" 
+                                Style="{StaticResource DefaultModernButton}"
                                 Padding="24,12"/>
                     </StackPanel>
 
