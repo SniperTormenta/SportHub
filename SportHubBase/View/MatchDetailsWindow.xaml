@@ -45,7 +45,7 @@
 
             <!-- Центральный счёт по сетам -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="Sets Won"
+                <TextBlock Text="Счет по встречи"
                            FontSize="14"
                            Foreground="#617589"
                            HorizontalAlignment="Center"
@@ -95,6 +95,7 @@
                 <StackPanel Margin="0,0,0,32">
                     <TextBlock Text="Статус матча" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
                     <ComboBox SelectedItem="{Binding Status, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource ModernComboBox}"
                               Width="300" HorizontalAlignment="Left">
                         <sys:String>Не сыгран</sys:String>
                         <sys:String>Идёт</sys:String>
@@ -105,7 +106,7 @@
 
                 <!-- Быстрый счет (синхронизируется с расписанием) -->
                 <StackPanel Margin="0,0,0,32">
-                    <TextBlock Text="Quick Score (Games)" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <TextBlock Text="Быстрый счет" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -174,7 +175,8 @@
                                    FontWeight="Bold"
                                    Foreground="#617589"
                                    VerticalAlignment="Center"/>
-                        <Button Content="Add Set"
+                        <Button Content="Добавить сет"
+                                Style="{StaticResource DefaultModernButton}"
                                 Padding="16,10"
                                 Background="#137FEC"
                                 Foreground="White"
@@ -263,7 +265,7 @@
 
                 <!-- Total Ball Score -->
                 <StackPanel Margin="0,0,0,32">
-                    <TextBlock Text="Total Ball Score" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <TextBlock Text="Всего мячей разыграно" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -283,22 +285,23 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                        <TextBlock Text="Match MVP" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                        <TextBlock Text="MVP встречи" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
                         <ComboBox ItemsSource="{Binding PlayersList}"
+                                  Style="{StaticResource ModernComboBox}"
                                   SelectedItem="{Binding Mvp, UpdateSourceTrigger=PropertyChanged}"
                                   Height="48"
                                   Padding="12"
                                   IsEditable="True"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="16,0,0,0">
-                        <TextBlock Text="Referee" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                        <TextBlock Text="Судья" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
                         <TextBox Text="{Binding Referee}" Height="48" Padding="12"/>
                     </StackPanel>
                 </Grid>
 
                 <!-- Venue -->
                 <StackPanel>
-                    <TextBlock Text="Venue" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <TextBlock Text="Место игры" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
                     <TextBox Text="{Binding Location}" Height="48" Padding="12"/>
                 </StackPanel>
             </StackPanel>
@@ -306,10 +309,13 @@
 
         <!-- Кнопки внизу -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,32,0,0">
-            <Button Content="Cancel"
-                    Command="{Binding CancelCommand}"/>
-            <Button Content="Save Statistics"
-                    Command="{Binding SaveCommand}"/>
+            <Button Content="Отмена"
+                    Command="{Binding CancelCommand}"
+                    Style="{StaticResource DefaultModernButton}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Сохранить статистику"
+                    Command="{Binding SaveCommand}"
+                    Style="{StaticResource DefaultModernButton}"/>
         </StackPanel>
     </Grid>
 </Window>

@@ -106,7 +106,7 @@
                             </StackPanel>
 
                             <Button Command="{Binding AddTeamCommand}"
-                                    Background="#137FEC20" Foreground="#137FEC" FontWeight="Bold" Padding="20,20">
+                                    Style="{StaticResource AddTeamButtonStyle}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="+" FontSize="18" Margin="0,0,8,0"/>
                                     <TextBlock Text="Добавить команду"/>
@@ -266,16 +266,17 @@
                                             <!-- Кнопка "Открыть карточку" справа -->
                                             <Border Grid.Column="2"
                                         CornerRadius="8"
-                                        Background="#137FEC20">
+                                        Background="#E0F2FE">
                                                 <Button Content="Открыть карточку"
-                                            Padding="12,8"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            Foreground="#137FEC"
-                                            FontWeight="SemiBold"
-                                            VerticalAlignment="Center"
-                                            Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"/>
+                                                        Style="{StaticResource AddTeamButtonStyle}"
+                                                        Padding="12,8"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Foreground="#137FEC"
+                                                        FontWeight="SemiBold"
+                                                        VerticalAlignment="Center"
+                                                        Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"/>
                                             </Border>
                                         </Grid>
                                     </Border>
@@ -293,74 +294,72 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Сообщение (для заглушек и ошибок) -->
+                    <!-- Сообщение -->
                     <TextBlock Grid.Row="0" Text="{Binding ResultsMessage}"
-                               FontSize="16"
-                               Foreground="#617589"
-                               Margin="0,0,0,16"
-                               TextWrapping="Wrap"
-                               HorizontalAlignment="Center"/>
+                   FontSize="16"
+                   Foreground="#617589"
+                   Margin="0,0,0,16"
+                   TextWrapping="Wrap"
+                   HorizontalAlignment="Center"/>
 
-                    <!-- Красивая таблица результатов (центрированная) -->
-                    <ScrollViewer Grid.Row="1" 
-                                  HorizontalScrollBarVisibility="Auto" 
-                                  VerticalScrollBarVisibility="Auto">
-                        <Border Background="White" 
-                                CornerRadius="12" 
-                                BorderBrush="#E5E7EB" 
-                                BorderThickness="1"
-                                Padding="0"
-                                HorizontalAlignment="Center"
-                                MaxWidth="1200">
+                    <!-- Таблица — на всё пространство -->
+                    <ScrollViewer Grid.Row="1"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
+                                <!-- Заголовок -->
                                 <RowDefinition Height="*"/>
+                                <!-- Тело -->
                             </Grid.RowDefinitions>
 
                             <!-- Заголовок таблицы -->
-                            <Border Grid.Row="0" 
-                                    Background="#F9FAFB" 
-                                    BorderBrush="#E5E7EB" 
-                                    BorderThickness="0,0,0,1"
-                                    Padding="0">
+                            <Border Grid.Row="0"
+                        Background="#F9FAFB"
+                        BorderBrush="#E5E7EB"
+                        BorderThickness="0,0,0,1"
+                        Padding="0">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="60"/>
-                                        <ColumnDefinition Width="240"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <!-- Rk. -->
+                                        <ColumnDefinition Width="280"/>
+                                        <!-- Команда -->
                                         <ColumnDefinition Width="*"/>
+                                        <!-- Номера -->
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Заголовок "Rk." -->
-                                    <Border Grid.Column="0" 
-                                            BorderBrush="#E5E7EB" 
-                                            BorderThickness="0,0,1,0"
-                                            Padding="12,14"
-                                            Background="#F9FAFB">
-                                        <TextBlock Text="Rk." 
-                                                   FontSize="11" 
-                                                   FontWeight="SemiBold" 
-                                                   Foreground="#617589" 
-                                                   HorizontalAlignment="Left"/>
+                                    <!-- Rk. -->
+                                    <Border Grid.Column="0"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="0,0,1,0"
+                                Padding="16,14"
+                                Background="#F9FAFB">
+                                        <TextBlock Text="Rk."
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#617589"
+                                       HorizontalAlignment="Center"/>
                                     </Border>
 
-                                    <!-- Заголовок "Команда" -->
-                                    <Border Grid.Column="1" 
-                                            BorderBrush="#E5E7EB" 
-                                            BorderThickness="0,0,1,0"
-                                            Padding="12,14"
-                                            Background="#F9FAFB">
-                                        <TextBlock Text="Команда" 
-                                                   FontSize="11" 
-                                                   FontWeight="SemiBold" 
-                                                   Foreground="#617589" 
-                                                   HorizontalAlignment="Left"/>
+                                    <!-- Команда -->
+                                    <Border Grid.Column="1"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="0,0,1,0"
+                                Padding="16,14"
+                                Background="#F9FAFB">
+                                        <TextBlock Text="Команда"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#617589"
+                                       HorizontalAlignment="Left"/>
                                     </Border>
 
-                                    <!-- Заголовки номеров столбцов (прокручиваемые) -->
-                                    <ScrollViewer Grid.Column="2" 
-                                                  HorizontalScrollBarVisibility="Auto" 
-                                                  VerticalScrollBarVisibility="Disabled">
+                                    <!-- Номера столбцов (прокручиваемые, синхронизированы с ячейками) -->
+                                    <ScrollViewer Grid.Column="2"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Disabled">
                                         <ItemsControl ItemsSource="{Binding ResultsHeaderNumbers}">
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate>
@@ -369,18 +368,17 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Width="48" 
-                                                            Height="48" 
-                                                            BorderBrush="#E5E7EB" 
-                                                            BorderThickness="0,0,1,0"
-                                                            Background="#F9FAFB"
-                                                            Padding="0">
-                                                        <TextBlock Text="{Binding}" 
-                                                                   HorizontalAlignment="Center" 
-                                                                   VerticalAlignment="Center" 
-                                                                   FontSize="11" 
-                                                                   FontWeight="SemiBold" 
-                                                                   Foreground="#617589"/>
+                                                    <Border Width="60"
+                                                Height="70"
+                                                BorderBrush="#E5E7EB"
+                                                BorderThickness="0,0,1,0"
+                                                Background="#F9FAFB">
+                                                        <TextBlock Text="{Binding}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#617589"/>
                                                     </Border>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
@@ -390,209 +388,167 @@
                             </Border>
 
                             <!-- Тело таблицы -->
-                            <ScrollViewer Grid.Row="1" 
-                                          HorizontalScrollBarVisibility="Auto" 
-                                          VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding ResultsTable}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border BorderBrush="#E5E7EB" 
-                                                    BorderThickness="0,0,0,1"
-                                                    Background="White"
-                                                    x:Name="RowBorder">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Background" Value="#EFF6FF"/>
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="60"/>
-                                                        <ColumnDefinition Width="240"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding ResultsTable}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E5E7EB"
+                                    BorderThickness="0,0,0,1"
+                                    Background="White"
+                                    x:Name="RowBorder">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#EFF6FF"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid Height="70">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="80"/>
+                                                    <ColumnDefinition Width="280"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
 
-                                                    <!-- Номер строки (sticky) -->
-                                                    <Border Grid.Column="0" 
-                                                            BorderBrush="#E5E7EB" 
-                                                            BorderThickness="0,0,1,0"
-                                                            Padding="12,14"
-                                                            Background="{Binding Background, RelativeSource={RelativeSource AncestorType=Border, AncestorLevel=2}}">
-                                                        <Border Width="24" 
-                                                                Height="24" 
-                                                                CornerRadius="4" 
-                                                                Background="#F3F4F6"
-                                                                HorizontalAlignment="Left"
-                                                                VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding Index}" 
-                                                                       FontSize="12" 
-                                                                       FontWeight="Bold" 
-                                                                       Foreground="#111418"
-                                                                       HorizontalAlignment="Center" 
-                                                                       VerticalAlignment="Center"/>
-                                                        </Border>
+                                                <!-- Номер строки -->
+                                                <Border Grid.Column="0"
+                                            BorderBrush="#E5E7EB"
+                                            BorderThickness="0,0,1,0"
+                                            Background="White">
+                                                    <Border Width="32"
+                                                Height="32"
+                                                CornerRadius="6"
+                                                Background="#F3F4F6"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Index}"
+                                                       FontSize="14"
+                                                       FontWeight="Bold"
+                                                       Foreground="#111418"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
                                                     </Border>
+                                                </Border>
 
-                                                    <!-- Название команды (sticky) -->
-                                                    <Border Grid.Column="1" 
-                                                            BorderBrush="#E5E7EB" 
+                                                <!-- Название команды -->
+                                                <Border Grid.Column="1"
+                                            BorderBrush="#E5E7EB"
+                                            BorderThickness="0,0,1,0"
+                                            Background="White">
+                                                    <TextBlock Text="{Binding TeamName}"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#111418"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"
+                                                   Margin="16,0"/>
+                                                </Border>
+
+                                                <!-- Ячейки -->
+                                                <ScrollViewer Grid.Column="2"
+                                                  HorizontalScrollBarVisibility="Auto"
+                                                  VerticalScrollBarVisibility="Hidden">
+                                                    <ItemsControl ItemsSource="{Binding Cells}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal"/>
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Width="60"
+                                                            Height="60"
+                                                            BorderBrush="#E5E7EB"
                                                             BorderThickness="0,0,1,0"
-                                                            Padding="12,14"
-                                                            Background="{Binding Background, RelativeSource={RelativeSource AncestorType=Border, AncestorLevel=2}}">
-                                                        <TextBlock Text="{Binding TeamName}" 
-                                                                   FontSize="14" 
-                                                                   FontWeight="SemiBold" 
-                                                                   Foreground="#111418"
-                                                                   TextTrimming="CharacterEllipsis"
-                                                                   VerticalAlignment="Center"/>
-                                                    </Border>
+                                                            Background="{Binding Converter={StaticResource ResultCellBackgroundConverter}}"
+                                                            x:Name="CellBorder">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Style.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter Property="Background" Value="#F1F5F9"/>
+                                                                                </Trigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                    <Grid>
+                                                                        <Path Data="M0,0 L60,60 M0,60 L60,0"
+                                                                  Stroke="#E5E7EB"
+                                                                  StrokeThickness="1.5"
+                                                                  Stretch="None"
+                                                                  Visibility="Collapsed"
+                                                                  x:Name="DiagonalLines">
+                                                                            <Path.Style>
+                                                                                <Style TargetType="Path">
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding}" Value="SELF">
+                                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </Path.Style>
+                                                                        </Path>
 
-                                                    <!-- Ячейки результатов (прокручиваемые) -->
-                                                    <ScrollViewer Grid.Column="2" 
-                                                                  HorizontalScrollBarVisibility="Auto" 
-                                                                  VerticalScrollBarVisibility="Hidden">
-                                                        <ItemsControl ItemsSource="{Binding Cells}">
-                                                            <ItemsControl.ItemsPanel>
-                                                                <ItemsPanelTemplate>
-                                                                    <StackPanel Orientation="Horizontal"/>
-                                                                    
-                                                                </ItemsPanelTemplate>
-                                                            </ItemsControl.ItemsPanel>
-                                                            <ItemsControl.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <Border Width="48" 
-                                                                            Height="48" 
-                                                                            BorderBrush="#E5E7EB" 
-                                                                            BorderThickness="0,0,1,0"
-                                                                            Background="{Binding Converter={StaticResource ResultCellBackgroundConverter}}"
-                                                                            Padding="0"
-                                                                            x:Name="CellBorder">
-                                                                        <Border.Style>
-                                                                            <Style TargetType="Border">
-                                                                                <Style.Triggers>
-                                                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                                                        <Setter Property="Background" Value="#F1F5F9"/>
-                                                                                    </Trigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </Border.Style>
-                                                                        <Grid>
-                                                                            <!-- Диагональные линии для Self ячеек (команда против себя) -->
-                                                                            <Path Data="M0,0 L48,48 M0,48 L48,0" 
-                                                                                  Stroke="#E5E7EB" 
-                                                                                  StrokeThickness="1"
-                                                                                  Stretch="Fill"
-                                                                                  Opacity="0.5"
-                                                                                  Visibility="Collapsed"
-                                                                                  x:Name="DiagonalLines">
-                                                                                <Path.Style>
-                                                                                    <Style TargetType="Path">
-                                                                                        <Style.Triggers>
-                                                                                            <DataTrigger Binding="{Binding}" Value="SELF">
-                                                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                                                            </DataTrigger>
-                                                                                        </Style.Triggers>
-                                                                                    </Style>
-                                                                                </Path.Style>
-                                                                            </Path>
-                                                                            
-                                                                            <!-- Текст результата -->
-                                                                            <TextBlock HorizontalAlignment="Center" 
-                                                                                       VerticalAlignment="Center" 
-                                                                                       FontSize="14" 
-                                                                                       FontWeight="Medium"
-                                                                                       Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}">
-                                                                                <TextBlock.Style>
-                                                                                    <Style TargetType="TextBlock">
-                                                                                        <Setter Property="Text" Value="{Binding}"/>
-                                                                                        <Style.Triggers>
-                                                                                            <DataTrigger Binding="{Binding}" Value="SELF">
-                                                                                                <Setter Property="Text" Value=""/>
-                                                                                            </DataTrigger>
-                                                                                            <DataTrigger Binding="{Binding}" Value="">
-                                                                                                <Setter Property="Text" Value=""/>
-                                                                                            </DataTrigger>
-                                                                                        </Style.Triggers>
-                                                                                    </Style>
-                                                                                </TextBlock.Style>
-                                                                            </TextBlock>
-                                                                        </Grid>
-                                                                    </Border>
-                                                                </DataTemplate>
-                                                            </ItemsControl.ItemTemplate>
-                                                        </ItemsControl>
-                                                    </ScrollViewer>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                                                                        <TextBlock HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center"
+                                                                       FontSize="16"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="TextBlock">
+                                                                                    <Setter Property="Text" Value="{Binding}"/>
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding}" Value="SELF">
+                                                                                            <Setter Property="Text" Value=""/>
+                                                                                        </DataTrigger>
+                                                                                        <DataTrigger Binding="{Binding}" Value="">
+                                                                                            <Setter Property="Text" Value=""/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                        </TextBlock>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </ScrollViewer>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Grid>
-                    </Border>
-
                     </ScrollViewer>
 
                     <!-- Легенда -->
-                    <Border Grid.Row="2" 
-                            Margin="0,16,0,0"
-                            Padding="16"
-                            Background="#F9FAFB"
-                            CornerRadius="8"
-                            BorderBrush="#E5E7EB"
-                            BorderThickness="1"
-                            HorizontalAlignment="Center"
-                            MaxWidth="1200">
+                    <Border Grid.Row="2"
+                Margin="0,16,0,0"
+                Padding="16"
+                Background="#F9FAFB"
+                CornerRadius="8"
+                BorderBrush="#E5E7EB"
+                BorderThickness="1">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBlock Text="Легенда:" 
-                                       FontSize="12" 
-                                       FontWeight="SemiBold" 
-                                       Foreground="#617589" 
-                                       Margin="0,0,16,0"
-                                       VerticalAlignment="Center"/>
-                            
+                            <TextBlock Text="Легенда:"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="#617589"
+                           Margin="0,0,16,0"
+                           VerticalAlignment="Center"/>
                             <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                                <Border Width="12" 
-                                        Height="12" 
-                                        CornerRadius="2" 
-                                        Background="#10B981" 
-                                        Margin="0,0,6,0"
-                                        VerticalAlignment="Center"/>
-                                <TextBlock Text="Победа (1)" 
-                                           FontSize="12" 
-                                           Foreground="#617589"
-                                           VerticalAlignment="Center"/>
+                                <Border Width="12" Height="12" CornerRadius="2" Background="#10B981" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Победа (1)" FontSize="12" Foreground="#617589" VerticalAlignment="Center"/>
                             </StackPanel>
-                            
                             <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                                <Border Width="12" 
-                                        Height="12" 
-                                        CornerRadius="2" 
-                                        Background="#617589" 
-                                        Opacity="0.5"
-                                        Margin="0,0,6,0"
-                                        VerticalAlignment="Center"/>
-                                <TextBlock Text="Ничья (½)" 
-                                           FontSize="12" 
-                                           Foreground="#617589"
-                                           VerticalAlignment="Center"/>
+                                <Border Width="12" Height="12" CornerRadius="2" Background="#617589" Opacity="0.5" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Ничья (½)" FontSize="12" Foreground="#617589" VerticalAlignment="Center"/>
                             </StackPanel>
-                            
                             <StackPanel Orientation="Horizontal">
-                                <Border Width="12" 
-                                        Height="12" 
-                                        CornerRadius="2" 
-                                        Background="#F43F5E" 
-                                        Margin="0,0,6,0"
-                                        VerticalAlignment="Center"/>
-                                <TextBlock Text="Поражение (0)" 
-                                           FontSize="12" 
-                                           Foreground="#617589"
-                                           VerticalAlignment="Center"/>
+                                <Border Width="12" Height="12" CornerRadius="2" Background="#F43F5E" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Поражение (0)" FontSize="12" Foreground="#617589" VerticalAlignment="Center"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -688,7 +644,7 @@
 
                                 <Border Background="#F9FAFB" CornerRadius="8" Padding="12">
                                     <StackPanel>
-                                        <TextBlock Text="МАКС. ЭЙСОВ" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Количество MVP" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
                                         <TextBlock Text="32" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
                                     </StackPanel>
                                 </Border>

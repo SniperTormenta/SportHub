@@ -67,6 +67,7 @@
                         <StackPanel Margin="0,0,0,24">
                             <TextBlock Text="Выберите капитана" FontSize="13" FontWeight="Medium" Foreground="#111418"/>
                             <ComboBox ItemsSource="{Binding Players}"
+                                      Style="{StaticResource ModernComboBox}"
                                       DisplayMemberPath="Name"
                                       SelectedValue="{Binding SelectedCaptainName, UpdateSourceTrigger=PropertyChanged}"
                                       SelectedValuePath="Name"
@@ -93,6 +94,7 @@
                                 <Button Grid.Column="1"
                                         Content="+ Добавить игрока"
                                         Command="{Binding AddPlayerCommand}"
+                                        Style="{StaticResource DefaultModernButton}"
                                         Background="Transparent"
                                         Foreground="#137FEC"
                                         FontWeight="Medium"
@@ -161,6 +163,7 @@
                     <Button Grid.Column="0"
                             Content="Удалить команду"
                             Command="{Binding DeleteTeamCommand}"
+                            Style="{StaticResource DefaultModernButton}"
                             Background="#EF4444"
                             Foreground="White"
                             FontWeight="Bold"
@@ -170,10 +173,12 @@
 
                     <Button Grid.Column="1" Content="Отмена"
                             Command="{Binding CancelCommand}"
+                            Style="{StaticResource DefaultModernButton}"
                             Background="Transparent"
                             BorderBrush="#E5E7EB"
                             Padding="20,12"/>
                     <Button Grid.Column="2" Content="Сохранить команду"
+                            Style="{StaticResource DefaultModernButton}"
                             Command="{Binding SaveTeamCommand}"
                             Background="#137FEC" Foreground="White"
                             FontWeight="Bold" Padding="20,12"/>
