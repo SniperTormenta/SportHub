@@ -669,47 +669,427 @@ namespace SportHubBase.ViewModels
                 .Select((team, index) => new { team.Name, index })
                 .ToDictionary(k => k.Name, v => v.index, StringComparer.OrdinalIgnoreCase);
 
+            // Словарь для хранения статистики команд
+            var teamStats = sortedTeams.ToDictionary(
+                t => t.Name,
+                t => new ResultRow
+                {
+                    TeamName = t.Name,
+                    Wins = 0,
+                    Losses = 0,
+                    SetsWon = 0,
+                    SetsLost = 0,
+                    Points = 0,
+                    PointsScored = 0,
+                    PointsConceded = 0,
+                    SetsRatio = 0,
+                    PointsRatio = 0
+                },
+                StringComparer.OrdinalIgnoreCase);
+
+            // Обрабатываем все матчи и заполняем статистику
             foreach (var match in Schedule)
             {
                 if (match == null || string.IsNullOrWhiteSpace(match.Team1) || string.IsNullOrWhiteSpace(match.Team2))
                     continue;
 
-                if (!nameToIndex.TryGetValue(match.Team1, out int t1) ||
-                    !nameToIndex.TryGetValue(match.Team2, out int t2))
+                if (!teamStats.TryGetValue(match.Team1, out var team1Stats) ||
+                    !teamStats.TryGetValue(match.Team2, out var team2Stats))
                 {
                     continue;
                 }
 
-                var outcome = GetOutcome(match);
-                if (!outcome.HasValue)
+                // Проверяем, сыгран ли матч
+                if (string.IsNullOrWhiteSpace(match.Status) ||
+                    !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                {
                     continue;
-
-                string team1Cell;
-                string team2Cell;
-
-                if (outcome.Value == 1d)
-                {
-                    team1Cell = "1";
-                    team2Cell = "0";
                 }
-                else if (outcome.Value == 0d)
+
+                // Получаем счет по сетам
+                var setsScore = ParsePair(match.SetsScore);
+                if (!setsScore.left.HasValue || !setsScore.right.HasValue)
                 {
-                    team1Cell = "0";
-                    team2Cell = "1";
+                    // Пробуем быстрый счет
+                    var quickScore = ParsePair(match.Team1QuickScore, match.Team2QuickScore);
+                    if (quickScore.left.HasValue && quickScore.right.HasValue)
+                    {
+                        setsScore = quickScore;
+                    }
+                    else
+                    {
+                        continue; // Нет счета - пропускаем матч
+                    }
+                }
+
+                int team1Sets = setsScore.left.Value;
+                int team2Sets = setsScore.right.Value;
+
+                // Получаем общий счет по мячам
+                var totalScore = ParsePair(match.TotalScore);
+                int team1Points = totalScore.left ?? 0;
+                int team2Points = totalScore.right ?? 0;
+
+                // Обновляем статистику сетов
+                team1Stats.SetsWon += team1Sets;
+                team1Stats.SetsLost += team2Sets;
+                team2Stats.SetsWon += team2Sets;
+                team2Stats.SetsLost += team1Sets;
+
+                // Обновляем статистику мячей
+                team1Stats.PointsScored += team1Points;
+                team1Stats.PointsConceded += team2Points;
+                team2Stats.PointsScored += team2Points;
+                team2Stats.PointsConceded += team1Points;
+
+                // Определяем исход матча и начисляем очки по итальянской системе
+                int team1PointsItalian = CalculateItalianPoints(team1Sets, team2Sets);
+                int team2PointsItalian = CalculateItalianPoints(team2Sets, team1Sets);
+
+                team1Stats.Points += team1PointsItalian;
+                team2Stats.Points += team2PointsItalian;
+
+                // Обновляем победы/поражения
+                if (team1Sets > team2Sets)
+                {
+                    team1Stats.Wins++;
+                    team2Stats.Losses++;
+                }
+                else if (team1Sets < team2Sets)
+                {
+                    team1Stats.Losses++;
+                    team2Stats.Wins++;
+                }
+                // Ничья в волейболе невозможна, но на всякий случай
+
+                // Заполняем ячейки в таблице
+                if (nameToIndex.TryGetValue(match.Team1, out int t1) &&
+                    nameToIndex.TryGetValue(match.Team2, out int t2))
+                {
+                    string team1Cell;
+                    string team2Cell;
+
+                    if (team1Sets > team2Sets)
+                    {
+                        team1Cell = "1";
+                        team2Cell = "0";
+                    }
+                    else if (team1Sets < team2Sets)
+                    {
+                        team1Cell = "0";
+                        team2Cell = "1";
+                    }
+                    else
+                    {
+                        team1Cell = "½";
+                        team2Cell = "½";
+                    }
+
+                    if (ResultsTable.ElementAtOrDefault(t1)?.Cells.Count > t2 &&
+                        ResultsTable.ElementAtOrDefault(t2)?.Cells.Count > t1)
+                    {
+                        ResultsTable[t1].Cells[t2] = team1Cell;
+                        ResultsTable[t2].Cells[t1] = team2Cell;
+                    }
+                }
+            }
+
+            // Рассчитываем коэффициенты для всех команд
+            foreach (var stats in teamStats.Values)
+            {
+                // Коэффициент по сетам
+                if (stats.SetsLost > 0)
+                {
+                    stats.SetsRatio = (double)stats.SetsWon / stats.SetsLost;
+                }
+                else if (stats.SetsWon > 0)
+                {
+                    stats.SetsRatio = double.MaxValue; // Бесконечность (деление на 0)
                 }
                 else
                 {
-                    team1Cell = "½";
-                    team2Cell = "½";
+                    stats.SetsRatio = 0;
                 }
 
-                if (ResultsTable.ElementAtOrDefault(t1)?.Cells.Count > t2 &&
-                    ResultsTable.ElementAtOrDefault(t2)?.Cells.Count > t1)
+                // Коэффициент по мячам
+                if (stats.PointsConceded > 0)
                 {
-                    ResultsTable[t1].Cells[t2] = team1Cell;
-                    ResultsTable[t2].Cells[t1] = team2Cell;
+                    stats.PointsRatio = (double)stats.PointsScored / stats.PointsConceded;
+                }
+                else if (stats.PointsScored > 0)
+                {
+                    stats.PointsRatio = double.MaxValue; // Бесконечность
+                }
+                else
+                {
+                    stats.PointsRatio = 0;
                 }
             }
+
+            // Создаем словарь результатов личных встреч для определения победителя при равенстве
+            var headToHeadResults = new Dictionary<string, Dictionary<string, int>>();
+            foreach (var match in Schedule)
+            {
+                if (match == null || string.IsNullOrWhiteSpace(match.Team1) || string.IsNullOrWhiteSpace(match.Team2))
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(match.Status) ||
+                    !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var setsScore = ParsePair(match.SetsScore);
+                if (!setsScore.left.HasValue || !setsScore.right.HasValue)
+                {
+                    var quickScore = ParsePair(match.Team1QuickScore, match.Team2QuickScore);
+                    if (quickScore.left.HasValue && quickScore.right.HasValue)
+                    {
+                        setsScore = quickScore;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                int team1Sets = setsScore.left.Value;
+                int team2Sets = setsScore.right.Value;
+
+                if (!headToHeadResults.ContainsKey(match.Team1))
+                    headToHeadResults[match.Team1] = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                if (!headToHeadResults.ContainsKey(match.Team2))
+                    headToHeadResults[match.Team2] = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+                // Сохраняем результат личной встречи (1 = победа, -1 = поражение, 0 = ничья)
+                if (team1Sets > team2Sets)
+                {
+                    headToHeadResults[match.Team1][match.Team2] = 1;
+                    headToHeadResults[match.Team2][match.Team1] = -1;
+                }
+                else if (team1Sets < team2Sets)
+                {
+                    headToHeadResults[match.Team1][match.Team2] = -1;
+                    headToHeadResults[match.Team2][match.Team1] = 1;
+                }
+                else
+                {
+                    headToHeadResults[match.Team1][match.Team2] = 0;
+                    headToHeadResults[match.Team2][match.Team1] = 0;
+                }
+            }
+
+            // Сортируем команды по месту (по очкам, затем по коэффициентам, затем по личной встрече)
+            // Используем итеративную сортировку для учета личной встречи
+            var sortedByPlace = teamStats.Values.ToList();
+            
+            // Сортируем по основным критериям
+            sortedByPlace = sortedByPlace
+                .OrderByDescending(s => s.Points) // Сначала по очкам (больше = лучше)
+                .ThenByDescending(s => s.SetsRatio) // Затем по коэффициенту сетов
+                .ThenByDescending(s => s.PointsRatio) // Затем по коэффициенту мячей
+                .ToList();
+
+            // Дополнительная сортировка по личной встрече для команд с равными показателями
+            for (int i = 0; i < sortedByPlace.Count; i++)
+            {
+                var currentTeam = sortedByPlace[i];
+                var equalTeams = sortedByPlace
+                    .Where(t => t != currentTeam &&
+                                t.Points == currentTeam.Points &&
+                                Math.Abs(t.SetsRatio - currentTeam.SetsRatio) < 0.000001 &&
+                                Math.Abs(t.PointsRatio - currentTeam.PointsRatio) < 0.000001)
+                    .ToList();
+
+                if (equalTeams.Count > 0)
+                {
+                    // Если есть равные команды, проверяем личную встречу
+                    int currentH2H = 0;
+                    if (headToHeadResults.ContainsKey(currentTeam.TeamName))
+                    {
+                        foreach (var equalTeam in equalTeams)
+                        {
+                            if (headToHeadResults[currentTeam.TeamName].TryGetValue(equalTeam.TeamName, out int h2hResult))
+                            {
+                                currentH2H += h2hResult;
+                            }
+                        }
+                    }
+
+                    // Пересортируем группу равных команд по личной встрече
+                    var groupStart = i;
+                    var groupEnd = i;
+                    while (groupEnd + 1 < sortedByPlace.Count)
+                    {
+                        var nextTeam = sortedByPlace[groupEnd + 1];
+                        if (nextTeam.Points == currentTeam.Points &&
+                            Math.Abs(nextTeam.SetsRatio - currentTeam.SetsRatio) < 0.000001 &&
+                            Math.Abs(nextTeam.PointsRatio - currentTeam.PointsRatio) < 0.000001)
+                        {
+                            groupEnd++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if (groupEnd > groupStart)
+                    {
+                        // Сортируем группу по личной встрече
+                        var group = sortedByPlace.Skip(groupStart).Take(groupEnd - groupStart + 1).ToList();
+                        group = group.OrderByDescending(t =>
+                        {
+                            int h2h = 0;
+                            if (headToHeadResults.ContainsKey(t.TeamName))
+                            {
+                                foreach (var other in group.Where(ot => ot.TeamName != t.TeamName))
+                                {
+                                    if (headToHeadResults[t.TeamName].TryGetValue(other.TeamName, out int h2hResult))
+                                    {
+                                        h2h += h2hResult;
+                                    }
+                                }
+                            }
+                            return h2h;
+                        }).ToList();
+
+                        // Заменяем группу в отсортированном списке
+                        for (int j = 0; j < group.Count; j++)
+                        {
+                            sortedByPlace[groupStart + j] = group[j];
+                        }
+                    }
+                }
+            }
+
+            // Определяем места с учетом равенства и выводим отладочную информацию
+            int currentPlace = 1;
+            for (int i = 0; i < sortedByPlace.Count; i++)
+            {
+                if (i > 0)
+                {
+                    var prev = sortedByPlace[i - 1];
+                    var curr = sortedByPlace[i];
+
+                    // Если очки, коэффициент сетов и коэффициент мячей равны
+                    if (prev.Points == curr.Points &&
+                        Math.Abs(prev.SetsRatio - curr.SetsRatio) < 0.000001 &&
+                        Math.Abs(prev.PointsRatio - curr.PointsRatio) < 0.000001)
+                    {
+                        // Проверяем личную встречу
+                        int h2hResult = 0;
+                        if (headToHeadResults.ContainsKey(prev.TeamName) &&
+                            headToHeadResults[prev.TeamName].TryGetValue(curr.TeamName, out h2hResult))
+                        {
+                            if (h2hResult == 0)
+                            {
+                                // Коэффициенты равны, личная встреча ничья - отладка
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"Коэффициенты равны для команд {prev.TeamName} и {curr.TeamName}. " +
+                                    $"Очки: {prev.Points}, Коэф. сетов: {prev.SetsRatio:F6}, Коэф. мячей: {prev.PointsRatio:F6}. " +
+                                    $"Личная встреча: ничья. Победитель определяется по личной встрече.");
+                            }
+                        }
+                        else
+                        {
+                            // Нет личной встречи - оставляем то же место
+                        }
+                    }
+                    else
+                    {
+                        currentPlace = i + 1;
+                    }
+                }
+
+                sortedByPlace[i].Place = currentPlace;
+            }
+
+            // Пересоздаем таблицу с правильным порядком команд и статистикой
+            // Сохраняем старую таблицу для копирования ячеек результатов
+            var oldTable = ResultsTable.ToList();
+            ResultsTable.Clear();
+
+            // Создаем новую таблицу с правильным порядком
+            var newNameToIndex = sortedByPlace
+                .Select((row, index) => new { row.TeamName, index })
+                .ToDictionary(k => k.TeamName, v => v.index, StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < sortedByPlace.Count; i++)
+            {
+                var stats = sortedByPlace[i];
+                var oldRow = oldTable.FirstOrDefault(r => r.TeamName == stats.TeamName);
+
+                var newRow = new ResultRow
+                {
+                    Index = i + 1,
+                    TeamName = stats.TeamName,
+                    Wins = stats.Wins,
+                    Losses = stats.Losses,
+                    SetsWon = stats.SetsWon,
+                    SetsLost = stats.SetsLost,
+                    Points = stats.Points,
+                    Place = stats.Place,
+                    SetsRatio = stats.SetsRatio,
+                    PointsRatio = stats.PointsRatio,
+                    PointsScored = stats.PointsScored,
+                    PointsConceded = stats.PointsConceded
+                };
+
+                // Копируем ячейки из старой таблицы, но переставляем их в правильном порядке
+                newRow.Cells = new ObservableCollection<string>();
+                for (int j = 0; j < sortedByPlace.Count; j++)
+                {
+                    var opponentName = sortedByPlace[j].TeamName;
+                    if (i == j)
+                    {
+                        newRow.Cells.Add("SELF");
+                    }
+                    else if (oldRow != null && oldRow.Cells.Count > 0)
+                    {
+                        // Находим индекс оппонента в старой таблице
+                        var oldOpponentIndex = oldTable.FindIndex(r => r.TeamName == opponentName);
+                        if (oldOpponentIndex >= 0 && oldRow.Cells.Count > oldOpponentIndex)
+                        {
+                            newRow.Cells.Add(oldRow.Cells[oldOpponentIndex]);
+                        }
+                        else
+                        {
+                            newRow.Cells.Add(string.Empty);
+                        }
+                    }
+                    else
+                    {
+                        newRow.Cells.Add(string.Empty);
+                    }
+                }
+
+                ResultsTable.Add(newRow);
+            }
+        }
+
+        /// <summary>
+        /// Рассчитывает очки по итальянской системе для волейбола.
+        /// Победа 3:0 или 3:1 = 3 очка
+        /// Победа 3:2 = 2 очка
+        /// Поражение 2:3 = 1 очко
+        /// Поражение 0:3 или 1:3 = 0 очков
+        /// </summary>
+        private int CalculateItalianPoints(int setsWon, int setsLost)
+        {
+            if (setsWon == 3 && setsLost == 0)
+                return 3; // Победа 3:0
+            if (setsWon == 3 && setsLost == 1)
+                return 3; // Победа 3:1
+            if (setsWon == 3 && setsLost == 2)
+                return 2; // Победа 3:2
+            if (setsWon == 2 && setsLost == 3)
+                return 1; // Поражение 2:3
+            if (setsWon == 1 && setsLost == 3)
+                return 0; // Поражение 1:3
+            if (setsWon == 0 && setsLost == 3)
+                return 0; // Поражение 0:3
+
+            // Для других случаев (нестандартные счета) возвращаем 0
+            return 0;
         }
 
         private double? GetOutcome(Match match)

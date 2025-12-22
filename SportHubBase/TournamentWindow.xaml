@@ -326,6 +326,16 @@
                                         <!-- Rk. -->
                                         <ColumnDefinition Width="280"/>
                                         <!-- Команда -->
+                                        <ColumnDefinition Width="60"/>
+                                        <!-- В -->
+                                        <ColumnDefinition Width="60"/>
+                                        <!-- П -->
+                                        <ColumnDefinition Width="60"/>
+                                        <!-- ВП -->
+                                        <ColumnDefinition Width="60"/>
+                                        <!-- ПП -->
+                                        <ColumnDefinition Width="70"/>
+                                        <!-- Очки -->
                                         <ColumnDefinition Width="*"/>
                                         <!-- Номера -->
                                     </Grid.ColumnDefinitions>
@@ -356,8 +366,78 @@
                                        HorizontalAlignment="Left"/>
                                     </Border>
 
+                                    <!-- В -->
+                                    <Border Grid.Column="2"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="0,0,1,0"
+                                Padding="8,14"
+                                Background="#F9FAFB">
+                                        <TextBlock Text="В"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#617589"
+                                       HorizontalAlignment="Center"
+                                       ToolTip="Выигранные матчи"/>
+                                    </Border>
+
+                                    <!-- П -->
+                                    <Border Grid.Column="3"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="0,0,1,0"
+                                Padding="8,14"
+                                Background="#F9FAFB">
+                                        <TextBlock Text="П"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#617589"
+                                       HorizontalAlignment="Center"
+                                       ToolTip="Проигранные матчи"/>
+                                    </Border>
+
+                                    <!-- ВП -->
+                                    <Border Grid.Column="4"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="0,0,1,0"
+                                Padding="8,14"
+                                Background="#F9FAFB">
+                                        <TextBlock Text="ВП"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#617589"
+                                       HorizontalAlignment="Center"
+                                       ToolTip="Выигранные партии/сеты"/>
+                                    </Border>
+
+                                    <!-- ПП -->
+                                    <Border Grid.Column="5"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="0,0,1,0"
+                                Padding="8,14"
+                                Background="#F9FAFB">
+                                        <TextBlock Text="ПП"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#617589"
+                                       HorizontalAlignment="Center"
+                                       ToolTip="Проигранные партии/сеты"/>
+                                    </Border>
+
+                                    <!-- Очки -->
+                                    <Border Grid.Column="6"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="0,0,1,0"
+                                Padding="8,14"
+                                Background="#F9FAFB">
+                                        <TextBlock Text="Очки"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Foreground="#617589"
+                                       HorizontalAlignment="Center"
+                                       ToolTip="Очки по итальянской системе"/>
+                                    </Border>
+
                                     <!-- Номера столбцов (прокручиваемые, синхронизированы с ячейками) -->
-                                    <ScrollViewer Grid.Column="2"
+                                    <ScrollViewer Grid.Column="7"
                                       HorizontalScrollBarVisibility="Auto"
                                       VerticalScrollBarVisibility="Disabled">
                                         <ItemsControl ItemsSource="{Binding ResultsHeaderNumbers}">
@@ -408,10 +488,15 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="80"/>
                                                     <ColumnDefinition Width="280"/>
+                                                    <ColumnDefinition Width="60"/>
+                                                    <ColumnDefinition Width="60"/>
+                                                    <ColumnDefinition Width="60"/>
+                                                    <ColumnDefinition Width="60"/>
+                                                    <ColumnDefinition Width="70"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
 
-                                                <!-- Номер строки -->
+                                                <!-- Номер строки (место) -->
                                                 <Border Grid.Column="0"
                                             BorderBrush="#E5E7EB"
                                             BorderThickness="0,0,1,0"
@@ -422,7 +507,7 @@
                                                 Background="#F3F4F6"
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Index}"
+                                                        <TextBlock Text="{Binding Place}"
                                                        FontSize="14"
                                                        FontWeight="Bold"
                                                        Foreground="#111418"
@@ -445,8 +530,73 @@
                                                    Margin="16,0"/>
                                                 </Border>
 
+                                                <!-- В (выигранные) -->
+                                                <Border Grid.Column="2"
+                                            BorderBrush="#E5E7EB"
+                                            BorderThickness="0,0,1,0"
+                                            Background="White">
+                                                    <TextBlock Text="{Binding Wins}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#111418"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- П (проигранные) -->
+                                                <Border Grid.Column="3"
+                                            BorderBrush="#E5E7EB"
+                                            BorderThickness="0,0,1,0"
+                                            Background="White">
+                                                    <TextBlock Text="{Binding Losses}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#111418"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- ВП (выигранные партии) -->
+                                                <Border Grid.Column="4"
+                                            BorderBrush="#E5E7EB"
+                                            BorderThickness="0,0,1,0"
+                                            Background="White">
+                                                    <TextBlock Text="{Binding SetsWon}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#111418"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- ПП (проигранные партии) -->
+                                                <Border Grid.Column="5"
+                                            BorderBrush="#E5E7EB"
+                                            BorderThickness="0,0,1,0"
+                                            Background="White">
+                                                    <TextBlock Text="{Binding SetsLost}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#111418"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- Очки -->
+                                                <Border Grid.Column="6"
+                                            BorderBrush="#E5E7EB"
+                                            BorderThickness="0,0,1,0"
+                                            Background="White">
+                                                    <TextBlock Text="{Binding Points}"
+                                                   FontSize="14"
+                                                   FontWeight="Bold"
+                                                   Foreground="#137FEC"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                                </Border>
+
                                                 <!-- Ячейки -->
-                                                <ScrollViewer Grid.Column="2"
+                                                <ScrollViewer Grid.Column="7"
                                                   HorizontalScrollBarVisibility="Auto"
                                                   VerticalScrollBarVisibility="Hidden">
                                                     <ItemsControl ItemsSource="{Binding Cells}">
