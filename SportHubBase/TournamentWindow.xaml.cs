@@ -9,10 +9,25 @@ namespace SportHubBase
         public TournamentWindow(Guid tournamentId)
         {
             InitializeComponent();
+            Loaded += TournamentWindow_Loaded;
             DataContext = new TournamentViewModel(tournamentId);
         }
-
-        // Для дизайнера и тестов
         public TournamentWindow() : this(Guid.Empty) { }
+
+        private void TournamentWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Получаем размеры рабочей области экрана (без панели задач)
+            double screenWidth = SystemParameters.WorkArea.Width;
+            double screenHeight = SystemParameters.WorkArea.Height;
+
+            // Задаём размер окна — например, 95% от экрана, чтобы оставались видимыми границы
+            Width = screenWidth * 0.95;
+            Height = screenHeight * 0.95;
+
+            // Центрируем окно (хотя WindowStartupLocation="CenterScreen" уже это делает,
+            // но на случай, если размер изменился)
+            Left = (screenWidth - Width) / 2;
+            Top = (screenHeight - Height) / 2;
+        }
     }
 }

@@ -19,12 +19,28 @@ namespace SportHubBase
         {
             InitializeComponent();
             DataContext = this;
+
             Loaded += MainWindow_Loaded;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             LoadTournamentsFromJson();
+            // Размеры рабочей области экрана (без панели задач Windows)
+            double screenWidth = SystemParameters.WorkArea.Width;
+            double screenHeight = SystemParameters.WorkArea.Height;
+
+            // Делаем окно примерно 92–95% от экрана — выглядит максимально большим, но остаются границы окна
+            double targetWidth = screenWidth * 0.94;
+            double targetHeight = screenHeight * 0.92;
+
+            // Уважем минимальные размеры
+            Width = Math.Max(targetWidth, MinWidth);
+            Height = Math.Max(targetHeight, MinHeight);
+
+            // Центрируем (на случай, если размер изменился)
+            Left = (screenWidth - Width) / 2;
+            Top = (screenHeight - Height) / 2;
         }
 
         private void LoadTournamentsFromJson()

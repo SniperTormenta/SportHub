@@ -56,5 +56,7 @@ namespace SportHubBase.ViewModels
             _storage.CreateTournament(tournament);
             // Закрыть окно или показать сообщение
         }
+
+
     }
 }

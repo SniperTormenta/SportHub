@@ -2,8 +2,11 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Турниры"
-        MinHeight="720" MinWidth="1200"
+        MinWidth="1200"
+        MinHeight="720"
         WindowStartupLocation="CenterScreen"
+        WindowState="Normal"
+        ResizeMode="CanResizeWithGrip"
         Background="#F5F7FA">
 
     <Grid>

@@ -3,10 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:converters="clr-namespace:SportHubBase.Converters"
         Title="{Binding CurrentTournament.Name}"
-        Height="950" Width="1400"
         WindowStartupLocation="CenterScreen"
+        WindowState="Normal"            
+        ResizeMode="CanResizeWithGrip"
         Background="#F6F7F8"
-        FontFamily="Inter, Segoe UI">
+        FontFamily="Inter, Segoe UI"
+        MinWidth="1200"
+        MinHeight="800">
 
     <Grid>
         <!-- Header -->

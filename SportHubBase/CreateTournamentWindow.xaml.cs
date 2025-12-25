@@ -27,7 +27,18 @@ namespace SportHubBase
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             LoadAdministratorsBlock();
-            UpdateTournamentTypeDescription("Круговой"); // Теперь здесь точно все инициализировано
+            UpdateTournamentTypeDescription("Круговой");
+            WindowState = WindowState.Normal; // на всякий случай
+
+            double screenWidth = SystemParameters.WorkArea.Width;
+            double screenHeight = SystemParameters.WorkArea.Height;
+
+            Width = screenWidth * 0.95;
+            Height = screenHeight * 0.95;
+
+            Left = (screenWidth - Width) / 2;
+            Top = (screenHeight - Height) / 2;
+
         }
 
         private void LoadAdministratorsBlock()
