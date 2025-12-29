@@ -59,6 +59,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\StringEqualityConverter.cs" />
     <Compile Include="Models\Admin.cs" />
     <Compile Include="Models\Player.cs" />
     <Compile Include="Models\Team.cs" />
@@ -66,11 +67,16 @@
     <Compile Include="Models\Match.cs" />
     <Compile Include="Models\ResultRow.cs" />
     <Compile Include="Services\JsonStorageService.cs" />
+    <Compile Include="Services\Result\IResultsCalculator.cs" />
+    <Compile Include="Services\Result\ResultsCalculatorFactory.cs" />
+    <Compile Include="Services\Result\VolleyballResultsCalculator.cs" />
     <Compile Include="Services\Scheduling\IScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\RoundRobinBergerScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\ScheduleStrategyFactory.cs" />
     <Compile Include="Services\Scheduling\StubStrategies.cs" />
     <Compile Include="Converters\ResultCellColorConverter.cs" />
+    <Compile Include="Services\Statistics\IStatisticsCalculator.cs" />
+    <Compile Include="Services\Statistics\StatisticsCalculatorFactory.cs" />
     <Compile Include="TournamentWindow.xaml.cs">
       <DependentUpon>TournamentWindow.xaml</DependentUpon>
     </Compile>
@@ -78,6 +84,7 @@
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\CreateTournamentViewModel.cs" />
     <Compile Include="ViewModels\MatchDetailsViewModel.cs" />
+    <Compile Include="ViewModels\TournamentStatistics.cs" />
     <Compile Include="ViewModels\TournamentViewModel.cs" />
     <Compile Include="View\MatchDetailsWindow.xaml.cs">
       <DependentUpon>MatchDetailsWindow.xaml</DependentUpon>
@@ -150,8 +157,6 @@
   <ItemGroup>
     <Resource Include="Image\SportUltraWitheMainLogo.jpg" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Services\Result\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

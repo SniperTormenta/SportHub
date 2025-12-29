@@ -1,4 +1,5 @@
-﻿<Window x:Class="SportHubBase.TournamentWindow"
+﻿
+    <Window x:Class="SportHubBase.TournamentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:converters="clr-namespace:SportHubBase.Converters"
@@ -11,6 +12,8 @@
         MinWidth="1200"
         MinHeight="800">
 
+    
+    
     <Grid>
         <!-- Header -->
         <Border Background="White" Height="80" VerticalAlignment="Top">
@@ -715,7 +718,9 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Статистика" Style="{StaticResource TailwindTabItem}">
-                <Grid Margin="40,32">
+                <!-- Волейбол -->
+                <Grid Visibility="{Binding CurrentTournament.SportType, Converter={StaticResource StringEqualityConverter}, ConverterParameter=Волейбол}">
+                    <Grid Margin="40,32">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -946,6 +951,8 @@
                         </StackPanel>
                     </Border>
                 </Grid>
+            </Grid>
+                
             </TabItem>
             <TabItem Header="Настройки" Style="{StaticResource TailwindTabItem}">
                 <TextBlock Text="Настройки — в разработке" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>

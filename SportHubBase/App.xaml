@@ -9,10 +9,12 @@
     
     <Application.Resources>
         <!-- Конвертеры для таблицы результатов -->
+        <converters:StringEqualityConverter x:Key="StringEqualityConverter"/>
         <converters:ResultCellColorConverter x:Key="ResultCellColorConverter"/>
         <converters:ResultCellBackgroundConverter x:Key="ResultCellBackgroundConverter"/>
         <converters:IsSelfCellConverter x:Key="IsSelfCellConverter"/>
         <converters:ProgressConverter x:Key="ProgressConverter"/>
+        
                
         <Style x:Key="ModernComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="White"/>

@@ -17,6 +17,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using SportHubBase.Services.Results;
+using SportHubBase.Services.Statistics;
 
 namespace SportHubBase.ViewModels
 {
@@ -50,6 +52,8 @@ namespace SportHubBase.ViewModels
         /// Коллекция матчей (генерируется стратегией, обновляется из сохранённых).
         
         public ObservableCollection<Match> Schedule { get; } = new ObservableCollection<Match>();
+
+        public TournamentStatistics Statistics { get; private set; } = new TournamentStatistics();
 
         private string _scheduleMessage;
         
@@ -423,56 +427,47 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        
-        /// Генерация структуры таблицы результатов (для кругового формата).
-        
+        /// Инициализирует структуру таблицы результатов (очищает коллекции, проверяет базовые условия).
+        /// Вызывается один раз при загрузке турнира или при изменении команд/формата.
+        /// После инициализации сразу запускает полный расчёт через калькулятор.
         private void GenerateResults()
         {
-            ResultsHeaderNumbers.Clear();
+            // Очищаем всё перед новым расчётом
             ResultsTable.Clear();
+            ResultsHeaderNumbers.Clear();
             ResultsMessage = string.Empty;
 
+            // Базовые проверки — если не прошли, калькулятор не вызываем
             if (CurrentTournament == null)
             {
                 ResultsMessage = "Турнир не найден.";
                 return;
             }
+
             if (Teams.Count == 0)
             {
                 ResultsMessage = "Команды ещё не добавлены.";
                 return;
             }
+
+            // Для не-круговых форматов пока только сообщение (в будущем — другое представление)
             if (!string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase))
             {
-                ResultsMessage = $"Формат \"{CurrentTournament.Type}\" — результаты в разработке.";
+                ResultsMessage = $"Таблица результатов для формата \"{CurrentTournament.Type}\" — в разработке.";
                 return;
             }
 
-            var sortedTeams = Teams.OrderBy(t => t.Name).ToList();
-            int teamCount = sortedTeams.Count;
-            for (int i = 1; i <= teamCount; i++)
-            {
-                ResultsHeaderNumbers.Add(i);
-            }
-            for (int i = 0; i < teamCount; i++)
-            {
-                var row = new ResultRow
-                {
-                    Index = i + 1,
-                    TeamName = sortedTeams[i].Name
-                };
-                for (int j = 0; j < teamCount; j++)
-                {
-                    row.Cells.Add(i == j ? "SELF" : string.Empty);
-                }
-                ResultsTable.Add(row);
-            }
+            // Здесь больше НЕ строим вручную строки и ячейки!
+            // Это теперь делает VolleyballResultsCalculator внутри Calculate()
+
+            // Просто запускаем полный расчёт
+            UpdateResultsFromMatches();
         }
 
-        
+
         /// Генерация расписания с использованием паттерна "Стратегия".
         /// Merge с сохранёнными матчами (сохраняет введённые результаты).
-        
+
         private void GenerateSchedule()
         {
             Schedule.Clear();
@@ -614,23 +609,6 @@ namespace SportHubBase.ViewModels
                 UpdateStatistics();
             }
         }
-
-        
-        /// Уведомление об изменении статистических свойств.
-        
-        private void UpdateStatistics()
-        {
-            OnPropertyChanged(nameof(TotalMatchesPlayed));
-            OnPropertyChanged(nameof(TotalSetsPlayed));
-            OnPropertyChanged(nameof(TotalPointsScored));
-            OnPropertyChanged(nameof(MostValuablePlayerName));
-            OnPropertyChanged(nameof(MostValuablePlayerTeam));
-            OnPropertyChanged(nameof(MostPopularTeamName));
-            OnPropertyChanged(nameof(MostPopularTeamWins));
-            OnPropertyChanged(nameof(MostPopularTeamMatchesPlayed));
-            OnPropertyChanged(nameof(MostPopularTeamWinPercentage));
-        }
-
         
         /// Открывает карточку матча (MatchDetailsWindow).
         /// После закрытия — сохраняет и обновляет.
@@ -710,286 +688,44 @@ namespace SportHubBase.ViewModels
             _storage.UpdateTournament(CurrentTournament);
         }
 
-        
-        /// Основной метод расчёта таблицы: статистика, итальянские очки, сортировка (очки → коэф. сетов → коэф. мячей → личные встречи), места.
-        /// Длинный, но полный; работает только для кругового формата.
-        
+        /// Полный пересчёт таблицы результатов и статистики с использованием калькулятора по виду спорта.
+        /// Вызывается при любом изменении матчей, добавлении команд и т.д.
         private void UpdateResultsFromMatches()
         {
-            if (CurrentTournament == null ||
-                !string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase) ||
-                Teams.Count == 0)
+            if (CurrentTournament == null)
             {
+                ResultsMessage = "Турнир не найден.";
+                ResultsTable.Clear();
+                ResultsHeaderNumbers.Clear();
                 return;
             }
 
-            GenerateResults();
-            if (ResultsTable.Count == 0) return;
+            var calculator = ResultsCalculatorFactory.GetCalculator(CurrentTournament);
 
-            var sortedTeams = Teams.OrderBy(t => t.Name).ToList();
-            var nameToIndex = sortedTeams
-                .Select((team, index) => new { team.Name, index })
-                .ToDictionary(k => k.Name, v => v.index, StringComparer.OrdinalIgnoreCase);
-
-            var teamStats = sortedTeams.ToDictionary(
-                t => t.Name,
-                t => new ResultRow
-                {
-                    TeamName = t.Name,
-                    Wins = 0,
-                    Losses = 0,
-                    SetsWon = 0,
-                    SetsLost = 0,
-                    Points = 0,
-                    PointsScored = 0,
-                    PointsConceded = 0,
-                    SetsRatio = 0,
-                    PointsRatio = 0
-                },
-                StringComparer.OrdinalIgnoreCase);
-
-            foreach (var match in Schedule)
+            if (calculator == null)
             {
-                if (match == null || string.IsNullOrWhiteSpace(match.Team1) || string.IsNullOrWhiteSpace(match.Team2))
-                    continue;
-                if (!teamStats.TryGetValue(match.Team1, out var team1Stats) ||
-                    !teamStats.TryGetValue(match.Team2, out var team2Stats))
-                    continue;
-
-                if (string.IsNullOrWhiteSpace(match.Status) ||
-                    !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var setsScore = ParsePair(match.SetsScore);
-                if (!setsScore.left.HasValue || !setsScore.right.HasValue)
-                {
-                    var quickScore = ParsePair(match.Team1QuickScore, match.Team2QuickScore);
-                    if (quickScore.left.HasValue && quickScore.right.HasValue)
-                    {
-                        setsScore = quickScore;
-                    }
-                    else continue;
-                }
-
-                int team1Sets = setsScore.left.Value;
-                int team2Sets = setsScore.right.Value;
-
-                var totalScore = ParsePair(match.TotalScore);
-                int team1Points = totalScore.left ?? 0;
-                int team2Points = totalScore.right ?? 0;
-
-                team1Stats.SetsWon += team1Sets;
-                team1Stats.SetsLost += team2Sets;
-                team2Stats.SetsWon += team2Sets;
-                team2Stats.SetsLost += team1Sets;
-
-                team1Stats.PointsScored += team1Points;
-                team1Stats.PointsConceded += team2Points;
-                team2Stats.PointsScored += team2Points;
-                team2Stats.PointsConceded += team1Points;
-
-                int team1PointsItalian = CalculateItalianPoints(team1Sets, team2Sets);
-                int team2PointsItalian = CalculateItalianPoints(team2Sets, team1Sets);
-                team1Stats.Points += team1PointsItalian;
-                team2Stats.Points += team2PointsItalian;
-
-                if (team1Sets > team2Sets)
-                {
-                    team1Stats.Wins++;
-                    team2Stats.Losses++;
-                }
-                else if (team1Sets < team2Sets)
-                {
-                    team1Stats.Losses++;
-                    team2Stats.Wins++;
-                }
-
-                if (nameToIndex.TryGetValue(match.Team1, out int t1) &&
-                    nameToIndex.TryGetValue(match.Team2, out int t2))
-                {
-                    string team1Cell = team1Sets > team2Sets ? "1" : (team1Sets < team2Sets ? "0" : "½");
-                    string team2Cell = team1Cell == "1" ? "0" : (team1Cell == "0" ? "1" : "½");
-
-                    if (ResultsTable.ElementAtOrDefault(t1)?.Cells.Count > t2 &&
-                        ResultsTable.ElementAtOrDefault(t2)?.Cells.Count > t1)
-                    {
-                        ResultsTable[t1].Cells[t2] = team1Cell;
-                        ResultsTable[t2].Cells[t1] = team2Cell;
-                    }
-                }
+                ResultsMessage = "Калькулятор результатов не найден для данного вида спорта.";
+                ResultsTable.Clear();
+                ResultsHeaderNumbers.Clear();
+                return;
             }
 
-            foreach (var stats in teamStats.Values)
+            calculator.Calculate(CurrentTournament, Schedule, ResultsTable, out string message);
+            ResultsMessage = message;
+
+            // ← Ключевое исправление: обновляем заголовки ПОСЛЕ расчёта и только для кругового
+            if (string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase))
             {
-                stats.SetsRatio = stats.SetsLost > 0 ? (double)stats.SetsWon / stats.SetsLost :
-                                 stats.SetsWon > 0 ? double.MaxValue : 0;
-
-                stats.PointsRatio = stats.PointsConceded > 0 ? (double)stats.PointsScored / stats.PointsConceded :
-                                    stats.PointsScored > 0 ? double.MaxValue : 0;
-            }
-
-            var headToHeadResults = new Dictionary<string, Dictionary<string, int>>();
-            foreach (var match in Schedule)
-            {
-                if (match == null || string.IsNullOrWhiteSpace(match.Team1) || string.IsNullOrWhiteSpace(match.Team2))
-                    continue;
-                if (string.IsNullOrWhiteSpace(match.Status) ||
-                    !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var setsScore = ParsePair(match.SetsScore);
-                if (!setsScore.left.HasValue || !setsScore.right.HasValue)
+                ResultsHeaderNumbers.Clear();
+                for (int i = 1; i <= ResultsTable.Count; i++)
                 {
-                    var quickScore = ParsePair(match.Team1QuickScore, match.Team2QuickScore);
-                    if (quickScore.left.HasValue && quickScore.right.HasValue)
-                        setsScore = quickScore;
-                    else continue;
-                }
-
-                int team1Sets = setsScore.left.Value;
-                int team2Sets = setsScore.right.Value;
-
-                if (!headToHeadResults.ContainsKey(match.Team1))
-                    headToHeadResults[match.Team1] = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                if (!headToHeadResults.ContainsKey(match.Team2))
-                    headToHeadResults[match.Team2] = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-                int result = team1Sets > team2Sets ? 1 : (team1Sets < team2Sets ? -1 : 0);
-                headToHeadResults[match.Team1][match.Team2] = result;
-                headToHeadResults[match.Team2][match.Team1] = -result;
-            }
-
-            var sortedByPlace = teamStats.Values
-                .OrderByDescending(s => s.Points)
-                .ThenByDescending(s => s.SetsRatio)
-                .ThenByDescending(s => s.PointsRatio)
-                .ToList();
-
-            // Корректировка по личным встречам (группами равных)
-            for (int i = 0; i < sortedByPlace.Count; i++)
-            {
-                var currentTeam = sortedByPlace[i];
-                var equalTeams = sortedByPlace
-                    .Where(t => t != currentTeam &&
-                                t.Points == currentTeam.Points &&
-                                Math.Abs(t.SetsRatio - currentTeam.SetsRatio) < 0.000001 &&
-                                Math.Abs(t.PointsRatio - currentTeam.PointsRatio) < 0.000001)
-                    .ToList();
-
-                if (equalTeams.Count > 0)
-                {
-                    int groupStart = i;
-                    int groupEnd = i;
-                    while (groupEnd + 1 < sortedByPlace.Count &&
-                           sortedByPlace[groupEnd + 1].Points == currentTeam.Points &&
-                           Math.Abs(sortedByPlace[groupEnd + 1].SetsRatio - currentTeam.SetsRatio) < 0.000001 &&
-                           Math.Abs(sortedByPlace[groupEnd + 1].PointsRatio - currentTeam.PointsRatio) < 0.000001)
-                    {
-                        groupEnd++;
-                    }
-
-                    if (groupEnd > groupStart)
-                    {
-                        var group = sortedByPlace.Skip(groupStart).Take(groupEnd - groupStart + 1).ToList();
-                        group = group.OrderByDescending(t =>
-                        {
-                            int h2h = 0;
-                            if (headToHeadResults.ContainsKey(t.TeamName))
-                            {
-                                foreach (var other in group.Where(ot => ot.TeamName != t.TeamName))
-                                {
-                                    if (headToHeadResults[t.TeamName].TryGetValue(other.TeamName, out int h2hResult))
-                                        h2h += h2hResult;
-                                }
-                            }
-                            return h2h;
-                        }).ToList();
-
-                        for (int j = 0; j < group.Count; j++)
-                        {
-                            sortedByPlace[groupStart + j] = group[j];
-                        }
-                    }
+                    ResultsHeaderNumbers.Add(i);
                 }
             }
-
-            int currentPlace = 1;
-            for (int i = 0; i < sortedByPlace.Count; i++)
+            else
             {
-                if (i > 0)
-                {
-                    var prev = sortedByPlace[i - 1];
-                    var curr = sortedByPlace[i];
-                    if (!(prev.Points == curr.Points &&
-                          Math.Abs(prev.SetsRatio - curr.SetsRatio) < 0.000001 &&
-                          Math.Abs(prev.PointsRatio - curr.PointsRatio) < 0.000001))
-                    {
-                        currentPlace = i + 1;
-                    }
-                }
-                sortedByPlace[i].Place = currentPlace;
+                ResultsHeaderNumbers.Clear(); // Для других форматов — очищаем
             }
-
-            var oldTable = ResultsTable.ToList();
-            ResultsTable.Clear();
-
-            var newNameToIndex = sortedByPlace
-                .Select((row, index) => new { row.TeamName, index })
-                .ToDictionary(k => k.TeamName, v => v.index, StringComparer.OrdinalIgnoreCase);
-
-            for (int i = 0; i < sortedByPlace.Count; i++)
-            {
-                var stats = sortedByPlace[i];
-                var oldRow = oldTable.FirstOrDefault(r => r.TeamName == stats.TeamName);
-                var newRow = new ResultRow
-                {
-                    Index = i + 1,
-                    TeamName = stats.TeamName,
-                    Wins = stats.Wins,
-                    Losses = stats.Losses,
-                    SetsWon = stats.SetsWon,
-                    SetsLost = stats.SetsLost,
-                    Points = stats.Points,
-                    Place = stats.Place,
-                    SetsRatio = stats.SetsRatio,
-                    PointsRatio = stats.PointsRatio,
-                    PointsScored = stats.PointsScored,
-                    PointsConceded = stats.PointsConceded
-                };
-
-                newRow.Cells = new ObservableCollection<string>();
-                for (int j = 0; j < sortedByPlace.Count; j++)
-                {
-                    var opponentName = sortedByPlace[j].TeamName;
-                    if (i == j)
-                    {
-                        newRow.Cells.Add("SELF");
-                    }
-                    else if (oldRow != null)
-                    {
-                        var oldOpponentIndex = oldTable.FindIndex(r => r.TeamName == opponentName);
-                        newRow.Cells.Add(oldOpponentIndex >= 0 && oldRow.Cells.Count > oldOpponentIndex
-                            ? oldRow.Cells[oldOpponentIndex]
-                            : string.Empty);
-                    }
-                    else
-                    {
-                        newRow.Cells.Add(string.Empty);
-                    }
-                }
-                ResultsTable.Add(newRow);
-            }
-        }
-
-        
-        /// Расчёт итальянских очков для волейбола.
-        
-        private int CalculateItalianPoints(int setsWon, int setsLost)
-        {
-            if (setsWon == 3 && (setsLost == 0 || setsLost == 1)) return 3;
-            if (setsWon == 3 && setsLost == 2) return 2;
-            if (setsWon == 2 && setsLost == 3) return 1;
-            return 0;
         }
 
         private double? GetOutcome(Match match)
@@ -1029,5 +765,21 @@ namespace SportHubBase.ViewModels
             if (left < right) return 0d;
             return 0.5d;
         }
+
+        private void UpdateStatistics()
+        {
+            if (CurrentTournament == null)
+            {
+                Statistics = new TournamentStatistics { SportType = string.Empty };
+            }
+            else
+            {
+                var calculator = StatisticsCalculatorFactory.GetCalculator(CurrentTournament.SportType);
+                Statistics = calculator.Calculate(CurrentTournament, Schedule);
+            }
+
+            OnPropertyChanged(nameof(Statistics));
+        }
+
     }
 }
