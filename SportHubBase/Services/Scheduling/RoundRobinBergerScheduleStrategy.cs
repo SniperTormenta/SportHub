@@ -6,15 +6,20 @@ using SportHubBase.Models;
 
 namespace SportHubBase.Services.Scheduling
 {
-    /// <summary>
     /// Реализация кругового турнира по алгоритму Бергера.
-    /// </summary>
+    /// Генерирует матчи с ротацией: фиксирует первую команду, сдвигает остальные.
+    /// Обработка нечётного количества команд через "выходной" слот (не создаёт матч).
+    /// В архитектуре: Полноценная стратегия для Tournament.Type = "Круговой"; возвращает Match с Team1/Team2 как строки (Team.Name) для простоты.
+    /// Улучшение: Добавить даты матчей (на основе Tournament.StartDate); рандомизацию порядка; валидацию команд.
     public class RoundRobinBergerScheduleStrategy : IScheduleStrategy
     {
+        /// Имя стратегии.
         public string Name => "Круговой (Бергера)";
 
+        /// Флаг реализации (true).
         public bool IsImplemented => true;
 
+        /// Генерирует расписание: туры с парами команд.
         public IEnumerable<Match> GenerateSchedule(IList<Team> teams)
         {
             if (teams == null)
@@ -81,5 +86,3 @@ namespace SportHubBase.Services.Scheduling
         }
     }
 }
-
-

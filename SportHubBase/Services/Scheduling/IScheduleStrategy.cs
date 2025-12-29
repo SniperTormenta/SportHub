@@ -6,6 +6,9 @@ namespace SportHubBase.Services.Scheduling
 {
     /// Стратегия генерации расписания турнира.
     /// Позволяет подменять алгоритм в зависимости от формата турнира.
+    /// Часть паттерна "Стратегия": реализуется конкретными классами (e.g. RoundRobinBergerScheduleStrategy), выбирается фабрикой.
+    /// В MVVM: Вызывается из ViewModels (e.g. для генерации Tournament.Matches); IsImplemented для UI-логики.
+    /// Улучшение: Добавить параметры (e.g. даты, рандомизация) в GenerateSchedule.
     public interface IScheduleStrategy
     {
         /// Короткое имя / описание стратегии (например, "Круговой (Бергера)").
@@ -19,12 +22,3 @@ namespace SportHubBase.Services.Scheduling
         IEnumerable<Match> GenerateSchedule(IList<Team> teams);
     }
 }
-
-
-
-
-
-
-
-
-

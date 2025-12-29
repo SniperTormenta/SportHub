@@ -150,6 +150,8 @@
   <ItemGroup>
     <Resource Include="Image\SportUltraWitheMainLogo.jpg" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Services\Result\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

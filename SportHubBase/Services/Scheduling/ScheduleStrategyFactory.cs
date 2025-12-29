@@ -3,11 +3,12 @@ using System;
 
 namespace SportHubBase.Services.Scheduling
 {
-    /// <summary>
     /// Фабрика для выбора стратегии генерации расписания на основе формата турнира.
-    /// </summary>
+    /// Часть паттерна "Стратегия": возвращает IScheduleStrategy по Tournament.Type.
+    /// Статическая для простоты; в IoC можно инжектировать как singleton.
     public static class ScheduleStrategyFactory
     {
+        /// Возвращает стратегию по типу турнира (trim и case-insensitive).
         public static IScheduleStrategy GetStrategy(string tournamentType)
         {
             if (string.IsNullOrWhiteSpace(tournamentType))
@@ -33,12 +34,3 @@ namespace SportHubBase.Services.Scheduling
         }
     }
 }
-
-
-
-
-
-
-
-
-
