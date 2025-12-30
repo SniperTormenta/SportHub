@@ -39,6 +39,9 @@
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="SimpleInjector, Version=5.0.0.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
+      <HintPath>..\packages\SimpleInjector.5.5.0\lib\net461\SimpleInjector.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -60,6 +63,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Converters\StringEqualityConverter.cs" />
+    <Compile Include="Interfaces\IResultsCalculatorFactory.cs" />
+    <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
+    <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Models\Admin.cs" />
     <Compile Include="Models\Player.cs" />
     <Compile Include="Models\Team.cs" />

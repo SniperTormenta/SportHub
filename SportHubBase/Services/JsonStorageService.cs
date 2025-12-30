@@ -1,10 +1,11 @@
 ﻿// Services/JsonStorageService.cs
 // Это базовый CRUD. Расширить по мере нужды (для матчей, результатов и т.д.).
+using Newtonsoft.Json;
+using SportHubBase.Interfaces;
+using SportHubBase.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
-using SportHubBase.Models;
 
 namespace SportHubBase.Services
 {
@@ -12,7 +13,7 @@ namespace SportHubBase.Services
     /// Изолированная логика persistence; инжектируется через IoC в ViewModels/Services.
     /// В MVVM: Вызывается из VM для загрузки/сохранения, без UI-зависимостей.
     /// Улучшение: Добавить обработку исключений (e.g. FileNotFound), возможно Directory.Create для папки; расширить методами для Matches/ResultRow.
-    public class JsonStorageService
+    public class JsonStorageService : IStorage
     {
         /// Путь к файлу хранения (в базовой директории приложения).
         private readonly string _filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tournaments.json");

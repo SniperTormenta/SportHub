@@ -1,43 +1,46 @@
 ﻿// Services/Results/ResultsCalculatorFactory.cs
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
+using SportHubBase.Services.Results;
 using System.Collections.ObjectModel;
 
 namespace SportHubBase.Services.Results
 {
-    /// Фабрика калькуляторов результатов по виду спорта (Tournament.SportType).
-    /// Статическая для простоты (как ScheduleStrategyFactory).
-    /// Легко расширяется новыми видами спорта.
-    public static class ResultsCalculatorFactory
+    public class ResultsCalculatorFactory : IResultsCalculatorFactory
     {
-        public static IResultsCalculator GetCalculator(Tournament tournament)
+        public IResultsCalculator GetCalculator(Tournament tournament)
         {
             if (tournament == null || string.IsNullOrWhiteSpace(tournament.SportType))
-                return null;
+                return new StubResultsCalculator("Неизвестно");
 
-            switch (tournament.SportType.Trim())
+            string sport = tournament.SportType.Trim();
+
+            switch (sport)
             {
                 case "Волейбол":
                     return new VolleyballResultsCalculator();
 
-                // Заглушки для будущих видов
                 case "Футбол":
                 case "Баскетбол":
                 case "Теннис":
-                    return new StubResultsCalculator(tournament.SportType);
+                    return new StubResultsCalculator(sport);
 
                 default:
-                    return new StubResultsCalculator(tournament.SportType);
+                    return new StubResultsCalculator(sport);
             }
         }
     }
 
-    /// Заглушка для нереализованных видов спорта.
     internal class StubResultsCalculator : IResultsCalculator
     {
         private readonly string _sport;
+
         public string Name => $"Заглушка: {_sport}";
 
-        public StubResultsCalculator(string sport) => _sport = sport;
+        public StubResultsCalculator(string sport)
+        {
+            _sport = sport;
+        }
 
         public void Calculate(Tournament tournament,
                               ObservableCollection<Match> schedule,
