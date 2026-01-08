@@ -4,7 +4,6 @@ using System.Windows.Data;
 using System.Windows.Media;
 namespace SportHubBase.Converters
 {
-    /// 
     public class ResultCellColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -26,7 +25,7 @@ namespace SportHubBase.Converters
             throw new NotImplementedException(); // Не требуется, так как односторонний биндинг
         }
     }
-    /// 
+
     public class ResultCellBackgroundConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -48,7 +47,7 @@ namespace SportHubBase.Converters
             throw new NotImplementedException(); // Не требуется
         }
     }
-    /// 
+
     public class IsSelfCellConverter : IMultiValueConverter
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
@@ -64,7 +63,7 @@ namespace SportHubBase.Converters
             throw new NotImplementedException(); // Не требуется
         }
     }
-    /// 
+
     public class ProgressConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

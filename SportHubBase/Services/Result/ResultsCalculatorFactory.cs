@@ -1,14 +1,13 @@
 ﻿// Services/Results/ResultsCalculatorFactory.cs
-using SportHubBase.Interfaces;
 using SportHubBase.Models;
 using SportHubBase.Services.Results;
 using System.Collections.ObjectModel;
 
 namespace SportHubBase.Services.Results
 {
-    public class ResultsCalculatorFactory : IResultsCalculatorFactory
+    public static class ResultsCalculatorFactory
     {
-        public IResultsCalculator GetCalculator(Tournament tournament)
+        public static IResultsCalculator GetCalculator(Tournament tournament)
         {
             if (tournament == null || string.IsNullOrWhiteSpace(tournament.SportType))
                 return new StubResultsCalculator("Неизвестно");
