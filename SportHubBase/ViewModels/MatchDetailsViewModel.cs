@@ -1,6 +1,6 @@
-﻿// ViewModels/MatchDetailsViewModel.cs
+// ViewModels/MatchDetailsViewModel.cs
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
-using SportHubBase.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,7 +14,7 @@ namespace SportHubBase.ViewModels
     public class MatchDetailsViewModel : BaseViewModel
     {
         private readonly Match _match;
-        private readonly JsonStorageService _storage = new JsonStorageService();
+        private readonly IStorage _storage;
 
         public ObservableCollection<SetScore> SetsList { get; } = new ObservableCollection<SetScore>();
         public ObservableCollection<string> PlayersList { get; } = new ObservableCollection<string>();
@@ -133,9 +133,10 @@ namespace SportHubBase.ViewModels
 
         public event Action RequestClose;
 
-        public MatchDetailsViewModel(Match match, Guid tournamentId)
+        public MatchDetailsViewModel(Match match, Guid tournamentId, IStorage storage)
         {
             _match = match ?? throw new ArgumentNullException(nameof(match));
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
 
             AddSetCommand = new RelayCommand(_ => AddSet());
             RemoveSetCommand = new RelayCommand(RemoveSet, CanRemoveSet);

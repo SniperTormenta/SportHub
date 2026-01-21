@@ -1,9 +1,9 @@
-﻿// ViewModels/CreateTournamentViewModel.cs (для окна создания)
+// ViewModels/CreateTournamentViewModel.cs (для окна создания)
 using System;
 using System.Collections.Generic;
 using System.Windows.Input;
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
-using SportHubBase.Services;
 
 namespace SportHubBase.ViewModels
 {
@@ -15,8 +15,8 @@ namespace SportHubBase.ViewModels
     /// Улучшения: Инжектировать JsonStorageService через конструктор (IoC); добавить валидацию (e.g. Name не пустой); уведомлять о создании (событие или messenger); закрывать окно после успеха (через Action или событие).
     public class CreateTournamentViewModel : BaseViewModel
     {
-        /// Сервис хранения (JsonStorage). Пока создаётся напрямую; для полной инверсии зависимостей — инжектировать.
-        private readonly JsonStorageService _storage = new JsonStorageService();
+        /// Сервис хранения (JsonStorage). Инжектируется через конструктор.
+        private readonly IStorage _storage;
 
         // Свойства из формы (биндим к UI)
         /// Название турнира (биндинг TwoWay к TextBox).
@@ -63,8 +63,9 @@ namespace SportHubBase.ViewModels
         public ICommand CreateCommand { get; }
 
         /// Конструктор: инициализирует команду.
-        public CreateTournamentViewModel()
+        public CreateTournamentViewModel(IStorage storage)
         {
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             CreateCommand = new RelayCommand(CreateTournament);
         }
 

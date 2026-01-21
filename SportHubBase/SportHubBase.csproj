@@ -63,7 +63,11 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Converters\StringEqualityConverter.cs" />
+    <Compile Include="Converters\ResultCellBackgroundConverter.cs" />
+    <Compile Include="Converters\IsSelfCellConverter.cs" />
+    <Compile Include="Converters\ProgressConverter.cs" />
     <Compile Include="Interfaces\IResultsCalculatorFactory.cs" />
+    <Compile Include="Interfaces\IStatisticsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Models\Admin.cs" />

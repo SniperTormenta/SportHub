@@ -1,4 +1,5 @@
 // View/MatchDetailsWindow.xaml.cs
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
 using SportHubBase.ViewModels;
 using System;
@@ -15,7 +16,9 @@ namespace SportHubBase.View
             InitializeComponent();
             Owner = owner;
 
-            _viewModel = new MatchDetailsViewModel(match, tournamentId);
+            // Создание ViewModel через контейнер зависимостей
+            var storage = App.Container.GetInstance<IStorage>();
+            _viewModel = new MatchDetailsViewModel(match, tournamentId, storage);
             DataContext = _viewModel;
 
             _viewModel.RequestClose += () =>

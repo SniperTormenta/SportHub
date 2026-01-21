@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Windows;
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
 using SportHubBase.ViewModels;
 
@@ -15,7 +16,9 @@ namespace SportHubBase.View // или SportHubBase, если в корне
             Owner = owner;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
-            _viewModel = new AddTeamViewModel(tournamentId, team);
+            // Создание ViewModel через контейнер зависимостей
+            var storage = App.Container.GetInstance<IStorage>();
+            _viewModel = new AddTeamViewModel(tournamentId, storage, team);
             DataContext = _viewModel;
 
             _viewModel.RequestClose += result =>

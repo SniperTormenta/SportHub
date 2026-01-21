@@ -1,25 +1,24 @@
-﻿// Services/Statistics/StatisticsCalculatorFactory.cs
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
 using SportHubBase.ViewModels;
 using System.Collections.ObjectModel;
 
 namespace SportHubBase.Services.Statistics
 {
-    /// Фабрика калькуляторов статистики по виду спорта.
-    public static class StatisticsCalculatorFactory
+    public class StatisticsCalculatorFactory : IStatisticsCalculatorFactory
     {
-        public static IStatisticsCalculator GetCalculator(string sportType)
+        public IStatisticsCalculator GetCalculator(string sportType)
         {
             if (string.IsNullOrWhiteSpace(sportType))
                 return new DefaultStatisticsCalculator();
 
-            switch (sportType.Trim())
+            switch (sportType.Trim().ToLower())
             {
-                case "Волейбол":
+                case "волейбол":
                     return new VolleyballStatisticsCalculator();
-                case "Футбол":
+                case "футбол":
                     return new FootballStatisticsCalculator();
-                case "Баскетбол":
+                case "баскетбол":
                     return new BasketballStatisticsCalculator();
                 default:
                     return new DefaultStatisticsCalculator();
@@ -27,29 +26,29 @@ namespace SportHubBase.Services.Statistics
         }
     }
 
-    // Заглушки
-    internal class DefaultStatisticsCalculator : IStatisticsCalculator
+    // ИЗМЕНИТЬ internal НА public!
+    public class DefaultStatisticsCalculator : IStatisticsCalculator
     {
         public string Name => "По умолчанию";
         public TournamentStatistics Calculate(Tournament t, ObservableCollection<Match> s) =>
             new TournamentStatistics { SportType = t?.SportType ?? "" };
     }
 
-    internal class VolleyballStatisticsCalculator : IStatisticsCalculator
+    public class VolleyballStatisticsCalculator : IStatisticsCalculator
     {
         public string Name => "Волейбол";
         public TournamentStatistics Calculate(Tournament t, ObservableCollection<Match> s) =>
             new TournamentStatistics { SportType = "Волейбол" };
     }
 
-    internal class FootballStatisticsCalculator : IStatisticsCalculator
+    public class FootballStatisticsCalculator : IStatisticsCalculator
     {
         public string Name => "Футбол";
         public TournamentStatistics Calculate(Tournament t, ObservableCollection<Match> s) =>
             new TournamentStatistics { SportType = "Футбол" };
     }
 
-    internal class BasketballStatisticsCalculator : IStatisticsCalculator
+    public class BasketballStatisticsCalculator : IStatisticsCalculator
     {
         public string Name => "Баскетбол";
         public TournamentStatistics Calculate(Tournament t, ObservableCollection<Match> s) =>

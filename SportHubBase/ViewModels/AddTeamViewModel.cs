@@ -1,16 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
-using SportHubBase.Services;
 
 namespace SportHubBase.ViewModels
 {
     public class AddTeamViewModel : BaseViewModel
     {
-        private readonly JsonStorageService _storage = new JsonStorageService();
+        private readonly IStorage _storage;
         private readonly Guid _tournamentId;
         private readonly Team _existingTeam;
 
@@ -44,8 +44,9 @@ namespace SportHubBase.ViewModels
         // Режим редактирования, если передана существующая команда
         public bool IsEditMode => _existingTeam != null;
 
-        public AddTeamViewModel(Guid tournamentId, Team existingTeam = null)
+        public AddTeamViewModel(Guid tournamentId, IStorage storage, Team existingTeam = null)
         {
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _tournamentId = tournamentId;
             _existingTeam = existingTeam;
 

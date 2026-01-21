@@ -1,12 +1,12 @@
-﻿// ViewModels/TournamentViewModel.cs
+// ViewModels/TournamentViewModel.cs
 
 // Вынести текущий расчёт из UpdateResultsFromMatches() в VolleyballResultsCalculator.
 // Создать фабрику и интерфейс.
 // Изменить VM на использование калькулятора.
 // Добавить заглушки для футбола/баскетбола (пока сообщение "в разработке").
 // По мере необходимости реализовать другие калькуляторы.
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
-using SportHubBase.Services;
 using SportHubBase.Services.Scheduling;
 using SportHubBase.View;
 using System;
@@ -29,13 +29,21 @@ namespace SportHubBase.ViewModels
     /// ObservableCollection для динамического обновления UI (списки команд/матчей/таблицы).
     /// В архитектуре: Вызывает JsonStorage для загрузки/сохранения, фабрику Scheduling для генерации Matches, открывает вспомогательные окна (AddTeamWindow, MatchDetailsWindow).
     /// Улучшения: Инжектировать JsonStorage через конструктор (IoC); вынести длинные методы (UpdateResultsFromMatches) в отдельный сервис расчёта результатов; добавить async для сохранения; обработку ошибок (try/catch в Save).
-    
+
     public class TournamentViewModel : BaseViewModel
     {
-        
-        /// Сервис хранения. Пока прямое создание; для инверсии зависимостей — инжектировать.
-        
-        private readonly JsonStorageService _storage = new JsonStorageService();
+
+        /// Сервис хранения. Инжектируется через конструктор.
+        private readonly IStorage _storage;
+
+        /// Фабрика стратегий расписания. Инжектируется через конструктор.
+        private readonly IScheduleStrategyFactory _scheduleFactory;
+
+        /// Фабрика калькуляторов результатов. Инжектируется через конструктор.
+        private readonly IResultsCalculatorFactory _resultsFactory;
+
+        /// Фабрика калькуляторов статистики. Инжектируется через конструктор.
+        private readonly IStatisticsCalculatorFactory _statisticsFactory;
 
         
         /// Текущий турнир (Model). Биндится к UI для заголовков/дат.
@@ -339,12 +347,26 @@ namespace SportHubBase.ViewModels
         
         public ICommand OpenMatchCommand { get; }
 
-        
+
         /// Конструктор: загружает турнир по ID, инициализирует коллекции, команды, генерирует расписание/результаты, подписывается на изменения.
-        
+
         /// <param name="tournamentId">ID турнира из списка.</param>
-        public TournamentViewModel(Guid tournamentId)
+        /// <param name="storage">Сервис хранения.</param>
+        /// <param name="scheduleFactory">Фабрика стратегий расписания.</param>
+        /// <param name="resultsFactory">Фабрика калькуляторов результатов.</param>
+        /// <param name="statisticsFactory">Фабрика калькуляторов статистики.</param>
+        public TournamentViewModel(
+            Guid tournamentId,
+            IStorage storage,
+            IScheduleStrategyFactory scheduleFactory,
+            IResultsCalculatorFactory resultsFactory,
+            IStatisticsCalculatorFactory statisticsFactory)
         {
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _scheduleFactory = scheduleFactory ?? throw new ArgumentNullException(nameof(scheduleFactory));
+            _resultsFactory = resultsFactory ?? throw new ArgumentNullException(nameof(resultsFactory));
+            _statisticsFactory = statisticsFactory ?? throw new ArgumentNullException(nameof(statisticsFactory));
+
             var tournaments = _storage.LoadTournaments();
             CurrentTournament = tournaments.Find(t => t.Id == tournamentId);
             if (CurrentTournament != null)
@@ -484,7 +506,7 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
-            IScheduleStrategy strategy = ScheduleStrategyFactory.GetStrategy(CurrentTournament.Type);
+            IScheduleStrategy strategy = _scheduleFactory.GetStrategy(CurrentTournament.Type);
             if (strategy == null)
             {
                 ScheduleMessage = $"Формат \"{CurrentTournament.Type}\" не поддерживается.";
@@ -700,7 +722,7 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
-            var calculator = ResultsCalculatorFactory.GetCalculator(CurrentTournament);
+            var calculator = _resultsFactory.GetCalculator(CurrentTournament);
 
             if (calculator == null)
             {
@@ -774,7 +796,7 @@ namespace SportHubBase.ViewModels
             }
             else
             {
-                var calculator = StatisticsCalculatorFactory.GetCalculator(CurrentTournament.SportType);
+                var calculator = _statisticsFactory.GetCalculator(CurrentTournament.SportType);
                 Statistics = calculator.Calculate(CurrentTournament, Schedule);
             }
 

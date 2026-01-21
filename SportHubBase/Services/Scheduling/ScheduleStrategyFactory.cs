@@ -1,15 +1,16 @@
 // Services/Scheduling/ScheduleStrategyFactory.cs
+using SportHubBase.Interfaces;
 using System;
 
 namespace SportHubBase.Services.Scheduling
 {
     /// Фабрика для выбора стратегии генерации расписания на основе формата турнира.
     /// Часть паттерна "Стратегия": возвращает IScheduleStrategy по Tournament.Type.
-    /// Статическая для простоты; в IoC можно инжектировать как singleton.
-    public static class ScheduleStrategyFactory
+    /// Для использования в IoC контейнере.
+    public class ScheduleStrategyFactory : IScheduleStrategyFactory
     {
         /// Возвращает стратегию по типу турнира (trim и case-insensitive).
-        public static IScheduleStrategy GetStrategy(string tournamentType)
+        public IScheduleStrategy GetStrategy(string tournamentType)
         {
             if (string.IsNullOrWhiteSpace(tournamentType))
                 return null;

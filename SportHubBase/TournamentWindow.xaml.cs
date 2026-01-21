@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Windows;
+using SportHubBase.Interfaces;
 using SportHubBase.ViewModels;
 
 namespace SportHubBase
@@ -10,7 +11,14 @@ namespace SportHubBase
         {
             InitializeComponent();
             Loaded += TournamentWindow_Loaded;
-            DataContext = new TournamentViewModel(tournamentId);
+
+            // Создание ViewModel через контейнер зависимостей
+            var storage = App.Container.GetInstance<IStorage>();
+            var scheduleFactory = App.Container.GetInstance<IScheduleStrategyFactory>();
+            var resultsFactory = App.Container.GetInstance<IResultsCalculatorFactory>();
+            var statisticsFactory = App.Container.GetInstance<IStatisticsCalculatorFactory>();
+
+            DataContext = new TournamentViewModel(tournamentId, storage, scheduleFactory, resultsFactory, statisticsFactory);
         }
         public TournamentWindow() : this(Guid.Empty) { }
 

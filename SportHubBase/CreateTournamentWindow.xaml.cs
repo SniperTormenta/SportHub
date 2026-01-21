@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,8 +11,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Newtonsoft.Json;
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
+using SportHubBase.ViewModels;
 
 namespace SportHubBase
 {
@@ -22,6 +22,10 @@ namespace SportHubBase
         public CreateTournamentWindow()
         {
             InitializeComponent();
+
+            // Создание ViewModel через контейнер зависимостей
+            var storage = App.Container.GetInstance<IStorage>();
+            DataContext = new CreateTournamentViewModel(storage);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -190,8 +194,9 @@ namespace SportHubBase
                 StartDate = StartDatePicker.SelectedDate.Value
             };
 
-            // Сохранение в JSON
-            SaveTournamentToJson(tournament);
+            // Сохранение через сервис хранения
+            var storage = App.Container.GetInstance<IStorage>();
+            storage.CreateTournament(tournament);
 
             // Открыть окно турнира (как было)
             Window TournamentWindow = new TournamentWindow();
@@ -213,25 +218,5 @@ namespace SportHubBase
             return "";
         }
 
-        private void SaveTournamentToJson(Tournament tournament)
-        {
-            string filePath = "tournaments.json";
-            List<Tournament> tournaments;
-
-            if (File.Exists(filePath))
-            {
-                string json = File.ReadAllText(filePath);
-                tournaments = JsonConvert.DeserializeObject<List<Tournament>>(json) ?? new List<Tournament>();
-            }
-            else
-            {
-                tournaments = new List<Tournament>();
-            }
-
-            tournaments.Add(tournament);
-
-            string newJson = JsonConvert.SerializeObject(tournaments, Formatting.Indented);
-            File.WriteAllText(filePath, newJson);
-        }
     }
 }
