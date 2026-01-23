@@ -9,12 +9,10 @@
         Background="Transparent"
         ResizeMode="NoResize">
 
-
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </Window.Resources>
-    
-    
+
     <!-- Затемнение на весь Window -->
     <Grid Background="#80000000">
         <Border Background="White"
@@ -50,8 +48,6 @@
                             Foreground="#617589"
                             Content="X"/>
                 </Grid>
-                
-                
 
                 <!-- Body -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -102,7 +98,6 @@
                             </Grid>
 
                             <!-- Список игроков -->
-                            <!-- Динамический список игроков -->
                             <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8">
                                 <ItemsControl ItemsSource="{Binding Players}">
                                     <ItemsControl.ItemTemplate>
@@ -114,31 +109,31 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
 
-                                                    <!-- Имя игрока — TextBox по центру -->
+                                                    <!-- Имя игрока -->
                                                     <TextBox Grid.Column="0"
-                                 Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                 FontWeight="Medium"
-                                 Foreground="#111418"
-                                 Background="Transparent"
-                                 BorderThickness="0"
-                                 Padding="0"
-                                 TextAlignment="Center"
-                                 VerticalAlignment="Center"/>
+                                                             Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                                             FontWeight="Medium"
+                                                             Foreground="#111418"
+                                                             Background="Transparent"
+                                                             BorderThickness="0"
+                                                             Padding="0"
+                                                             TextAlignment="Center"
+                                                             VerticalAlignment="Center"/>
 
-                                                    <!-- Метка "Капитан" — показывается если этот игрок выбран в ComboBox -->
+                                                    <!-- Метка "Капитан" -->
                                                     <TextBlock Grid.Column="0"
-                                   Text="Капитан"
-                                   Foreground="#137FEC" FontSize="11"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Bottom"
-                                   Margin="0,24,0,0"
-                                   Visibility="{Binding IsCaptain, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                               Text="Капитан"
+                                                               Foreground="#137FEC" FontSize="11"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Bottom"
+                                                               Margin="0,24,0,0"
+                                                               Visibility="{Binding IsCaptain, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                                                    <!-- Кнопка удаления -->
+                                                    <!-- Кнопка удаления игрока -->
                                                     <Button Grid.Column="1"
-                                Command="{Binding DataContext.RemovePlayerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                CommandParameter="{Binding}"
-                                Background="Transparent" Padding="8">
+                                                            Command="{Binding DataContext.RemovePlayerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent" Padding="8">
                                                         <TextBlock Text="×" FontSize="18" Foreground="#EF4444" FontWeight="Bold"/>
                                                     </Button>
                                                 </Grid>
@@ -151,37 +146,59 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- Footer -->
+                <!-- Footer – правильное центрирование -->
                 <Grid Grid.Row="2" Margin="0,24,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
+                        <!-- Удалить -->
                         <ColumnDefinition Width="*"/>
+                        <!-- левое пространство -->
                         <ColumnDefinition Width="Auto"/>
+                        <!-- Отмена -->
+                        <ColumnDefinition Width="40"/>
+                        <!-- фиксированный зазор Отмена ↔ Сохранить -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Сохранить -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- правое пространство -->
                     </Grid.ColumnDefinitions>
 
-                    <!-- Кнопка удаления команды (только в режиме редактирования) -->
+
                     <Button Grid.Column="0"
                             Content="Удалить команду"
                             Command="{Binding DeleteTeamCommand}"
-                            Style="{StaticResource DefaultModernButton}"
+                            Style="{StaticResource ColoredModernButton}"
                             Background="#EF4444"
                             Foreground="White"
                             FontWeight="Bold"
-                            Padding="16,12"
-                            Margin="0,0,12,0"
+                            Padding="20,12"
+                            MinWidth="160"
+                            Margin="0,0,32,0"
                             Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                    <Button Grid.Column="1" Content="Отмена"
+                    
+                    <!-- Отмена -->
+                    <Button Grid.Column="2"
+                            Content="Отмена"
                             Command="{Binding CancelCommand}"
                             Style="{StaticResource DefaultModernButton}"
                             Background="Transparent"
                             BorderBrush="#E5E7EB"
-                            Padding="20,12"/>
-                    <Button Grid.Column="2" Content="Сохранить команду"
-                            Style="{StaticResource DefaultModernButton}"
+                            BorderThickness="1"
+                            Padding="24,12"
+                            MinWidth="120"/>
+
+                    <!-- Сохранить -->
+                    <Button Grid.Column="4"
+                            Content="Сохранить команду"
                             Command="{Binding SaveTeamCommand}"
-                            Background="#137FEC" Foreground="White"
-                            FontWeight="Bold" Padding="20,12"/>
+                            Style="{StaticResource ColoredModernButton}"
+                            Background="#137FEC"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            Padding="20,12"
+                            MinWidth="160"                 
+                            HorizontalAlignment="Left"/>
+                    
                 </Grid>
             </Grid>
         </Border>
