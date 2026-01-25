@@ -20,8 +20,9 @@ namespace SportHubBase
             var scheduleFactory = App.Container.GetInstance<IScheduleStrategyFactory>();
             var resultsFactory = App.Container.GetInstance<IResultsCalculatorFactory>();
             var statisticsFactory = App.Container.GetInstance<IStatisticsCalculatorFactory>();
+            var imageEncoderFactory = App.Container.GetInstance<IImageEncoderStrategyFactory>();
 
-            DataContext = new TournamentViewModel(tournamentId, storage, scheduleFactory, resultsFactory, statisticsFactory);
+            DataContext = new TournamentViewModel(tournamentId, storage, scheduleFactory, resultsFactory, statisticsFactory, imageEncoderFactory);
         }
 
         private void TournamentWindow_Loaded(object sender, RoutedEventArgs e)

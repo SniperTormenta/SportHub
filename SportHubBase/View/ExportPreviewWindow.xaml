@@ -11,6 +11,184 @@
         AllowsTransparency="True"
         ResizeMode="NoResize">
 
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
+        <!-- Шаблон строки результатов для экспорта -->
+        <DataTemplate x:Key="ResultsRowTemplate">
+            <Border BorderBrush="#E5E7EB"
+                    BorderThickness="0,0,0,1"
+                    Background="White">
+                <Grid Height="70">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <!-- Rk. -->
+                        <ColumnDefinition Width="280"/>
+                        <!-- Команда -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- Шахматная таблица -->
+                        <ColumnDefinition Width="60"/>
+                        <!-- В -->
+                        <ColumnDefinition Width="60"/>
+                        <!-- П -->
+                        <ColumnDefinition Width="60"/>
+                        <!-- ВП -->
+                        <ColumnDefinition Width="60"/>
+                        <!-- ПП -->
+                        <ColumnDefinition Width="70"/>
+                        <!-- Очки -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Место -->
+                    <Border Grid.Column="0"
+                            BorderBrush="#E5E7EB"
+                            BorderThickness="0,0,1,0"
+                            Background="White">
+                        <Border Width="32"
+                                Height="32"
+                                CornerRadius="6"
+                                Background="#F3F4F6"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Place}"
+                                       FontSize="14"
+                                       FontWeight="Bold"
+                                       Foreground="#111418"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                    </Border>
+
+                    <!-- Название команды -->
+                    <Border Grid.Column="1"
+                            BorderBrush="#E5E7EB"
+                            BorderThickness="0,0,1,0"
+                            Background="White">
+                        <TextBlock Text="{Binding TeamName}"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   Foreground="#111418"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center"
+                                   Margin="16,0"/>
+                    </Border>
+
+                    <!-- Шахматная таблица (ячейки) -->
+                    <ScrollViewer Grid.Column="2"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Hidden">
+                        <ItemsControl ItemsSource="{Binding Cells}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Width="60"
+                                            Height="60"
+                                            BorderBrush="#E5E7EB"
+                                            BorderThickness="0,0,1,0"
+                                            Background="{Binding Converter={StaticResource ResultCellBackgroundConverter}}">
+                                        <Grid>
+                                            <Path Data="M0,0 L60,60 M0,60 L60,0"
+                                                  Stroke="#E5E7EB"
+                                                  StrokeThickness="1.5"
+                                                  Stretch="None"
+                                                  Visibility="Collapsed"
+                                                  x:Name="DiagonalLines">
+                                                <Path.Style>
+                                                    <Style TargetType="Path">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding}" Value="SELF">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Path.Style>
+                                            </Path>
+                                            <TextBlock HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="16"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}"
+                                                       Text="{Binding}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- В (победы) -->
+                    <Border Grid.Column="3"
+                            BorderBrush="#E5E7EB"
+                            BorderThickness="0,0,1,0"
+                            Background="White">
+                        <TextBlock Text="{Binding Wins}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#111418"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- П (поражения) -->
+                    <Border Grid.Column="4"
+                            BorderBrush="#E5E7EB"
+                            BorderThickness="0,0,1,0"
+                            Background="White">
+                        <TextBlock Text="{Binding Losses}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#111418"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- ВП (выигранные партии) -->
+                    <Border Grid.Column="5"
+                            BorderBrush="#E5E7EB"
+                            BorderThickness="0,0,1,0"
+                            Background="White">
+                        <TextBlock Text="{Binding WonGames}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#111418"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- ПП (проигранные партии) -->
+                    <Border Grid.Column="6"
+                            BorderBrush="#E5E7EB"
+                            BorderThickness="0,0,1,0"
+                            Background="White">
+                        <TextBlock Text="{Binding LostGames}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#111418"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Очки -->
+                    <Border Grid.Column="7"
+                            BorderBrush="#E5E7EB"
+                            BorderThickness="0,0,0,0"
+                            Background="White">
+                        <TextBlock Text="{Binding Points}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="#111418"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
     <Grid Background="#80000000">
         <Border Background="White"
                 CornerRadius="12"

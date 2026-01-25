@@ -45,6 +45,9 @@ namespace SportHubBase.ViewModels
         /// Фабрика калькуляторов статистики. Инжектируется через конструктор.
         private readonly IStatisticsCalculatorFactory _statisticsFactory;
 
+        /// Фабрика стратегий кодирования изображений. Инжектируется через конструктор.
+        private readonly IImageEncoderStrategyFactory _imageEncoderFactory;
+
         
         /// Текущий турнир (Model). Биндится к UI для заголовков/дат.
         
@@ -378,12 +381,14 @@ namespace SportHubBase.ViewModels
             IStorage storage,
             IScheduleStrategyFactory scheduleFactory,
             IResultsCalculatorFactory resultsFactory,
-            IStatisticsCalculatorFactory statisticsFactory)
+            IStatisticsCalculatorFactory statisticsFactory,
+            IImageEncoderStrategyFactory imageEncoderFactory)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _scheduleFactory = scheduleFactory ?? throw new ArgumentNullException(nameof(scheduleFactory));
             _resultsFactory = resultsFactory ?? throw new ArgumentNullException(nameof(resultsFactory));
             _statisticsFactory = statisticsFactory ?? throw new ArgumentNullException(nameof(statisticsFactory));
+            _imageEncoderFactory = imageEncoderFactory ?? throw new ArgumentNullException(nameof(imageEncoderFactory));
 
             var tournaments = _storage.LoadTournaments();
             CurrentTournament = tournaments.Find(t => t.Id == tournamentId);
@@ -470,13 +475,15 @@ namespace SportHubBase.ViewModels
                 .FirstOrDefault(w => w.IsActive);
             if (currentWindow != null && CurrentTournament != null)
             {
-                var exportWindow = new View.ExportPreviewWindow(
-                    currentWindow,
-                    CurrentTournament,
-                    ResultsTable,
+                var exportViewModel = new ExportPreviewViewModel(
+                    CurrentTournament.Name,
+                    "Таблица результатов",
                     ResultsHeaderNumbers,
-                    "results");
+                    ResultsTable,
+                    ExportTableType.Results,
+                    _imageEncoderFactory);
 
+                var exportWindow = new View.ExportPreviewWindow(currentWindow, exportViewModel);
                 exportWindow.ShowDialog();
             }
         }
