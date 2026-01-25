@@ -1,6 +1,7 @@
 using SimpleInjector;
 using SportHubBase.Interfaces;
 using SportHubBase.Services;
+using SportHubBase.Services.Export;
 using SportHubBase.Services.Results;
 using SportHubBase.Services.Scheduling;
 using SportHubBase.Services.Statistics;
@@ -40,6 +41,7 @@ namespace SportHubBase
             Container.Register<IScheduleStrategyFactory, ScheduleStrategyFactory>(Lifestyle.Singleton);
             Container.Register<IResultsCalculatorFactory, ResultsCalculatorFactory>(Lifestyle.Singleton);
             Container.Register<IStatisticsCalculatorFactory, StatisticsCalculatorFactory>(Lifestyle.Singleton);
+            Container.Register<IImageEncoderStrategyFactory, ImageEncoderStrategyFactory>(Lifestyle.Singleton);
 
             // Верификация контейнера
             Container.Verify();

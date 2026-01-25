@@ -14,6 +14,8 @@
     </Window.Resources>
 
     <Border Background="White"
+            BorderBrush="#E5E7EB"
+            BorderThickness="2"
             CornerRadius="12"
             MaxWidth="600"
             HorizontalAlignment="Center"

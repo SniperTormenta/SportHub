@@ -50,6 +50,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -66,6 +67,8 @@
     <Compile Include="Converters\ResultCellBackgroundConverter.cs" />
     <Compile Include="Converters\IsSelfCellConverter.cs" />
     <Compile Include="Converters\ProgressConverter.cs" />
+    <Compile Include="Interfaces\IImageEncoderStrategy.cs" />
+    <Compile Include="Interfaces\IImageEncoderStrategyFactory.cs" />
     <Compile Include="Interfaces\IResultsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IStatisticsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
@@ -76,6 +79,9 @@
     <Compile Include="Models\Tournament.cs" />
     <Compile Include="Models\Match.cs" />
     <Compile Include="Models\ResultRow.cs" />
+    <Compile Include="Services\Export\ImageEncoderStrategyFactory.cs" />
+    <Compile Include="Services\Export\JpgImageEncoderStrategy.cs" />
+    <Compile Include="Services\Export\PngImageEncoderStrategy.cs" />
     <Compile Include="Services\JsonStorageService.cs" />
     <Compile Include="Services\Result\IResultsCalculator.cs" />
     <Compile Include="Services\Result\ResultsCalculatorFactory.cs" />
@@ -93,6 +99,7 @@
     <Compile Include="ViewModels\AddTeamViewModel.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\CreateTournamentViewModel.cs" />
+    <Compile Include="ViewModels\ExportPreviewViewModel.cs" />
     <Compile Include="ViewModels\MatchDetailsViewModel.cs" />
     <Compile Include="ViewModels\TournamentStatistics.cs" />
     <Compile Include="ViewModels\TournamentViewModel.cs" />
@@ -101,6 +108,9 @@
     </Compile>
     <Compile Include="View\AddTeamWindow.xaml.cs">
       <DependentUpon>AddTeamWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ExportPreviewWindow.xaml.cs">
+      <DependentUpon>ExportPreviewWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="CreateTournamentWindow.xaml">
       <SubType>Designer</SubType>
@@ -126,6 +136,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\AddTeamWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ExportPreviewWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

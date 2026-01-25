@@ -358,8 +358,12 @@ namespace SportHubBase.ViewModels
 
         
         /// Команда открытия карточки матча.
-        
+
         public ICommand OpenMatchCommand { get; }
+
+        /// Команда экспорта результатов.
+
+        public ICommand ExportResultsCommand { get; }
 
 
         /// Конструктор: загружает турнир по ID, инициализирует коллекции, команды, генерирует расписание/результаты, подписывается на изменения.
@@ -412,6 +416,7 @@ namespace SportHubBase.ViewModels
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
             EditTeamCommand = new RelayCommand(EditTeam, t => t is Team);
             OpenMatchCommand = new RelayCommand(OpenMatchCard, m => m is Match);
+            ExportResultsCommand = new RelayCommand(OpenExportWindow);
 
             GenerateSchedule();
             GenerateResults();
@@ -447,11 +452,35 @@ namespace SportHubBase.ViewModels
                         }
                     }
                     OnPropertyChanged(nameof(TeamsCount));
+
+                    // Обновляем расписание и результаты после добавления команды
+                    GenerateSchedule();
+                    GenerateResults();
+                    UpdateStatistics();
                 }
             }
         }
 
-        
+        /// Открывает окно экспорта результатов.
+        /// Показывает превью таблицы и позволяет сохранить в PNG/JPG.
+        private void OpenExportWindow(object parameter)
+        {
+            var currentWindow = Application.Current.Windows
+                .OfType<TournamentWindow>()
+                .FirstOrDefault(w => w.IsActive);
+            if (currentWindow != null && CurrentTournament != null)
+            {
+                var exportWindow = new View.ExportPreviewWindow(
+                    currentWindow,
+                    CurrentTournament,
+                    ResultsTable,
+                    ResultsHeaderNumbers,
+                    "results");
+
+                exportWindow.ShowDialog();
+            }
+        }
+
         /// Открывает окно редактирования команды.
         
         private void EditTeam(object parameter)
@@ -477,11 +506,22 @@ namespace SportHubBase.ViewModels
                         }
                     }
                     OnPropertyChanged(nameof(TeamsCount));
+
+                    // Обновляем расписание и результаты после редактирования команды
+                    GenerateSchedule();
+                    GenerateResults();
+                    UpdateStatistics();
                 }
             }
         }
 
         /// Инициализирует структуру таблицы результатов (очищает коллекции, проверяет базовые условия).
+        /// Публичный метод для принудительного обновления результатов (для внешнего вызова из UI).
+        public void RefreshResults()
+        {
+            GenerateResults();
+        }
+
         /// Вызывается один раз при загрузке турнира или при изменении команд/формата.
         /// После инициализации сразу запускает полный расчёт через калькулятор.
         private void GenerateResults()
@@ -766,6 +806,9 @@ namespace SportHubBase.ViewModels
 
             calculator.Calculate(CurrentTournament, Schedule, ResultsTable, out string message);
             ResultsMessage = message;
+
+            // Обновляем UI для таблицы результатов
+            OnPropertyChanged(nameof(ResultsTable));
 
             // ← Ключевое исправление: обновляем заголовки ПОСЛЕ расчёта и только для кругового
             if (string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase))

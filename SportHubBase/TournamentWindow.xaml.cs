@@ -39,5 +39,19 @@ namespace SportHubBase
             Left = (screenWidth - Width) / 2;
             Top = (screenHeight - Height) / 2;
         }
+
+        private void TabControl_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (e.Source is System.Windows.Controls.TabControl tabControl)
+            {
+                var selectedTab = tabControl.SelectedItem as System.Windows.Controls.TabItem;
+                if (selectedTab != null && selectedTab.Header.ToString() == "Результаты")
+                {
+                    // Обновляем результаты при переключении на вкладку "Результаты"
+                    var viewModel = DataContext as TournamentViewModel;
+                    viewModel?.RefreshResults();
+                }
+            }
+        }
     }
 }
