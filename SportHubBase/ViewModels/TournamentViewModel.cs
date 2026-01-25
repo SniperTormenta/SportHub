@@ -383,7 +383,25 @@ namespace SportHubBase.ViewModels
 
             var tournaments = _storage.LoadTournaments();
             CurrentTournament = tournaments.Find(t => t.Id == tournamentId);
-            if (CurrentTournament != null)
+
+            // Если турнир не найден (например, при Guid.Empty), создаем новый
+            if (CurrentTournament == null && tournamentId != Guid.Empty)
+            {
+                throw new ArgumentException($"Турнир с ID {tournamentId} не найден.");
+            }
+            else if (CurrentTournament == null && tournamentId == Guid.Empty)
+            {
+                // Для отладки - если передан пустой GUID, создаем временный турнир
+                CurrentTournament = new Tournament
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Новый турнир",
+                    Type = "Круговой",
+                    SportType = "Волейбол"
+                };
+            }
+
+            if (CurrentTournament != null && CurrentTournament.Teams != null)
             {
                 foreach (var team in CurrentTournament.Teams)
                 {

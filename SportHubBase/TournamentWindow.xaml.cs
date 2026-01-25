@@ -9,6 +9,9 @@ namespace SportHubBase
     {
         public TournamentWindow(Guid tournamentId)
         {
+            if (tournamentId == Guid.Empty)
+                throw new ArgumentException("Tournament ID cannot be empty", nameof(tournamentId));
+
             InitializeComponent();
             Loaded += TournamentWindow_Loaded;
 
@@ -20,7 +23,6 @@ namespace SportHubBase
 
             DataContext = new TournamentViewModel(tournamentId, storage, scheduleFactory, resultsFactory, statisticsFactory);
         }
-        public TournamentWindow() : this(Guid.Empty) { }
 
         private void TournamentWindow_Loaded(object sender, RoutedEventArgs e)
         {

@@ -198,9 +198,9 @@ namespace SportHubBase
             var storage = App.Container.GetInstance<IStorage>();
             storage.CreateTournament(tournament);
 
-            // Открыть окно турнира (как было)
-            Window TournamentWindow = new TournamentWindow();
-            TournamentWindow.Show();
+            // Открыть окно турнира с ID созданного турнира
+            Window tournamentWindow = new TournamentWindow(tournament.Id);
+            tournamentWindow.Show();
             this.Close(); // Закрыть текущее окно
         }
 
