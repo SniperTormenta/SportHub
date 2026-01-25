@@ -16,18 +16,21 @@ namespace SportHubBase.ViewModels
 
         public string TeamName { get; set; }
 
-        // Выбранный капитан из ComboBox (индекс или имя — здесь имя игрока)
-        private string _selectedCaptainName;
-        public string SelectedCaptainName
+        // Выбранный капитан из ComboBox
+        private Player _selectedCaptain;
+        public Player SelectedCaptain
         {
-            get => _selectedCaptainName;
+            get => _selectedCaptain;
             set
             {
-                _selectedCaptainName = value;
+                _selectedCaptain = value;
                 UpdateCaptainInPlayers();
                 OnPropertyChanged();
             }
         }
+
+        // Для обратной совместимости - имя капитана
+        public string SelectedCaptainName => SelectedCaptain?.Name;
 
         public ObservableCollection<Player> Players { get; } = new ObservableCollection<Player>();
 
@@ -77,7 +80,7 @@ namespace SportHubBase.ViewModels
                                   ?? _existingTeam.Players.FirstOrDefault();
                     if (captain != null)
                     {
-                        SelectedCaptainName = captain.Name;
+                        SelectedCaptain = captain;
                     }
                 }
                 else if (!string.IsNullOrWhiteSpace(_existingTeam.Captain))
@@ -91,7 +94,7 @@ namespace SportHubBase.ViewModels
                     Players.Add(captainPlayer);
                     OnPropertyChanged(nameof(PlayersCount));
 
-                    SelectedCaptainName = captainPlayer.Name;
+                    SelectedCaptain = captainPlayer;
                 }
             }
         }
@@ -117,7 +120,7 @@ namespace SportHubBase.ViewModels
         {
             foreach (var player in Players)
             {
-                player.IsCaptain = player.Name == SelectedCaptainName;
+                player.IsCaptain = player == SelectedCaptain;
             }
         }
 
@@ -125,7 +128,7 @@ namespace SportHubBase.ViewModels
         {
             return !string.IsNullOrWhiteSpace(TeamName) &&
                    Players.Count > 0 &&
-                   !string.IsNullOrWhiteSpace(SelectedCaptainName);
+                   SelectedCaptain != null;
         }
 
         private void SaveTeam()
@@ -140,7 +143,7 @@ namespace SportHubBase.ViewModels
                     var newTeam = new Team
                     {
                         Name = TeamName,
-                        Captain = SelectedCaptainName ?? "Капитан не выбран"
+                        Captain = SelectedCaptain?.Name ?? "Капитан не выбран"
                     };
 
                     // Сохраняем состав игроков
@@ -149,7 +152,7 @@ namespace SportHubBase.ViewModels
                         {
                             Name = p.Name,
                             Role = p.Role,
-                            IsCaptain = p.Name == SelectedCaptainName
+                            IsCaptain = p == SelectedCaptain
                         })
                         .ToList();
 
@@ -164,7 +167,7 @@ namespace SportHubBase.ViewModels
                     if (teamToUpdate != null)
                     {
                         teamToUpdate.Name = TeamName;
-                        teamToUpdate.Captain = SelectedCaptainName ?? "Капитан не выбран";
+                        teamToUpdate.Captain = SelectedCaptain?.Name ?? "Капитан не выбран";
 
                         // Обновляем состав игроков
                         teamToUpdate.Players = Players
@@ -172,7 +175,7 @@ namespace SportHubBase.ViewModels
                             {
                                 Name = p.Name,
                                 Role = p.Role,
-                                IsCaptain = p.Name == SelectedCaptainName
+                                IsCaptain = p == SelectedCaptain
                             })
                             .ToList();
                     }

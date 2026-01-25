@@ -1,4 +1,4 @@
-﻿
+
     <Window x:Class="SportHubBase.TournamentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,8 +12,14 @@
         MinWidth="1200"
         MinHeight="800">
 
-    
-    
+    <Window.Resources>
+        <converters:StringEqualityConverter x:Key="StringEqualityConverter"/>
+        <converters:ResultCellColorConverter x:Key="ResultCellColorConverter"/>
+        <converters:ResultCellBackgroundConverter x:Key="ResultCellBackgroundConverter"/>
+        <converters:IsSelfCellConverter x:Key="IsSelfCellConverter"/>
+        <converters:ProgressConverter x:Key="ProgressConverter"/>
+    </Window.Resources>
+
     <Grid>
         <!-- Header -->
         <Border Background="White" Height="80" VerticalAlignment="Top">
@@ -858,7 +864,7 @@
                                 <Border Background="#F9FAFB" CornerRadius="8" Padding="12">
                                     <StackPanel>
                                         <TextBlock Text="Количество MVP" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
-                                        <TextBlock Text="32" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
+                                        <TextBlock Text="{Binding MostValuablePlayerCount}" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>

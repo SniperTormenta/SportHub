@@ -137,9 +137,9 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        
+
         /// Флаг live-режима (для индикатора в UI).
-        
+
         public bool IsLive => CurrentTournament?.IsLive ?? false;
 
         // Статистика
@@ -212,9 +212,9 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        
+
         /// Команда MVP.
-        
+
         public string MostValuablePlayerTeam
         {
             get
@@ -226,6 +226,20 @@ namespace SportHubBase.ViewModels
                     t.Players != null && t.Players.Any(p =>
                         string.Equals(p.Name, mvp, StringComparison.OrdinalIgnoreCase)));
                 return team?.Name ?? "—";
+            }
+        }
+
+        /// Количество MVP у самого ценного игрока.
+
+        public int MostValuablePlayerCount
+        {
+            get
+            {
+                var mvp = MostValuablePlayerName;
+                if (mvp == "—") return 0;
+
+                return Schedule
+                    .Count(m => string.Equals(m.Mvp, mvp, StringComparison.OrdinalIgnoreCase));
             }
         }
 
