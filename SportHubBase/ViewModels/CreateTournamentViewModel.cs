@@ -1,9 +1,12 @@
 // ViewModels/CreateTournamentViewModel.cs (для окна создания)
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
 using SportHubBase.Interfaces;
 using SportHubBase.Models;
+using SportHubBase.Services;
 
 namespace SportHubBase.ViewModels
 {
@@ -17,6 +20,15 @@ namespace SportHubBase.ViewModels
     {
         /// Сервис хранения (JsonStorage). Инжектируется через конструктор.
         private readonly IStorage _storage;
+
+        /// Сервис для загрузки городов.
+        private readonly CitiesService _citiesService;
+
+        /// Все доступные города.
+        private List<string> _allCities = new List<string>();
+
+        /// Отфильтрованные города для отображения в ComboBox.
+        private ObservableCollection<string> _filteredCities = new ObservableCollection<string>();
 
         // Свойства из формы (биндим к UI)
         /// Название турнира (биндинг TwoWay к TextBox).
@@ -48,8 +60,32 @@ namespace SportHubBase.ViewModels
         /// Описание турнира (MultiLine TextBox).
         public string Description { get; set; }
 
-        /// Город проведения (TextBox).
-        public string City { get; set; }
+        /// Город проведения.
+        private string _city;
+        public string City
+        {
+            get => _city;
+            set
+            {
+                if (_city != value)
+                {
+                    _city = value;
+                    OnPropertyChanged();
+                    // Не фильтруем автоматически при установке города
+                }
+            }
+        }
+
+        /// Отфильтрованные города для ComboBox.
+        public ObservableCollection<string> FilteredCities
+        {
+            get => _filteredCities;
+            set
+            {
+                _filteredCities = value;
+                OnPropertyChanged();
+            }
+        }
 
         /// Контакты (TextBox).
         public string Contacts { get; set; }
@@ -62,11 +98,15 @@ namespace SportHubBase.ViewModels
         /// Всегда активна (canExecute null); выполняет CreateTournament.
         public ICommand CreateCommand { get; }
 
-        /// Конструктор: инициализирует команду.
+        /// Конструктор: инициализирует команду и загружает города.
         public CreateTournamentViewModel(IStorage storage)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _citiesService = new CitiesService();
+
             CreateCommand = new RelayCommand(CreateTournament);
+
+            LoadCities();
         }
 
         /// Метод выполнения команды: создаёт объект Tournament из свойств VM, сохраняет через сервис.
@@ -97,6 +137,32 @@ namespace SportHubBase.ViewModels
 
             // Закрыть окно или показать сообщение
             // Варианты: вызвать событие, передать Action в конструктор, или использовать DialogResult в окне
+        }
+
+        /// Загружает все города из JSON файла.
+        private void LoadCities()
+        {
+            _allCities = _citiesService.LoadCities();
+            // Показываем все города изначально
+            FilteredCities = new ObservableCollection<string>(_allCities);
+        }
+
+        /// Фильтрует города по введённому тексту.
+        public void FilterCitiesByText(string filterText)
+        {
+            if (string.IsNullOrWhiteSpace(filterText))
+            {
+                // Если текст пустой, показываем все города
+                FilteredCities = new ObservableCollection<string>(_allCities);
+            }
+            else
+            {
+                // Фильтруем города, которые содержат введенный текст
+                var filtered = _allCities
+                    .Where(c => c.IndexOf(filterText, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .ToList();
+                FilteredCities = new ObservableCollection<string>(filtered);
+            }
         }
     }
 }

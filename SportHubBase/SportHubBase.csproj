@@ -79,6 +79,7 @@
     <Compile Include="Models\Tournament.cs" />
     <Compile Include="Models\Match.cs" />
     <Compile Include="Models\ResultRow.cs" />
+    <Compile Include="Services\CitiesService.cs" />
     <Compile Include="Services\Export\ImageEncoderStrategyFactory.cs" />
     <Compile Include="Services\Export\JpgImageEncoderStrategy.cs" />
     <Compile Include="Services\Export\PngImageEncoderStrategy.cs" />
@@ -170,6 +171,9 @@
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="cities.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>

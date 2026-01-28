@@ -43,6 +43,8 @@ namespace SportHubBase
             Left = (screenWidth - Width) / 2;
             Top = (screenHeight - Height) / 2;
 
+            // Подписываемся на изменение текста в ComboBox
+            SetupCityComboBox();
         }
 
         private void LoadAdministratorsBlock()
@@ -189,7 +191,7 @@ namespace SportHubBase
                 AccessMode = ((ComboBoxItem)AccessModeComboBox.SelectedItem).Content.ToString(),
                 NoScore = NoScoreCheckBox.IsChecked ?? false,
                 Description = DescriptionTextBox.Text,
-                City = ((ComboBoxItem)CityComboBox.SelectedItem)?.Content.ToString() ?? "",
+                City = CityComboBox.Text,
                 Contacts = ContactsTextBox.Text,
                 StartDate = StartDatePicker.SelectedDate.Value
             };
@@ -198,9 +200,8 @@ namespace SportHubBase
             var storage = App.Container.GetInstance<IStorage>();
             storage.CreateTournament(tournament);
 
-            // Открыть окно турнира с ID созданного турнира
-            Window tournamentWindow = new TournamentWindow(tournament.Id);
-            tournamentWindow.Show();
+            // Показать сообщение об успешном создании
+            MessageBox.Show("Турнир успешно создан!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
             this.Close(); // Закрыть текущее окно
         }
 
@@ -216,6 +217,28 @@ namespace SportHubBase
                 }
             }
             return "";
+        }
+
+        private void SetupCityComboBox()
+        {
+            // Находим TextBox внутри ComboBox для обработки изменения текста
+            var textBox = CityComboBox.Template.FindName("PART_EditableTextBox", CityComboBox) as TextBox;
+            if (textBox != null)
+            {
+                textBox.TextChanged += CityComboBox_TextChanged;
+            }
+        }
+
+        private void CityComboBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (DataContext is CreateTournamentViewModel viewModel)
+            {
+                var textBox = sender as TextBox;
+                if (textBox != null)
+                {
+                    viewModel.FilterCitiesByText(textBox.Text);
+                }
+            }
         }
 
     }

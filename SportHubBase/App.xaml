@@ -13,8 +13,8 @@
         <converters:ResultCellBackgroundConverter x:Key="ResultCellBackgroundConverter" x:Shared="False"/>
         <converters:IsSelfCellConverter x:Key="IsSelfCellConverter" x:Shared="False"/>
         <converters:ProgressConverter x:Key="ProgressConverter" x:Shared="False"/>
-        
-               
+
+
         <Style x:Key="ModernComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderBrush" Value="#E2E8F0"/>
@@ -24,22 +24,64 @@
             <Setter Property="Height" Value="48"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
+
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
                             <Border x:Name="Border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8"/>
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="8"/>
 
+                            <!-- Editable часть -->
+                            <TextBox x:Name="PART_EditableTextBox"
+                             Margin="{TemplateBinding Padding}"
+                             VerticalContentAlignment="Center"
+                             HorizontalContentAlignment="Left"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             FontSize="{TemplateBinding FontSize}"
+                             Foreground="{TemplateBinding Foreground}"
+                             Visibility="Collapsed"
+                             IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource TemplatedParent}}"/>
+
+                            <!-- Не-редактируемая часть (выбранный элемент) -->
+                            <ContentPresenter x:Name="ContentSite"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Left"
+                                      Content="{TemplateBinding SelectionBoxItem}"
+                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                      IsHitTestVisible="False"
+                                      Visibility="Collapsed"/>
+
+                            <!-- Placeholder -->
+                            <TextBlock x:Name="Placeholder"
+                               Text="Выберите..."
+                               Margin="14,0"
+                               Foreground="#94A3B8"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"
+                               Visibility="Collapsed"/>
+
+                            <!-- Стрелка -->
+                            <Path x:Name="Arrow"
+                          Data="M0,0 L4,4 8,0 Z"
+                          Fill="#64748B"
+                          HorizontalAlignment="Right"
+                          Margin="0,0,14,0"
+                          VerticalAlignment="Center"
+                          Stretch="Uniform"
+                          Width="8"/>
+
+                            <!-- Dropdown -->
                             <ToggleButton x:Name="ToggleButton"
-                                      Grid.Column="0"
-                                      Background="Transparent"
-                                      BorderThickness="0"
-                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                      ClickMode="Press">
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                  ClickMode="Press">
                                 <ToggleButton.Template>
                                     <ControlTemplate>
                                         <Grid Background="Transparent"/>
@@ -47,45 +89,20 @@
                                 </ToggleButton.Template>
                             </ToggleButton>
 
-                            <ContentPresenter x:Name="ContentSite"
-                                          Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="Center"
-                                          HorizontalAlignment="Left"
-                                          Content="{TemplateBinding SelectionBoxItem}"
-                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                          IsHitTestVisible="False"/>
-
-                            <TextBlock x:Name="Placeholder"
-                                   Text="Выберите..."
-                                   Margin="14,0"
-                                   Foreground="#94A3B8"
-                                   VerticalAlignment="Center"
-                                   IsHitTestVisible="False"
-                                   Visibility="Collapsed"/>
-
-                            <Path x:Name="Arrow"
-                              Data="M0,0 L4,4 8,0 Z"
-                              Fill="#64748B"
-                              HorizontalAlignment="Right"
-                              Margin="0,0,14,0"
-                              VerticalAlignment="Center"
-                              Stretch="Uniform"
-                              Width="8"/>
-
                             <Popup x:Name="Popup"
-                               Placement="Bottom"
-                               IsOpen="{TemplateBinding IsDropDownOpen}"
-                               AllowsTransparency="True"
-                               Focusable="False"
-                               PopupAnimation="Fade">
+                           Placement="Bottom"
+                           IsOpen="{TemplateBinding IsDropDownOpen}"
+                           AllowsTransparency="True"
+                           Focusable="False"
+                           PopupAnimation="Fade">
                                 <Grid Width="{Binding ActualWidth, ElementName=Border}">
                                     <Border x:Name="DropDownBorder"
-                                        Background="White"
-                                        BorderBrush="#E2E8F0"
-                                        BorderThickness="1"
-                                        CornerRadius="8"
-                                        Margin="0,4,0,0"
-                                        MaxHeight="300">
+                                    Background="White"
+                                    BorderBrush="#E2E8F0"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Margin="0,4,0,0"
+                                    MaxHeight="300">
                                         <ScrollViewer>
                                             <ItemsPresenter/>
                                         </ScrollViewer>
@@ -95,19 +112,54 @@
                         </Grid>
 
                         <ControlTemplate.Triggers>
+
+                            <!-- Переключаем видимость в зависимости от IsEditable -->
+                            <Trigger Property="IsEditable" Value="True">
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="ContentSite"         Property="Visibility" Value="Collapsed"/>
+                            </Trigger>
+                            <Trigger Property="IsEditable" Value="False">
+                                <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="ContentSite"         Property="Visibility" Value="Visible"/>
+                            </Trigger>
+
+                            <!-- Placeholder логика -->
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsEditable" Value="True"/>
+                                    <Condition Property="Text" Value=""/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsEditable" Value="False"/>
+                                    <Condition Property="SelectedItem" Value="{x:Null}"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="ContentSite"    Property="Visibility" Value="Collapsed"/>
+                            </MultiTrigger>
+
+                            <!-- Стрелка вверх/вниз -->
                             <Trigger Property="IsDropDownOpen" Value="True">
                                 <Setter TargetName="Arrow" Property="Data" Value="M0,4 L4,0 8,4 Z"/>
                             </Trigger>
-                            <Trigger Property="SelectedItem" Value="{x:Null}">
-                                <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
-                                <Setter TargetName="ContentSite" Property="Visibility" Value="Collapsed"/>
+
+                            <!-- Фокус/наведение (по желанию добавь) -->
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#3B82F6" Direction="0" ShadowDepth="0" BlurRadius="4" Opacity="0.4"/>
+                                    </Setter.Value>
+                                </Setter>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
 
-            <!-- Стиль элементов списка -->
+            <!-- Стиль выпадающих элементов (без изменений) -->
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
                     <Style TargetType="ComboBoxItem">
@@ -121,7 +173,7 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Bd" Property="Background" Value="#F8FAFCFF"/>
+                                            <Setter TargetName="Bd" Property="Background" Value="#F8FAFC"/>
                                         </Trigger>
                                         <Trigger Property="IsHighlighted" Value="True">
                                             <Setter TargetName="Bd" Property="Background" Value="#EFF6FF"/>
@@ -134,6 +186,8 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+
 
         <Style x:Key="ModernSearchBox" TargetType="TextBox">
             <Setter Property="Background" Value="White"/>
