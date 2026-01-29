@@ -301,7 +301,7 @@
 
                 <!-- Venue -->
                 <StackPanel>
-                    <TextBlock Text="Место игры" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <TextBlock Text="Место проведения встречи" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
                     <TextBox Text="{Binding Location}" Height="48" Padding="12"/>
                 </StackPanel>
             </StackPanel>
