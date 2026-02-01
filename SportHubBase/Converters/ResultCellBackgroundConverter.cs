@@ -1,8 +1,8 @@
-// Converters/ResultCellBackgroundConverter.cs
 using System;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
+using SportHubBase.Models;
 
 namespace SportHubBase.Converters
 {
@@ -10,21 +10,30 @@ namespace SportHubBase.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
-                return System.Windows.Media.Brushes.Transparent; // Прозрачный для пустых
-            string cellValue = value.ToString().Trim();
-            if (cellValue == "SELF")
-                return new SolidColorBrush(Color.FromRgb(243, 244, 246)); // #F3F4F6 — светло-серый для диагонали
-            else if (cellValue == "1" || cellValue == "1.0")
-                return new SolidColorBrush(Color.FromArgb(51, 16, 185, 129)); // #10B98133 — полупрозрачный зелёный
-            else if (cellValue == "0" || cellValue == "0.0")
-                return new SolidColorBrush(Color.FromArgb(51, 244, 63, 94)); // #F43F5E33 — полупрозрачный красный
-            else
-                return System.Windows.Media.Brushes.Transparent; // Прозрачный для других
+            var cell = value as CellResult;
+            if (cell == null) return Brushes.White;
+
+            if (cell.IsSelf)
+                return new SolidColorBrush(Color.FromRgb(230, 230, 230));      // серый self
+
+            if (!cell.IsPlayed)
+                return new SolidColorBrush(Color.FromRgb(249, 250, 251));      // очень светлый
+
+            if (cell.IsWin)
+                return new SolidColorBrush(Color.FromRgb(220, 252, 231));      // светло-зелёный
+
+            if (cell.IsLoss)
+                return new SolidColorBrush(Color.FromRgb(254, 226, 226));      // светло-красный
+
+            if (cell.IsDraw)
+                return new SolidColorBrush(Color.FromRgb(254, 249, 195));      // светло-жёлтый
+
+            return Brushes.White;
         }
+
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException(); // Не требуется
+            throw new NotImplementedException();
         }
     }
 }

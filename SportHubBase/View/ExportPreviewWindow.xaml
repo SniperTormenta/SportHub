@@ -108,11 +108,24 @@
                                                 </Path.Style>
                                             </Path>
                                             <TextBlock HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"
-                                                       FontSize="16"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}"
-                                                       Text="{Binding}"/>
+           VerticalAlignment="Center"
+           FontSize="16"
+           FontWeight="SemiBold"
+           Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}"
+           Text="{Binding DisplayText}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSelf}" Value="True">
+                                                                <Setter Property="Text" Value=""/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Outcome}" Value="NOT_PLAYED">
+                                                                <Setter Property="Text" Value="-"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

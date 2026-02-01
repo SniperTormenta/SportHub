@@ -16,7 +16,7 @@ namespace SportHubBase.Models
         /// <summary>
         /// Ячейки по соперникам (по столбцам). ObservableCollection, чтобы UI обновлялся при замене значений.
         /// </summary>
-        public ObservableCollection<string> Cells { get; set; } = new ObservableCollection<string>();
+        public ObservableCollection<CellResult> Cells { get; set; } = new ObservableCollection<CellResult>();
 
         // Статистика команды
         public int Wins { get; set; } // В - выигранные матчи

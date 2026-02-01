@@ -56,9 +56,21 @@ namespace SportHubBase.Services.Results
                     Index = i + 1,
                     TeamName = sortedTeams[i].Name
                 };
+
                 for (int j = 0; j < teamCount; j++)
                 {
-                    row.Cells.Add(i == j ? "SELF" : string.Empty);
+                    var cell = new CellResult();
+                    if (i == j)
+                    {
+                        cell.Outcome = "SELF";
+                        cell.DisplayText = "";
+                    }
+                    else
+                    {
+                        cell.Outcome = "NOT_PLAYED";
+                        cell.DisplayText = "-";
+                    }
+                    row.Cells.Add(cell);
                 }
                 resultsTable.Add(row);
             }
@@ -134,11 +146,40 @@ namespace SportHubBase.Services.Results
                 if (nameToIndex.TryGetValue(match.Team1, out int t1) &&
                     nameToIndex.TryGetValue(match.Team2, out int t2))
                 {
-                    string cell1 = team1Sets > team2Sets ? "1" : (team1Sets < team2Sets ? "0" : "½");
-                    string cell2 = cell1 == "1" ? "0" : (cell1 == "0" ? "1" : "½");
+                    // С точки зрения команды в строке t1 (Team1)
+                    var cellTeam1 = new CellResult
+                    {
+                        HomeSets = team1Sets,
+                        AwaySets = team2Sets,
+                        DisplayText = $"{team1Sets}:{team2Sets}"
+                    };
 
-                    resultsTable[t1].Cells[t2] = cell1;
-                    resultsTable[t2].Cells[t1] = cell2;
+                    // С точки зрения команды в строке t2 (Team2) — зеркально
+                    var cellTeam2 = new CellResult
+                    {
+                        HomeSets = team2Sets,
+                        AwaySets = team1Sets,
+                        DisplayText = $"{team2Sets}:{team1Sets}"
+                    };
+
+                    if (team1Sets > team2Sets)
+                    {
+                        cellTeam1.Outcome = "WIN";
+                        cellTeam2.Outcome = "LOSS";
+                    }
+                    else if (team1Sets < team2Sets)
+                    {
+                        cellTeam1.Outcome = "LOSS";
+                        cellTeam2.Outcome = "WIN";
+                    }
+                    else
+                    {
+                        cellTeam1.Outcome = "DRAW";
+                        cellTeam2.Outcome = "DRAW";
+                    }
+
+                    resultsTable[t1].Cells[t2] = cellTeam1;
+                    resultsTable[t2].Cells[t1] = cellTeam2;
                 }
             }
 
@@ -180,6 +221,7 @@ namespace SportHubBase.Services.Results
             foreach (var stats in sorted)
             {
                 var oldRow = oldTable.FirstOrDefault(r => r.TeamName.Equals(stats.TeamName, StringComparison.OrdinalIgnoreCase));
+
                 var newRow = new ResultRow
                 {
                     Index = resultsTable.Count + 1,
@@ -193,23 +235,48 @@ namespace SportHubBase.Services.Results
                     SetsRatio = stats.SetsRatio,
                     PointsRatio = stats.PointsRatio,
                     PointsScored = stats.PointsScored,
-                    PointsConceded = stats.PointsConceded
+                    PointsConceded = stats.PointsConceded,
+
+                    // ← Важно: инициализируем правильный тип
+                    Cells = new ObservableCollection<CellResult>()
                 };
 
-                newRow.Cells = new ObservableCollection<string>();
                 for (int j = 0; j < sorted.Count; j++)
                 {
                     var opponent = sorted[j].TeamName;
+
+                    var cell = new CellResult();
+
                     if (stats.TeamName == opponent)
-                        newRow.Cells.Add("SELF");
+                    {
+                        cell.Outcome = "SELF";
+                        cell.DisplayText = "";
+                    }
                     else if (oldRow != null)
                     {
                         var oldIdx = oldTable.FindIndex(r => r.TeamName.Equals(opponent, StringComparison.OrdinalIgnoreCase));
-                        newRow.Cells.Add(oldIdx >= 0 ? oldRow.Cells[oldIdx] : string.Empty);
+                        if (oldIdx >= 0)
+                        {
+                            // Берём готовый объект CellResult из старой строки
+                            cell = oldRow.Cells[oldIdx];
+                        }
+                        else
+                        {
+                            // Матча не было → несыгранный
+                            cell.Outcome = "NOT_PLAYED";
+                            cell.DisplayText = "-";
+                        }
                     }
                     else
-                        newRow.Cells.Add(string.Empty);
+                    {
+                        // На всякий случай (хотя не должен срабатывать)
+                        cell.Outcome = "NOT_PLAYED";
+                        cell.DisplayText = "-";
+                    }
+
+                    newRow.Cells.Add(cell);
                 }
+
                 resultsTable.Add(newRow);
             }
         }

@@ -545,7 +545,7 @@
                             </Border>
 
                             <!-- Тело таблицы -->
-                            <ItemsControl Grid.Row="1" ItemsSource="{Binding ResultsTable}">
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding ResultsTable}" Margin="0,5,0,-5">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border BorderBrush="#E5E7EB"
@@ -583,21 +583,21 @@
 
                                                 <!-- Место -->
                                                 <Border Grid.Column="0"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="0,0,1,0"
-                                            Background="White">
+                                                        BorderBrush="#E5E7EB"
+                                                        BorderThickness="0,0,1,0"
+                                                        Background="White">
                                                     <Border Width="32"
-                                                Height="32"
-                                                CornerRadius="6"
-                                                Background="#F3F4F6"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center">
+                                                            Height="32"
+                                                            CornerRadius="6"
+                                                            Background="#F3F4F6"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Place}"
-                                                       FontSize="14"
-                                                       FontWeight="Bold"
-                                                       Foreground="#111418"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"/>
+                                                                   FontSize="14"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="#111418"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"/>
                                                     </Border>
                                                 </Border>
 
@@ -627,12 +627,13 @@
                                                         </ItemsControl.ItemsPanel>
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
-                                                                <Border Width="60"
-                                                            Height="60"
-                                                            BorderBrush="#E5E7EB"
-                                                            BorderThickness="0,0,1,0"
-                                                            Background="{Binding Converter={StaticResource ResultCellBackgroundConverter}}"
-                                                            x:Name="CellBorder">
+                                                                <Border Width="57"
+                                                                          Height="60"
+                                                                          Margin="0,0,4,0"
+                                                                          BorderBrush="#E5E7EB"
+                                                                          BorderThickness="0,0,1,0"
+                                                                          Background="{Binding Converter={StaticResource ResultCellBackgroundConverter}}"
+                                                                          x:Name="CellBorder">
                                                                     <Border.Style>
                                                                         <Style TargetType="Border">
                                                                             <Style.Triggers>
@@ -660,19 +661,19 @@
                                                                             </Path.Style>
                                                                         </Path>
                                                                         <TextBlock HorizontalAlignment="Center"
-                                                                       VerticalAlignment="Center"
-                                                                       FontSize="16"
-                                                                       FontWeight="SemiBold"
-                                                                       Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}">
+                                                                                   VerticalAlignment="Center"
+                                                                                   FontSize="15"
+                                                                                   FontWeight="SemiBold"
+                                                                                   Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}"
+                                                                                   Text="{Binding DisplayText}">
                                                                             <TextBlock.Style>
                                                                                 <Style TargetType="TextBlock">
-                                                                                    <Setter Property="Text" Value="{Binding}"/>
                                                                                     <Style.Triggers>
-                                                                                        <DataTrigger Binding="{Binding}" Value="SELF">
+                                                                                        <DataTrigger Binding="{Binding IsSelf}" Value="True">
                                                                                             <Setter Property="Text" Value=""/>
                                                                                         </DataTrigger>
-                                                                                        <DataTrigger Binding="{Binding}" Value="">
-                                                                                            <Setter Property="Text" Value=""/>
+                                                                                        <DataTrigger Binding="{Binding Outcome}" Value="NOT_PLAYED">
+                                                                                            <Setter Property="Text" Value="-"/>
                                                                                         </DataTrigger>
                                                                                     </Style.Triggers>
                                                                                 </Style>

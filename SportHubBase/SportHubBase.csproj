@@ -74,6 +74,7 @@
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Models\Admin.cs" />
+    <Compile Include="Models\CellResult.cs" />
     <Compile Include="Models\Player.cs" />
     <Compile Include="Models\Team.cs" />
     <Compile Include="Models\Tournament.cs" />
