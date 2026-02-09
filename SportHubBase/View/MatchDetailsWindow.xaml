@@ -91,6 +91,15 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="0,0,0,32">
 
+                <!-- Номер матча -->
+                <StackPanel Margin="0,0,0,32">
+                    <TextBlock Text="Номер матча" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <TextBox Text="{Binding MatchNumber, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
+                             Height="48" Padding="12" Width="150" HorizontalAlignment="Left"
+                             FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock Text="Оставьте пустым для авто-нумерации" FontSize="12" Foreground="#9CA3AF" Margin="0,4,0,0" FontStyle="Italic"/>
+                </StackPanel>
+
                 <!-- Статус матча -->
                 <StackPanel Margin="0,0,0,32">
                     <TextBlock Text="Статус матча" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
@@ -308,7 +317,9 @@
         </ScrollViewer>
 
         <!-- Кнопки внизу -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,32,0,0">
+        <StackPanel Grid.Row="2" Margin="0,32,0,0">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="#EF4444" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Отмена"
                     Command="{Binding CancelCommand}"
                     Style="{StaticResource DefaultModernButton}"
@@ -316,6 +327,7 @@
             <Button Content="Сохранить статистику"
                     Command="{Binding SaveCommand}"
                     Style="{StaticResource DefaultModernButton}"/>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Window>

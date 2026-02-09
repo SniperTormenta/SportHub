@@ -28,6 +28,11 @@ namespace SportHubBase.Models
 
         public Guid Id { get; set; } = Guid.NewGuid();
 
+        /// <summary>
+        /// Порядковый номер матча (для поиска и отображения).
+        /// </summary>
+        public int? MatchNumber { get; set; }
+
         public int Round
         {
             get => _round;

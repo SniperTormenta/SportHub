@@ -69,6 +69,7 @@
     <Compile Include="Converters\ProgressConverter.cs" />
     <Compile Include="Interfaces\IImageEncoderStrategy.cs" />
     <Compile Include="Interfaces\IImageEncoderStrategyFactory.cs" />
+    <Compile Include="Interfaces\IMatchService.cs" />
     <Compile Include="Interfaces\IResultsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IStatisticsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
@@ -85,6 +86,7 @@
     <Compile Include="Services\Export\JpgImageEncoderStrategy.cs" />
     <Compile Include="Services\Export\PngImageEncoderStrategy.cs" />
     <Compile Include="Services\JsonStorageService.cs" />
+    <Compile Include="Services\MatchService.cs" />
     <Compile Include="Services\Result\IResultsCalculator.cs" />
     <Compile Include="Services\Result\ResultsCalculatorFactory.cs" />
     <Compile Include="Services\Result\VolleyballResultsCalculator.cs" />
@@ -104,6 +106,7 @@
     <Compile Include="ViewModels\ExportPreviewViewModel.cs" />
     <Compile Include="ViewModels\MatchDetailsViewModel.cs" />
     <Compile Include="ViewModels\TournamentStatistics.cs" />
+    <Compile Include="ViewModels\ScheduleViewModel.cs" />
     <Compile Include="ViewModels\TournamentViewModel.cs" />
     <Compile Include="View\MatchDetailsWindow.xaml.cs">
       <DependentUpon>MatchDetailsWindow.xaml</DependentUpon>

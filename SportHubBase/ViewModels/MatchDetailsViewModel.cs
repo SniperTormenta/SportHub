@@ -9,12 +9,15 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
+using SportHubBase.Interfaces;
+
 namespace SportHubBase.ViewModels
 {
     public class MatchDetailsViewModel : BaseViewModel
     {
         private readonly Match _match;
         private readonly IStorage _storage;
+        private readonly IMatchService _matchService;
 
         public ObservableCollection<SetScore> SetsList { get; } = new ObservableCollection<SetScore>();
         public ObservableCollection<string> PlayersList { get; } = new ObservableCollection<string>();
@@ -133,10 +136,31 @@ namespace SportHubBase.ViewModels
 
         public event Action RequestClose;
 
-        public MatchDetailsViewModel(Match match, Guid tournamentId, IStorage storage)
+        private string _errorMessage;
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+            set { _errorMessage = value; OnPropertyChanged(); }
+        }
+
+        public int? MatchNumber
+        {
+            get => _match.MatchNumber;
+            set
+            {
+                if (_match.MatchNumber != value)
+                {
+                    _match.MatchNumber = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public MatchDetailsViewModel(Match match, Guid tournamentId, IStorage storage, IMatchService matchService)
         {
             _match = match ?? throw new ArgumentNullException(nameof(match));
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
 
             AddSetCommand = new RelayCommand(_ => AddSet());
             RemoveSetCommand = new RelayCommand(RemoveSet, CanRemoveSet);
@@ -371,6 +395,25 @@ namespace SportHubBase.ViewModels
 
         private void Save()
         {
+            ErrorMessage = string.Empty;
+
+            // Валидация номера матча
+            if (MatchNumber.HasValue)
+            {
+                // Загружаем актуальный список матчей для проверки уникальности
+                var tournaments = _storage.LoadTournaments();
+                var tournament = tournaments.Find(t => t.Matches != null && t.Matches.Any(m => m.Id == _match.Id));
+                
+                if (tournament != null)
+                {
+                    if (!_matchService.ValidateUniqueNumber(_match, tournament.Matches))
+                    {
+                        ErrorMessage = $"Номер матча {MatchNumber} уже занят.";
+                        return;
+                    }
+                }
+            }
+
             SaveSetsToString();
             
             // Синхронизируем быстрый счет со счетом по сетам перед сохранением

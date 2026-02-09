@@ -45,6 +45,11 @@ namespace SportHubBase.ViewModels
         /// Фабрика калькуляторов статистики. Инжектируется через конструктор.
         private readonly IStatisticsCalculatorFactory _statisticsFactory;
 
+        /// Сервис матчей. Инжектируется через конструктор.
+        private readonly IMatchService _matchService;
+
+        public ScheduleViewModel ScheduleVM { get; }
+
         /// Фабрика стратегий кодирования изображений. Инжектируется через конструктор.
         private readonly IImageEncoderStrategyFactory _imageEncoderFactory;
 
@@ -62,7 +67,8 @@ namespace SportHubBase.ViewModels
         
         /// Коллекция матчей (генерируется стратегией, обновляется из сохранённых).
         
-        public ObservableCollection<Match> Schedule { get; } = new ObservableCollection<Match>();
+        // Расписание теперь в ScheduleVM
+        // public ObservableCollection<Match> Schedule { get; } = new ObservableCollection<Match>();
 
         public TournamentStatistics Statistics { get; private set; } = new TournamentStatistics();
 
@@ -149,8 +155,8 @@ namespace SportHubBase.ViewModels
         
         /// Сыгранные матчи.
         
-        public int TotalMatchesPlayed => Schedule.Count(m => !string.IsNullOrWhiteSpace(m.Status) &&
-            string.Equals(m.Status, "Сыгран", StringComparison.OrdinalIgnoreCase));
+        public int TotalMatchesPlayed => ScheduleVM?.Matches.Count(m => !string.IsNullOrWhiteSpace(m.Status) &&
+            string.Equals(m.Status, "Сыгран", StringComparison.OrdinalIgnoreCase)) ?? 0;
 
         
         /// Всего сыгранных сетов (партий).
@@ -160,7 +166,7 @@ namespace SportHubBase.ViewModels
             get
             {
                 int total = 0;
-                foreach (var match in Schedule)
+                foreach (var match in ScheduleVM?.Matches ?? Enumerable.Empty<Match>())
                 {
                     if (!string.IsNullOrWhiteSpace(match.SetsBySet))
                     {
@@ -180,7 +186,7 @@ namespace SportHubBase.ViewModels
             get
             {
                 int total = 0;
-                foreach (var match in Schedule)
+                foreach (var match in ScheduleVM?.Matches ?? Enumerable.Empty<Match>())
                 {
                     if (!string.IsNullOrWhiteSpace(match.TotalScore))
                     {
@@ -206,7 +212,7 @@ namespace SportHubBase.ViewModels
         {
             get
             {
-                var mvpCounts = Schedule
+                var mvpCounts = ScheduleVM?.Matches
                     .Where(m => !string.IsNullOrWhiteSpace(m.Mvp))
                     .GroupBy(m => m.Mvp)
                     .OrderByDescending(g => g.Count())
@@ -241,8 +247,8 @@ namespace SportHubBase.ViewModels
                 var mvp = MostValuablePlayerName;
                 if (mvp == "—") return 0;
 
-                return Schedule
-                    .Count(m => string.Equals(m.Mvp, mvp, StringComparison.OrdinalIgnoreCase));
+                return ScheduleVM?.Matches
+                    .Count(m => string.Equals(m.Mvp, mvp, StringComparison.OrdinalIgnoreCase)) ?? 0;
             }
         }
 
@@ -254,7 +260,7 @@ namespace SportHubBase.ViewModels
             get
             {
                 var wins = new Dictionary<string, int>();
-                foreach (var match in Schedule)
+                foreach (var match in ScheduleVM?.Matches ?? Enumerable.Empty<Match>())
                 {
                     if (string.IsNullOrWhiteSpace(match.Status) ||
                         !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
@@ -291,7 +297,7 @@ namespace SportHubBase.ViewModels
                 if (teamName == "—") return 0;
 
                 int wins = 0;
-                foreach (var match in Schedule)
+                foreach (var match in ScheduleVM?.Matches ?? Enumerable.Empty<Match>())
                 {
                     if (string.IsNullOrWhiteSpace(match.Status) ||
                         !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
@@ -317,7 +323,7 @@ namespace SportHubBase.ViewModels
                 if (teamName == "—") return 0;
 
                 int played = 0;
-                foreach (var match in Schedule)
+                foreach (var match in ScheduleVM?.Matches ?? Enumerable.Empty<Match>())
                 {
                     if (string.IsNullOrWhiteSpace(match.Status) ||
                         !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
@@ -382,13 +388,15 @@ namespace SportHubBase.ViewModels
             IScheduleStrategyFactory scheduleFactory,
             IResultsCalculatorFactory resultsFactory,
             IStatisticsCalculatorFactory statisticsFactory,
-            IImageEncoderStrategyFactory imageEncoderFactory)
+            IImageEncoderStrategyFactory imageEncoderFactory,
+            IMatchService matchService)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _scheduleFactory = scheduleFactory ?? throw new ArgumentNullException(nameof(scheduleFactory));
             _resultsFactory = resultsFactory ?? throw new ArgumentNullException(nameof(resultsFactory));
             _statisticsFactory = statisticsFactory ?? throw new ArgumentNullException(nameof(statisticsFactory));
             _imageEncoderFactory = imageEncoderFactory ?? throw new ArgumentNullException(nameof(imageEncoderFactory));
+            _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
 
             var tournaments = _storage.LoadTournaments();
             CurrentTournament = tournaments.Find(t => t.Id == tournamentId);
@@ -418,16 +426,19 @@ namespace SportHubBase.ViewModels
                 }
             }
 
+            ScheduleVM = new ScheduleViewModel(CurrentTournament, _storage, _scheduleFactory, _matchService);
+            ScheduleVM.OnOpenMatchRequest += OpenMatchCard;
+
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
             EditTeamCommand = new RelayCommand(EditTeam, t => t is Team);
             OpenMatchCommand = new RelayCommand(OpenMatchCard, m => m is Match);
             ExportResultsCommand = new RelayCommand(OpenExportWindow);
 
-            GenerateSchedule();
+            // GenerateSchedule(); // Теперь в ScheduleVM
             GenerateResults();
 
-            Schedule.CollectionChanged += OnScheduleCollectionChanged;
-            SubscribeToMatches(Schedule);
+            ScheduleVM.Matches.CollectionChanged += OnScheduleCollectionChanged;
+            SubscribeToMatches(ScheduleVM.Matches); // Подписываемся на матчи из VM
 
             UpdateResultsFromMatches();
             UpdateStatistics();
@@ -458,8 +469,10 @@ namespace SportHubBase.ViewModels
                     }
                     OnPropertyChanged(nameof(TeamsCount));
 
+                    OnPropertyChanged(nameof(TeamsCount));
+ 
                     // Обновляем расписание и результаты после добавления команды
-                    GenerateSchedule();
+                    ScheduleVM.LoadMatches(); // Обновляем через VM
                     GenerateResults();
                     UpdateStatistics();
                 }
@@ -514,8 +527,10 @@ namespace SportHubBase.ViewModels
                     }
                     OnPropertyChanged(nameof(TeamsCount));
 
+                    OnPropertyChanged(nameof(TeamsCount));
+ 
                     // Обновляем расписание и результаты после редактирования команды
-                    GenerateSchedule();
+                    ScheduleVM.LoadMatches(); // Обновляем через VM
                     GenerateResults();
                     UpdateStatistics();
                 }
@@ -569,81 +584,8 @@ namespace SportHubBase.ViewModels
         /// Генерация расписания с использованием паттерна "Стратегия".
         /// Merge с сохранёнными матчами (сохраняет введённые результаты).
 
-        private void GenerateSchedule()
-        {
-            Schedule.Clear();
-            ScheduleMessage = string.Empty;
+        // GenerateSchedule moved to ScheduleViewModel
 
-            if (CurrentTournament == null)
-            {
-                ScheduleMessage = "Турнир не найден.";
-                return;
-            }
-            if (Teams.Count < 2)
-            {
-                ScheduleMessage = "Недостаточно команд для генерации расписания.";
-                return;
-            }
-
-            IScheduleStrategy strategy = _scheduleFactory.GetStrategy(CurrentTournament.Type);
-            if (strategy == null)
-            {
-                ScheduleMessage = $"Формат \"{CurrentTournament.Type}\" не поддерживается.";
-                return;
-            }
-            if (!strategy.IsImplemented)
-            {
-                ScheduleMessage = $"Формат \"{strategy.Name}\" — расписание в разработке.";
-                return;
-            }
-
-            IEnumerable<Match> generatedMatches;
-            try
-            {
-                generatedMatches = strategy.GenerateSchedule(Teams.ToList()) ?? Enumerable.Empty<Match>();
-            }
-            catch (Exception)
-            {
-                ScheduleMessage = "Произошла ошибка при генерации расписания.";
-                return;
-            }
-
-            var savedMatchesDict = new Dictionary<string, Match>();
-            if (CurrentTournament.Matches != null)
-            {
-                foreach (var savedMatch in CurrentTournament.Matches)
-                {
-                    string key = $"{savedMatch.Team1}|{savedMatch.Team2}|{savedMatch.Round}";
-                    savedMatchesDict[key] = savedMatch;
-                }
-            }
-
-            foreach (var generatedMatch in generatedMatches)
-            {
-                string key = $"{generatedMatch.Team1}|{generatedMatch.Team2}|{generatedMatch.Round}";
-
-                if (savedMatchesDict.TryGetValue(key, out Match savedMatch))
-                {
-                    generatedMatch.Id = savedMatch.Id;
-                    generatedMatch.Status = savedMatch.Status;
-                    generatedMatch.Team1QuickScore = savedMatch.Team1QuickScore;
-                    generatedMatch.Team2QuickScore = savedMatch.Team2QuickScore;
-                    generatedMatch.SetsScore = savedMatch.SetsScore;
-                    generatedMatch.SetsBySet = savedMatch.SetsBySet;
-                    generatedMatch.TotalScore = savedMatch.TotalScore;
-                    generatedMatch.Duration = savedMatch.Duration;
-                    generatedMatch.Referee = savedMatch.Referee;
-                    generatedMatch.Location = savedMatch.Location;
-                    generatedMatch.Mvp = savedMatch.Mvp;
-                }
-                Schedule.Add(generatedMatch);
-            }
-
-            if (Schedule.Count == 0)
-            {
-                ScheduleMessage = "Не удалось сгенерировать расписание.";
-            }
-        }
 
         
         /// Подписка на изменения коллекции Schedule (для новых/удалённых матчей).
@@ -724,7 +666,7 @@ namespace SportHubBase.ViewModels
                 .FirstOrDefault(w => w.IsActive);
             if (currentWindow != null && CurrentTournament != null)
             {
-                var detailsWindow = new MatchDetailsWindow(currentWindow, match, CurrentTournament.Id);
+                var detailsWindow = new MatchDetailsWindow(currentWindow, match, CurrentTournament.Id, _matchService);
                 if (detailsWindow.ShowDialog() == true)
                 {
                     if (string.IsNullOrWhiteSpace(match.Status))
@@ -811,7 +753,7 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
-            calculator.Calculate(CurrentTournament, Schedule, ResultsTable, out string message);
+            calculator.Calculate(CurrentTournament, ScheduleVM.Matches, ResultsTable, out string message);
             ResultsMessage = message;
 
             // Обновляем UI для таблицы результатов
@@ -879,7 +821,7 @@ namespace SportHubBase.ViewModels
             else
             {
                 var calculator = _statisticsFactory.GetCalculator(CurrentTournament.SportType);
-                Statistics = calculator.Calculate(CurrentTournament, Schedule);
+                Statistics = calculator.Calculate(CurrentTournament, ScheduleVM.Matches);
             }
 
             OnPropertyChanged(nameof(Statistics));

@@ -36,6 +36,7 @@ namespace SportHubBase
 
             // Регистрация сервисов
             Container.Register<IStorage, JsonStorageService>(Lifestyle.Singleton);
+            Container.Register<IMatchService, MatchService>(Lifestyle.Singleton);
 
             // Регистрация фабрик
             Container.Register<IScheduleStrategyFactory, ScheduleStrategyFactory>(Lifestyle.Singleton);
