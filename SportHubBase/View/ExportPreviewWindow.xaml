@@ -202,7 +202,7 @@
         </DataTemplate>
     </Window.Resources>
 
-    <Grid Background="#80000000">
+    <Grid>
         <Border Background="White"
                 CornerRadius="12"
                 Padding="24"
@@ -307,13 +307,13 @@
                                             <!-- Очки -->
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- Rk. -->
+                                        <!-- № -->
                                         <Border Grid.Column="0"
                                                 BorderBrush="#E5E7EB"
                                                 BorderThickness="0,0,1,0"
                                                 Padding="16,14"
                                                 Background="#F9FAFB">
-                                            <TextBlock Text="Rk."
+                                            <TextBlock Text="№"
                                                        FontSize="11"
                                                        FontWeight="SemiBold"
                                                        Foreground="#617589"

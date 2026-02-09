@@ -23,6 +23,7 @@ namespace SportHubBase
         {
             InitializeComponent();
 
+
             // Создание ViewModel через контейнер зависимостей
             var storage = App.Container.GetInstance<IStorage>();
             DataContext = new CreateTournamentViewModel(storage);

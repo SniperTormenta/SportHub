@@ -18,6 +18,7 @@ namespace SportHubBase
         public MainWindow()
         {
             InitializeComponent();
+            WindowState = WindowState.Maximized;
             DataContext = this;
 
             Loaded += MainWindow_Loaded;
