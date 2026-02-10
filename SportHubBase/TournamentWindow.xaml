@@ -142,9 +142,31 @@
                     <!-- Сайдбар на русском -->
                     <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="24" Margin="24,0,0,0">
                         <StackPanel>
+                            <!-- Статус -->
+                            <StackPanel Margin="0,0,0,24">
+                                <TextBlock Text="Статус" Foreground="#617589" FontSize="13"/>
+                                <TextBlock Text="{Binding TournamentStatusText}" FontSize="20" FontWeight="Bold" Foreground="#137FEC"/>
+                            </StackPanel>
+
                             <StackPanel Margin="0,0,0,24">
                                 <TextBlock Text="Количество команд" Foreground="#617589" FontSize="13"/>
                                 <TextBlock Text="{Binding TeamsCount}" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
+                            </StackPanel>
+
+                            <!-- Сыграно матчей -->
+                            <StackPanel Margin="0,0,0,24">
+                                <TextBlock Text="Сыграно матчей" Foreground="#617589" FontSize="13"/>
+                                <TextBlock Text="{Binding MatchesProgressText}" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
+                            </StackPanel>
+
+                            <!-- Лидер -->
+                            <StackPanel Margin="0,0,0,24">
+                                <TextBlock Text="Лидер турнира" Foreground="#617589" FontSize="13"/>
+                                <TextBlock Text="{Binding LeaderText}" 
+                                            FontSize="16" 
+                                            FontWeight="Bold" 
+                                            Foreground="#10B981"
+                                            TextWrapping="Wrap"/>
                             </StackPanel>
 
                             <StackPanel Margin="0,0,0,24">
@@ -159,14 +181,27 @@
                                            FontWeight="Bold" 
                                            Foreground="#111418"
                                            TextWrapping="Wrap"/>
-                                <!-- Важно: Wrap, чтобы переносился на новую строку -->
                             </StackPanel>
 
                             <Button Command="{Binding AddTeamCommand}"
-                                    Style="{StaticResource AddTeamButtonStyle}">
+                                    Style="{StaticResource AddTeamButtonStyle}"
+                                    Margin="0,0,0,16">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="+" FontSize="18" Margin="0,0,8,0"/>
                                     <TextBlock Text="Добавить команду"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Кнопка завершить турнир -->
+                            <Button Command="{Binding FinishTournamentCommand}"
+                                    Style="{StaticResource AddTeamButtonStyle}"
+                                    Background="#FFF1F2"
+                                    Foreground="#E11D48"
+                                    BorderBrush="#FECDD3"
+                                    BorderThickness="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🏁" FontSize="16" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Завершить турнир"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

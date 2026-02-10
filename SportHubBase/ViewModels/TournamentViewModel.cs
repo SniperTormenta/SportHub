@@ -146,6 +146,58 @@ namespace SportHubBase.ViewModels
             }
         }
 
+        /// Текст статуса турнира.
+        public string TournamentStatusText
+        {
+            get
+            {
+                if (CurrentTournament == null) return "—";
+
+                // Если статус явно задан в модели
+                if (!string.IsNullOrWhiteSpace(CurrentTournament.Status))
+                {
+                    // Делаем первую букву заглавной для красоты
+                    return char.ToUpper(CurrentTournament.Status[0]) + CurrentTournament.Status.Substring(1).ToLower();
+                }
+
+                // Авто-определение
+                var now = DateTime.Now.Date;
+                if (now < CurrentTournament.StartDate.Date) return "Не начат";
+                if (CurrentTournament.EndDate.HasValue && now > CurrentTournament.EndDate.Value.Date) return "Завершён";
+                
+                return "Идёт";
+            }
+        }
+
+        /// Текст прогресса матчей ("X из Y").
+        public string MatchesProgressText
+        {
+            get
+            {
+                int played = ScheduleVM?.Played ?? 0;
+                int total = ScheduleVM?.TotalMatches ?? 0;
+                return $"{played} из {total}";
+            }
+        }
+
+        /// Текст текущего лидера.
+        public string LeaderText
+        {
+            get
+            {
+                if (ResultsTable == null || ResultsTable.Count == 0) return "Лидер: —";
+                
+                // Ищем первое место
+                var leader = ResultsTable.FirstOrDefault(r => r.Place == 1);
+                if (leader == null) return "Лидер: —";
+
+                return $"Лидер: {leader.TeamName} — {leader.Points} очков";
+            }
+        }
+
+        /// Команда завершения турнира.
+        public ICommand FinishTournamentCommand { get; private set; }
+
 
         /// Флаг live-режима (для индикатора в UI).
 
@@ -438,10 +490,73 @@ namespace SportHubBase.ViewModels
             GenerateResults();
 
             ScheduleVM.Matches.CollectionChanged += OnScheduleCollectionChanged;
+            GenerateResults();
+
+            ScheduleVM.Matches.CollectionChanged += OnScheduleCollectionChanged;
+            ScheduleVM.PropertyChanged += OnScheduleViewModelPropertyChanged; // Подписываемся на изменения в ScheduleVM (счётчики)
+            ResultsTable.CollectionChanged += OnResultsTableCollectionChanged; // Подписываемся на изменения в таблице (лидер)
+
             SubscribeToMatches(ScheduleVM.Matches); // Подписываемся на матчи из VM
 
             UpdateResultsFromMatches();
             UpdateStatistics();
+            
+            // Инициализация команды завершения
+            FinishTournamentCommand = new RelayCommand(FinishTournament, CanFinishTournament);
+        }
+
+        private void FinishTournament(object parameter)
+        {
+            if (MessageBox.Show("Вы уверены, что хотите завершить турнир? Это действие установит статус 'Завершён' и дату окончания на сегодня.", 
+                "Завершение турнира", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                if (CurrentTournament != null)
+                {
+                    CurrentTournament.Status = "Завершён";
+                    // Если дата окончания не установлена или она в будущем, ставим текущую
+                    if (!CurrentTournament.EndDate.HasValue || CurrentTournament.EndDate.Value > DateTime.Now)
+                    {
+                        CurrentTournament.EndDate = DateTime.Now;
+                    }
+                    _storage.UpdateTournament(CurrentTournament);
+                    
+                    OnPropertyChanged(nameof(TournamentStatusText));
+                    OnPropertyChanged(nameof(DatesText));
+                    OnPropertyChanged(nameof(IsLive)); // Обновит индикатор Live
+                    
+                    // Обновить состояние команды (кнопка станет неактивной)
+                    (FinishTournamentCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
+        private bool CanFinishTournament(object parameter)
+        {
+            // Можно завершить, если статус не "Завершён" и все матчи сыграны
+            if (CurrentTournament == null) return false;
+            
+            bool isFinished = string.Equals(CurrentTournament.Status, "Завершён", StringComparison.OrdinalIgnoreCase);
+            if (isFinished) return false;
+
+            // Проверяем, что есть матчи и все они сыграны
+            if (ScheduleVM == null || ScheduleVM.TotalMatches == 0) return false;
+            
+            return ScheduleVM.Played == ScheduleVM.TotalMatches;
+        }
+
+        private void OnScheduleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ScheduleViewModel.Played) || 
+                e.PropertyName == nameof(ScheduleViewModel.TotalMatches))
+            {
+                OnPropertyChanged(nameof(MatchesProgressText));
+                (FinishTournamentCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+
+        private void OnResultsTableCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(LeaderText));
         }
 
         

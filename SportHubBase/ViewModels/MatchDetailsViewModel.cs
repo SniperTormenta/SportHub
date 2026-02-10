@@ -9,8 +9,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
-using SportHubBase.Interfaces;
-
 namespace SportHubBase.ViewModels
 {
     public class MatchDetailsViewModel : BaseViewModel

@@ -5,8 +5,6 @@ using SportHubBase.ViewModels;
 using System;
 using System.Windows;
 
-using SportHubBase.Interfaces;
-
 namespace SportHubBase.View
 {
     public partial class MatchDetailsWindow : Window

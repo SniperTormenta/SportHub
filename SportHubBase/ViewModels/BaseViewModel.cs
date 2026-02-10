@@ -63,6 +63,12 @@ namespace SportHubBase.ViewModels
                 add { CommandManager.RequerySuggested += value; }
                 remove { CommandManager.RequerySuggested -= value; }
             }
+
+            /// Вызывает принудительное обновление статуса выполнения команды.
+            public void RaiseCanExecuteChanged()
+            {
+                CommandManager.InvalidateRequerySuggested();
+            }
         }
     }
 }
