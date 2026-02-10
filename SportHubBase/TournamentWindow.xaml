@@ -279,18 +279,18 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                         <ColumnDefinition Width="*"/>
                                                     </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="{Binding Team1}" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,0,24,0" FontSize="15" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Team1}" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,0,24,0" FontSize="15" TextTrimming="CharacterEllipsis" Foreground="Black"/>
                                                     
                                                     <!-- Quick Score -->
                                                     <Border Grid.Column="1" Background="#F9FAFB" CornerRadius="8" Padding="12,4" MinWidth="100">
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                            <TextBlock Text="{Binding Team1QuickScore}" FontWeight="Bold" FontSize="18" MinWidth="20" TextAlignment="Center"/>
+                                                            <TextBlock Text="{Binding Team1QuickScore}" FontWeight="Bold" FontSize="18" MinWidth="20" TextAlignment="Center" Foreground="Black"/>
                                                             <TextBlock Text=" : " FontWeight="Bold" FontSize="18" Foreground="#9CA3AF" Margin="4,0"/>
-                                                            <TextBlock Text="{Binding Team2QuickScore}" FontWeight="Bold" FontSize="18" MinWidth="20" TextAlignment="Center"/>
+                                                            <TextBlock Text="{Binding Team2QuickScore}" FontWeight="Bold" FontSize="18" MinWidth="20" TextAlignment="Center" Foreground="Black"/>
                                                         </StackPanel>
                                                     </Border>
 
-                                                    <TextBlock Grid.Column="2" Text="{Binding Team2}" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="24,0,0,0" FontSize="15" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Team2}" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="24,0,0,0" FontSize="15" TextTrimming="CharacterEllipsis" Foreground="Black"/>
                                                 </Grid>
 
                                                 <!-- Edit Button -->
@@ -311,11 +311,11 @@
                     <!-- Sidebar -->
                     <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="24" VerticalAlignment="Top">
                         <StackPanel>
-                            <TextBlock Text="Статистика" FontWeight="Bold" FontSize="16" Margin="0,0,0,24"/>
+                            <TextBlock Text="Статистика" FontWeight="Bold" FontSize="16" Margin="0,0,0,24" Foreground="Black"/>
                             
                             <Grid Margin="0,0,0,16">
                                 <TextBlock Text="Всего матчей" Foreground="#6B7280"/>
-                                <TextBlock Text="{Binding ScheduleVM.TotalMatches}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding ScheduleVM.TotalMatches}" FontWeight="Bold" HorizontalAlignment="Right" Foreground="Black"/>
                             </Grid>
                             <Grid Margin="0,0,0,16">
                                 <TextBlock Text="Сыграно" Foreground="#6B7280"/>
@@ -328,7 +328,7 @@
                             
                             <Separator Background="#E5E7EB" Margin="0,0,0,24"/>
                             
-                            <TextBlock Text="Фильтр и поиск" FontWeight="Bold" FontSize="14" Margin="0,0,0,8"/>
+                            <TextBlock Text="Фильтр и поиск" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" Foreground="Black"/>
                             <TextBlock Text="Используйте поиск для фильтрации по названию команды или номеру матча." FontSize="13" Foreground="#6B7280" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>

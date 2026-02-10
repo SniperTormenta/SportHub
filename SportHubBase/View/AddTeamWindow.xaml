@@ -22,188 +22,163 @@
             VerticalAlignment="Center"
             Padding="24">
 
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <!-- Header -->
-                <Grid Grid.Row="0" Margin="0,0,0,20">
-                    <StackPanel>
-                        <TextBlock Text="Добавить новую команду" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
-                        <TextBlock Text="Создайте команду и назначьте состав для турнира."
-                                   FontSize="13" Foreground="#617589" Margin="0,4,0,0"/>
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Добавить новую команду" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
+                    <TextBlock Text="Создайте команду и назначьте состав для турнира."
+                               FontSize="13" Foreground="#617589" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Width="36" Height="36"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{Binding CancelCommand}"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="#617589"
+                        Content="X"/>
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <StackPanel Margin="0,0,0,24">
+                        <TextBlock Text="Название команды *" FontSize="13" FontWeight="Medium" Foreground="#111418"/>
+                        <TextBox Text="{Binding TeamName, UpdateSourceTrigger=PropertyChanged}"
+                                 Margin="0,8,0,0"/>
                     </StackPanel>
 
-                    <Button HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            Width="36" Height="36"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Command="{Binding CancelCommand}"
-                            FontSize="20"
-                            FontWeight="Bold"
-                            Foreground="#617589"
-                            Content="X"/>
-                </Grid>
+                    <StackPanel Margin="0,0,0,24">
+                        <TextBlock Text="Выберите капитана" FontSize="13" FontWeight="Medium" Foreground="#111418"/>
+                        <ComboBox ItemsSource="{Binding Players}"
+                                  Style="{StaticResource ModernComboBox}"
+                                  SelectedItem="{Binding SelectedCaptain, UpdateSourceTrigger=PropertyChanged}"
+                                  TextSearch.TextPath="Name"
+                                  IsTextSearchEnabled="True"
+                                  Height="44" Margin="0,8,0,0" Padding="12,0">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Text="Капитан будет иметь права на управление составом команды."
+                                   FontSize="12" Foreground="#617589" Margin="0,4,0,0"/>
+                    </StackPanel>
 
-                <!-- Body -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <Border Height="1" Background="#E5E7EB" Margin="0,16"/>
+
                     <StackPanel>
-                        <!-- Название команды -->
-                        <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="Название команды *" FontSize="13" FontWeight="Medium" Foreground="#111418"/>
-                            <TextBox Text="{Binding TeamName, UpdateSourceTrigger=PropertyChanged}"
-                                     Height="44" Margin="0,8,0,0" Padding="12,0"/>
-                        </StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Состав команды" FontWeight="Bold" FontSize="13" Foreground="#111418"/>
+                                <TextBlock Text="{Binding PlayersCount, StringFormat='Игроков: {0}'}"
+                                           FontSize="12" Foreground="#617589"/>
+                            </StackPanel>
 
-                        <!-- Капитан -->
-                        <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="Выберите капитана" FontSize="13" FontWeight="Medium" Foreground="#111418"/>
-                            <ComboBox ItemsSource="{Binding Players}"
-                                      Style="{StaticResource ModernComboBox}"
-                                      SelectedItem="{Binding SelectedCaptain, UpdateSourceTrigger=PropertyChanged}"
-                                      TextSearch.TextPath="Name"
-                                      IsTextSearchEnabled="True"
-                                      Height="44" Margin="0,8,0,0" Padding="12,0">
-                                <ComboBox.ItemTemplate>
+                            <Button Grid.Column="1"
+                                    Content="+ Добавить игрока"
+                                    Command="{Binding AddPlayerCommand}"
+                                    Style="{StaticResource DefaultModernButton}"
+                                    Background="Transparent"
+                                    Foreground="#137FEC"
+                                    FontWeight="Medium"
+                                    Padding="12,6"/>
+                        </Grid>
+
+                        <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8">
+                            <ItemsControl ItemsSource="{Binding Players}">
+                                <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Name}"/>
+                                        <Border Padding="12" Background="#F9FAFB" Margin="0,0,0,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBox Grid.Column="0"
+                                                         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                                         Margin="0,0,8,0"/>
+
+                                                <TextBlock Grid.Column="0"
+                                                           Text="Капитан"
+                                                           Foreground="#137FEC" FontSize="11"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Bottom"
+                                                           Margin="0,24,0,0"
+                                                           Visibility="{Binding IsCaptain, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                                                <Button Grid.Column="1"
+                                                        Command="{Binding DataContext.RemovePlayerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent" Padding="8" Width="36" Height="36">
+                                                    <TextBlock Text="×" FontSize="18" Foreground="#EF4444" FontWeight="Bold"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
                                     </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                            <TextBlock Text="Капитан будет иметь права на управление составом команды."
-                                       FontSize="12" Foreground="#617589" Margin="0,4,0,0"/>
-                        </StackPanel>
-
-                        <Border Height="1" Background="#E5E7EB" Margin="0,16"/>
-
-                        <!-- Состав команды -->
-                        <StackPanel>
-                            <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Состав команды" FontWeight="Bold" FontSize="13" Foreground="#111418"/>
-                                    <TextBlock Text="{Binding PlayersCount, StringFormat='Игроков: {0}'}"
-                                               FontSize="12" Foreground="#617589"/>
-                                </StackPanel>
-
-                                <Button Grid.Column="1"
-                                        Content="+ Добавить игрока"
-                                        Command="{Binding AddPlayerCommand}"
-                                        Style="{StaticResource DefaultModernButton}"
-                                        Background="Transparent"
-                                        Foreground="#137FEC"
-                                        FontWeight="Medium"
-                                        Padding="12,6"/>
-                            </Grid>
-
-                            <!-- Список игроков -->
-                            <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8">
-                                <ItemsControl ItemsSource="{Binding Players}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Padding="12" Background="#F9FAFB">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-
-                                                    <!-- Имя игрока -->
-                                                    <TextBox Grid.Column="0"
-                                                             Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                                             FontWeight="Medium"
-                                                             Foreground="#111418"
-                                                             Background="Transparent"
-                                                             BorderThickness="0"
-                                                             Padding="0"
-                                                             TextAlignment="Center"
-                                                             VerticalAlignment="Center"/>
-
-                                                    <!-- Метка "Капитан" -->
-                                                    <TextBlock Grid.Column="0"
-                                                               Text="Капитан"
-                                                               Foreground="#137FEC" FontSize="11"
-                                                               HorizontalAlignment="Center"
-                                                               VerticalAlignment="Bottom"
-                                                               Margin="0,24,0,0"
-                                                               Visibility="{Binding IsCaptain, Converter={StaticResource BoolToVisibilityConverter}}"/>
-
-                                                    <!-- Кнопка удаления игрока -->
-                                                    <Button Grid.Column="1"
-                                                            Command="{Binding DataContext.RemovePlayerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            CommandParameter="{Binding}"
-                                                            Background="Transparent" Padding="8">
-                                                        <TextBlock Text="×" FontSize="18" Foreground="#EF4444" FontWeight="Bold"/>
-                                                    </Button>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Border>
-                        </StackPanel>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
                     </StackPanel>
-                </ScrollViewer>
+                </StackPanel>
+            </ScrollViewer>
 
-                <!-- Footer – правильное центрирование -->
-                <Grid Grid.Row="2" Margin="0,24,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <!-- Удалить -->
-                        <ColumnDefinition Width="*"/>
-                        <!-- левое пространство -->
-                        <ColumnDefinition Width="Auto"/>
-                        <!-- Отмена -->
-                        <ColumnDefinition Width="40"/>
-                        <!-- фиксированный зазор Отмена ↔ Сохранить -->
-                        <ColumnDefinition Width="Auto"/>
-                        <!-- Сохранить -->
-                        <ColumnDefinition Width="*"/>
-                        <!-- правое пространство -->
-                    </Grid.ColumnDefinitions>
+            <Grid Grid.Row="2" Margin="0,24,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="40"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
+                <Button Grid.Column="0"
+                        Content="Удалить команду"
+                        Command="{Binding DeleteTeamCommand}"
+                        Style="{StaticResource ColoredModernButton}"
+                        Background="#EF4444"
+                        Foreground="White"
+                        FontWeight="Bold"
+                        Padding="20,12"
+                        MinWidth="160"
+                        Margin="0,0,32,0"
+                        Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                    <Button Grid.Column="0"
-                            Content="Удалить команду"
-                            Command="{Binding DeleteTeamCommand}"
-                            Style="{StaticResource ColoredModernButton}"
-                            Background="#EF4444"
-                            Foreground="White"
-                            FontWeight="Bold"
-                            Padding="20,12"
-                            MinWidth="160"
-                            Margin="0,0,32,0"
-                            Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                    
-                    <!-- Отмена -->
-                    <Button Grid.Column="2"
-                            Content="Отмена"
-                            Command="{Binding CancelCommand}"
-                            Style="{StaticResource DefaultModernButton}"
-                            Background="Transparent"
-                            BorderBrush="#E5E7EB"
-                            BorderThickness="1"
-                            Padding="24,12"
-                            MinWidth="120"/>
+                <Button Grid.Column="2"
+                        Content="Отмена"
+                        Command="{Binding CancelCommand}"
+                        Style="{StaticResource DefaultModernButton}"
+                        Background="Transparent"
+                        BorderBrush="#E5E7EB"
+                        BorderThickness="1"
+                        Padding="24,12"
+                        MinWidth="120"/>
 
-                    <!-- Сохранить -->
-                    <Button Grid.Column="4"
-                            Content="Сохранить команду"
-                            Command="{Binding SaveTeamCommand}"
-                            Style="{StaticResource ColoredModernButton}"
-                            Background="#137FEC"
-                            Foreground="White"
-                            FontWeight="Bold"
-                            Padding="20,12"
-                            MinWidth="160"                 
-                            HorizontalAlignment="Left"/>
+                <Button Grid.Column="4"
+                        Content="Сохранить команду"
+                        Command="{Binding SaveTeamCommand}"
+                        Style="{StaticResource ColoredModernButton}"
+                        Background="#137FEC"
+                        Foreground="White"
+                        FontWeight="Bold"
+                        Padding="20,12"
+                        MinWidth="160"/>
             </Grid>
         </Grid>
     </Border>
