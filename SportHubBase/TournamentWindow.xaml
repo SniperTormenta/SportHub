@@ -816,131 +816,453 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Статистика" Style="{StaticResource TailwindTabItem}">
-                <!-- Волейбол -->
-                <Grid>
-                    <Grid Margin="40,32">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,32,0,0">
+                    <Grid Margin="40,0,40,40">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Сводка -->
+                            <RowDefinition Height="Auto"/> <!-- Лидер -->
+                            <RowDefinition Height="*"/>    <!-- Списки -->
+                        </Grid.RowDefinitions>
 
-                    <!-- Сетка карточек -->
-                        <Grid Grid.Row="0" Margin="0,0,0,24">
+                        <!-- 1. Сводка (сверху) -->
+                        <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <UniformGrid Rows="1">
+                                <!-- Сыграно -->
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Text="Сыграно матчей" FontSize="13" Foreground="#6B7280"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock Text="{Binding Statistics.PlayedMatches}" FontSize="24" FontWeight="Bold" Foreground="#111418"/>
+                                        <TextBlock Text="/" FontSize="24" FontWeight="Bold" Foreground="#9CA3AF" Margin="4,0"/>
+                                        <TextBlock Text="{Binding Statistics.TotalMatches}" FontSize="24" FontWeight="Bold" Foreground="#9CA3AF"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Осталось -->
+                                <StackPanel Margin="16,0">
+                                    <TextBlock Text="Осталось матчей" FontSize="13" Foreground="#6B7280"/>
+                                    <TextBlock Text="{Binding Statistics.RemainingMatches}" FontSize="24" FontWeight="Bold" Foreground="#F59E0B" Margin="0,4,0,0"/>
+                                </StackPanel>
+
+                                <!-- Пятисетовки -->
+                                <StackPanel Margin="16,0">
+                                    <TextBlock Text="Количество пятисетовок" FontSize="13" Foreground="#6B7280"/>
+                                    <TextBlock Text="{Binding Statistics.FiveSetMatches}" FontSize="24" FontWeight="Bold" Foreground="#10B981" Margin="0,4,0,0"/>
+                                </StackPanel>
+
+                                <!-- Среднее -->
+                                <StackPanel Margin="16,0">
+                                    <TextBlock Text="Средняя разыгровка мячей" FontSize="13" Foreground="#6B7280"/>
+                                    <TextBlock Text="{Binding Statistics.AvgGoals}" FontSize="24" FontWeight="Bold" Foreground="#6366F1" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </UniformGrid>
+                        </Border>
+
+                        <!-- 2. Лидер турнира (середина) -->
+                        <Border Grid.Row="1" CornerRadius="12" Margin="0,0,0,24">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                    <GradientStop Color="#10B981" Offset="0"/>
+                                    <GradientStop Color="#059669" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Border Padding="24">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Width="48" Height="48" CornerRadius="24" Background="White" Margin="0,0,16,0">
+                                        <TextBlock Text="♛" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#059669"/>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="ТЕКУЩИЙ ЛИДЕР" FontSize="12" FontWeight="Bold" Foreground="#D1FAE5"/>
+                                        <TextBlock Text="{Binding Statistics.LeaderName}" FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <StackPanel Margin="0,0,24,0" HorizontalAlignment="Right">
+                                            <TextBlock Text="Очки" FontSize="12" Foreground="#D1FAE5" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding Statistics.LeaderPoints}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
+                                        </StackPanel>
+                                        <StackPanel HorizontalAlignment="Right">
+                                            <TextBlock Text="Форма" FontSize="12" Foreground="#D1FAE5" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding Statistics.LeaderForm}" FontSize="18" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"
+                                                       FontFamily="Consolas, Monospace"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Border>
+
+                        <!-- 3. Списки (низ) -->
+                        <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/> <!-- Топ MVP -->
                                 <ColumnDefinition Width="24"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="24"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/> <!-- Последние матчи -->
                             </Grid.ColumnDefinitions>
 
-                            <!-- Tournament Overview -->
-                            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <!-- Топ MVP -->
+                            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20" VerticalAlignment="Top" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="Обзор турнира" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
-
-                                    <!-- Total Matches Played -->
-                                    <Grid Margin="0,0,0,16">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="Всего матчей сыграно" FontSize="13" Foreground="#617589"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding TotalMatchesPlayed}" FontSize="13" FontWeight="Bold" Foreground="#111418"/>
-                                    </Grid>
-
-                                    <!-- Total Sets Played -->
-                                    <Grid Margin="0,0,0,16">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="Всего сетов сыграно" FontSize="13" Foreground="#617589"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding TotalSetsPlayed}" FontSize="13" FontWeight="Bold" Foreground="#111418"/>
-                                    </Grid>
-
-                                    <!-- Total Points Scored -->
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="Всего очков набрано" FontSize="13" Foreground="#617589"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding TotalPointsScored, StringFormat='{}{0:N0}'}" FontSize="13" FontWeight="Bold" Foreground="#111418"/>
-                                    </Grid>
+                                    <TextBlock Text="Топ-5 MVP" FontSize="16" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
+                                    
+                                    <ItemsControl ItemsSource="{Binding Statistics.TopMvps}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="32"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <Border Grid.Column="0" Width="32" Height="32" CornerRadius="16" Background="#F3F4F6">
+                                                        <TextBlock Text="{Binding PlayerName, StringFormat='{}{0:0}'}" TextTrimming="CharacterEllipsis" 
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#6B7280" FontSize="12"/>
+                                                    </Border>
+                                                    
+                                                    <StackPanel Grid.Column="1" Margin="12,0">
+                                                        <TextBlock Text="{Binding PlayerName}" FontWeight="SemiBold" FontSize="14" Foreground="#111418"/>
+                                                        <TextBlock Text="{Binding TeamName}" FontSize="12" Foreground="#6B7280"/>
+                                                    </StackPanel>
+                                                    
+                                                    <Border Grid.Column="2" Background="#EFF6FF" CornerRadius="6" Padding="8,4">
+                                                        <TextBlock Text="{Binding Count, StringFormat='{}{0} MVP'}" FontSize="12" FontWeight="Bold" Foreground="#1D4ED8"/>
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    
+                                    <TextBlock Text="Данные собираются на основе карточек матчей" FontSize="11" Foreground="#9CA3AF" Margin="0,8,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- Most Valuable Player -->
-                            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <!-- Последние матчи -->
+                            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20" VerticalAlignment="Top" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="Самый ценный игрок" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
+                                    <TextBlock Text="Последние матчи" FontSize="16" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
 
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                        <Border Width="80" Height="80" CornerRadius="40" Background="#F0F2F4" Margin="0,0,16,0">
-                                            <TextBlock Text="P" Foreground="#617589" FontSize="24" FontWeight="Bold"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding MostValuablePlayerName}" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
-                                            <TextBlock Text="{Binding MostValuablePlayerTeam, StringFormat='из команды {0}'}" FontSize="13" Foreground="#617589"/>
-                                        </StackPanel>
-                                    </StackPanel>
-
-                                    <Border Background="#F9FAFB" CornerRadius="8" Padding="12">
-                                        <StackPanel>
-                                            <TextBlock Text="Количество MVP" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
-                                            <TextBlock Text="{Binding MostValuablePlayerCount}" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
-                                        </StackPanel>
-                                    </Border>
+                                    <ItemsControl ItemsSource="{Binding Statistics.LastMatches}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="0,0,0,8" Padding="12" Background="#F9FAFB" CornerRadius="8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        
+                                                        <TextBlock Grid.Column="0" Text="{Binding TeamName}" 
+                                                                   FontSize="14" FontWeight="SemiBold" Foreground="#374151" VerticalAlignment="Center"/>
+                                                        
+                                                        <TextBlock Grid.Column="1" Text="{Binding Form}" 
+                                                                   FontSize="13" FontWeight="Bold" Foreground="#6B7280" VerticalAlignment="Center" 
+                                                                   FontFamily="Consolas, Monospace" Margin="12,0,0,0"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </Border>
 
-                            <!-- Most Popular Team -->
-                            <Border Grid.Column="4" Background="White" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
-                                <StackPanel>
-                                    <TextBlock Text="Сыграла больше всех матчей" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
-
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                                        <Border Width="80" Height="80" CornerRadius="40" Background="#F0F2F4" Margin="0,0,16,0">
-                                            <TextBlock Text="T" Foreground="#617589" FontSize="24" FontWeight="Bold"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding MostPopularTeamName}" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
-                                        </StackPanel>
-                                    </StackPanel>
-
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="12"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="8" Padding="12">
-                                            <StackPanel>
-                                                <TextBlock Text="МАТЧЕЙ СЫГРАНО" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding MostPopularTeamMatchesPlayed}" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
-                                            </StackPanel>
-                                        </Border>
-
-                                        <Border Grid.Column="2" Background="#F9FAFB" CornerRadius="8" Padding="12">
-                                            <StackPanel>
-                                                <TextBlock Text="% ПОБЕД" FontSize="11" Foreground="#617589" TextAlignment="Center" Margin="0,0,0,4"/>
-                                                <TextBlock Text="{Binding MostPopularTeamWinPercentage, StringFormat='{}{0:F1}%'}" FontSize="20" FontWeight="Bold" Foreground="#111418" TextAlignment="Center"/>
-                                            </StackPanel>
-                                        </Border>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
                         </Grid>
                     </Grid>
-            </Grid>
-                
+                </ScrollViewer>
             </TabItem>
             <TabItem Header="Настройки" Style="{StaticResource TailwindTabItem}">
-                <TextBlock Text="Настройки — в разработке" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="40,32,40,40" MaxWidth="900">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- 1. Основная информация -->
+                        <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Основная информация" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
+
+                                <!-- Название турнира -->
+                                <TextBlock Text="Название турнира" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                <TextBox Text="{Binding CurrentTournament.Name, UpdateSourceTrigger=PropertyChanged}" 
+                                         FontSize="14" Padding="10" Margin="0,0,0,16" 
+                                         BorderBrush="#D1D5DB" BorderThickness="1"/>
+
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Дата начала -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Дата начала" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                        <DatePicker SelectedDate="{Binding CurrentTournament.StartDate}" 
+                                                    FontSize="14" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                    </StackPanel>
+
+                                    <!-- Дата окончания -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Дата окончания" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                        <DatePicker SelectedDate="{Binding CurrentTournament.EndDate}" 
+                                                    FontSize="14" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Место проведения -->
+                                <TextBlock Text="Место проведения" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding AvailableCities}" 
+                                          SelectedItem="{Binding CurrentTournament.Location}" 
+                                          FontSize="14" Padding="10" Margin="0,0,0,0" 
+                                          BorderBrush="#D1D5DB" BorderThickness="1" IsEditable="True"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 2. Настройки формата -->
+                        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Настройки формата" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Тип турнира -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Тип турнира" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                        <ComboBox ItemsSource="{Binding AvailableTournamentTypes}" 
+                                                  SelectedItem="{Binding CurrentTournament.Type}" 
+                                                  Style="{DynamicResource ModernComboBox}"
+                                                  FontSize="14" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                    </StackPanel>
+
+                                    <!-- Вид спорта -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Вид спорта" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                        <ComboBox ItemsSource="{Binding AvailableSportTypes}" 
+                                                  SelectedItem="{Binding CurrentTournament.SportType}"
+                                                  Style="{DynamicResource ModernComboBox}"
+                                                  FontSize="14" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Очки (только для отображения) -->
+                                <TextBlock Text="Система очков" FontSize="13" Foreground="#6B7280" Margin="0,16,0,6"/>
+                                <Border Background="#F9FAFB" CornerRadius="8" Padding="12">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Победа" FontSize="12" Foreground="#6B7280"/>
+                                            <TextBlock Text="{Binding WinPoints}" FontSize="16" FontWeight="Bold" Foreground="#10B981"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="Ничья" FontSize="12" Foreground="#6B7280"/>
+                                            <TextBlock Text="{Binding DrawPoints}" FontSize="16" FontWeight="Bold" Foreground="#F59E0B"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Поражение" FontSize="12" Foreground="#6B7280"/>
+                                            <TextBlock Text="{Binding LossPoints}" FontSize="16" FontWeight="Bold" Foreground="#EF4444"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="Система очков определяется автоматически на основе вида спорта" 
+                                           FontSize="11" Foreground="#9CA3AF" Margin="0,6,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 3. Расписание -->
+                        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Управление расписанием" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
+
+                                <!-- Стратегия расписания -->
+                                <TextBlock Text="Стратегия генерации" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding AvailableScheduleStrategies}" 
+                                          FontSize="14" Padding="10" Margin="0,0,0,16"
+                                          Style="{DynamicResource ModernComboBox}"
+                                          BorderBrush="#D1D5DB" BorderThickness="1" IsEnabled="False"/>
+
+                                <!-- Кнопка пересчета -->
+                                <Button Content="Пересчитать расписание" 
+                                        Command="{Binding RegenerateScheduleCommand}"
+                                        Background="#3B82F6" Foreground="White" 
+                                        FontSize="14" FontWeight="SemiBold" 
+                                        Padding="16,10" BorderThickness="0" 
+                                        Cursor="Hand" HorizontalAlignment="Left">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" 
+                                                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#2563EB"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 4. Дополнительные действия -->
+                        <Border Grid.Row="3" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Дополнительные действия" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
+
+                                <!-- Архивация -->
+                                <CheckBox IsChecked="{Binding IsArchived}" 
+                                          Content="Турнир архивирован" 
+                                          FontSize="14" Foreground="#374151" Margin="0,0,0,16"/>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- Экспорт -->
+                                    <Button Content="Экспорт результатов" 
+                                            Command="{Binding ExportResultsCommand}"
+                                            Background="#10B981" Foreground="White" 
+                                            FontSize="14" FontWeight="SemiBold" 
+                                            Padding="16,10" BorderThickness="0" 
+                                            Cursor="Hand" Margin="0,0,12,0">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}" 
+                                                                    CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#059669"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+
+                                    <!-- Удалить -->
+                                    <Button Content="Удалить турнир" 
+                                            Command="{Binding DeleteTournamentCommand}"
+                                            Background="#EF4444" Foreground="White" 
+                                            FontSize="14" FontWeight="SemiBold" 
+                                            Padding="16,10" BorderThickness="0" 
+                                            Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}" 
+                                                                    CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#DC2626"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 5. Кнопки сохранения/отмены -->
+                        <Border Grid.Row="4" Background="#F9FAFB" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <!-- Отмена -->
+                                <Button Content="Отмена" 
+                                        Command="{Binding CancelSettingsCommand}"
+                                        Background="White" Foreground="#374151" 
+                                        FontSize="14" FontWeight="SemiBold" 
+                                        Padding="20,10" BorderThickness="1" BorderBrush="#D1D5DB"
+                                        Cursor="Hand" Margin="0,0,12,0">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" 
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#F3F4F6"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+
+                                <!-- Сохранить -->
+                                <Button Content="Сохранить изменения" 
+                                        Command="{Binding SaveSettingsCommand}"
+                                        Background="#3B82F6" Foreground="White" 
+                                        FontSize="14" FontWeight="SemiBold" 
+                                        Padding="20,10" BorderThickness="0" 
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" 
+                                                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#2563EB"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </Grid>

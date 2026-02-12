@@ -11,6 +11,7 @@ namespace SportHubBase.Interfaces
         void SaveTournaments(List<Tournament> tournaments);
         void CreateTournament(Tournament tournament);
         void UpdateTournament(Tournament tournament);
+        void DeleteTournament(Guid tournamentId);
         void AddTeam(Guid tournamentId, Team team);
         // Можно добавить другие методы по необходимости
     }

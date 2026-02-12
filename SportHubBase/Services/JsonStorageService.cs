@@ -69,5 +69,17 @@ namespace SportHubBase.Services
                 SaveTournaments(tournaments);
             }
         }
+
+        /// Удаляет турнир по ID.
+        public void DeleteTournament(Guid tournamentId)
+        {
+            var tournaments = LoadTournaments();
+            var index = tournaments.FindIndex(t => t.Id == tournamentId);
+            if (index != -1)
+            {
+                tournaments.RemoveAt(index);
+                SaveTournaments(tournaments);
+            }
+        }
     }
 }

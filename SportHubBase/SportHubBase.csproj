@@ -80,6 +80,8 @@
     <Compile Include="Models\Team.cs" />
     <Compile Include="Models\Tournament.cs" />
     <Compile Include="Models\Match.cs" />
+    <Compile Include="Models\MvpItem.cs" />
+    <Compile Include="Models\TeamMatchHistory.cs" />
     <Compile Include="Models\ResultRow.cs" />
     <Compile Include="Services\CitiesService.cs" />
     <Compile Include="Services\Export\ImageEncoderStrategyFactory.cs" />

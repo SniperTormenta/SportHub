@@ -1,6 +1,7 @@
 ﻿// Services/Statistics/IStatisticsCalculator.cs
 using SportHubBase.Models;
 using SportHubBase.ViewModels;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 namespace SportHubBase.Services.Statistics
@@ -10,6 +11,6 @@ namespace SportHubBase.Services.Statistics
     {
         string Name { get; }
         /// Вычисляет статистику и возвращает готовый объект.
-        TournamentStatistics Calculate(Tournament tournament, ObservableCollection<Match> schedule);
+        TournamentStatistics Calculate(Tournament tournament, ObservableCollection<Match> schedule, IEnumerable<ResultRow> results);
     }
 }

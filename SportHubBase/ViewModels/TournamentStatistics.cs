@@ -1,12 +1,12 @@
-﻿// ViewModels/TournamentStatistics.cs
+﻿using SportHubBase.Models;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace SportHubBase.ViewModels
 {
     /// Объект, передаваемый в DataTemplateSelector.
-    /// Содержит только информацию о виде спорта (для выбора шаблона).
-    /// При необходимости можно добавить общие свойства.
+    /// Содержит рассчитанную статистику для отображения.
     public class TournamentStatistics : INotifyPropertyChanged
     {
         private string _sportType;
@@ -15,6 +15,23 @@ namespace SportHubBase.ViewModels
             get => _sportType;
             set { _sportType = value; OnPropertyChanged(); }
         }
+
+        // --- Сводка ---
+        public int TotalMatches { get; set; }
+        public int PlayedMatches { get; set; }
+        public int RemainingMatches { get; set; }
+        public int FiveSetMatches { get; set; } // Количество пятисетовок
+        public double AvgGoals { get; set; } // Средняя разыгровка мячей
+
+        // --- Лидер ---
+        public string LeaderName { get; set; } = "—";
+        public string LeaderTeam { get; set; }
+        public int LeaderPoints { get; set; }
+        public string LeaderForm { get; set; } // W D L W W
+
+        // --- Списки ---
+        public ObservableCollection<MvpItem> TopMvps { get; set; } = new ObservableCollection<MvpItem>();
+        public ObservableCollection<TeamMatchHistory> LastMatches { get; set; } = new ObservableCollection<TeamMatchHistory>();
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

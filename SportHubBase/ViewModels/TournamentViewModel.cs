@@ -426,6 +426,68 @@ namespace SportHubBase.ViewModels
 
         public ICommand ExportResultsCommand { get; }
 
+        // Settings Tab Properties and Commands
+        
+        /// Доступные города для выбора места проведения.
+        
+        public ObservableCollection<string> AvailableCities { get; } = new ObservableCollection<string>();
+
+        /// Доступные стратегии расписания.
+        
+        public List<string> AvailableScheduleStrategies { get; private set; } = new List<string>();
+
+        /// Доступные типы турниров.
+        
+        public List<string> AvailableTournamentTypes { get; } = new List<string> { "Круговой", "Плей-офф", "Швейцарка", "Группы + плей-офф" };
+
+        /// Доступные виды спорта.
+        
+        public List<string> AvailableSportTypes { get; } = new List<string> { "Волейбол", "Футбол", "Баскетбол" };
+
+        /// Очки за победу (только для отображения).
+        
+        public int WinPoints { get; private set; }
+
+        /// Очки за ничью (только для отображения).
+        
+        public int DrawPoints { get; private set; }
+
+        /// Очки за поражение (только для отображения).
+        
+        public int LossPoints { get; private set; }
+
+        /// Флаг архивации турнира.
+        
+        private bool _isArchived;
+        public bool IsArchived
+        {
+            get => _isArchived;
+            set
+            {
+                if (_isArchived != value)
+                {
+                    _isArchived = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        /// Команда сохранения настроек.
+        
+        public ICommand SaveSettingsCommand { get; private set; }
+
+        /// Команда отмены изменений настроек.
+        
+        public ICommand CancelSettingsCommand { get; private set; }
+
+        /// Команда удаления турнира.
+        
+        public ICommand DeleteTournamentCommand { get; private set; }
+
+        /// Команда пересчета расписания.
+        
+        public ICommand RegenerateScheduleCommand { get; private set; }
+
 
         /// Конструктор: загружает турнир по ID, инициализирует коллекции, команды, генерирует расписание/результаты, подписывается на изменения.
 
@@ -500,6 +562,17 @@ namespace SportHubBase.ViewModels
 
             UpdateResultsFromMatches();
             UpdateStatistics();
+            
+            // Инициализация команд Settings
+            SaveSettingsCommand = new RelayCommand(SaveSettings);
+            CancelSettingsCommand = new RelayCommand(CancelSettings);
+            DeleteTournamentCommand = new RelayCommand(DeleteTournament);
+            RegenerateScheduleCommand = new RelayCommand(param => ScheduleVM.RefreshCommand.Execute(null));
+            
+            // Загрузка данных для Settings
+            LoadCities();
+            LoadScheduleStrategies();
+            LoadPointsFromCalculator();
             
             // Инициализация команды завершения
             FinishTournamentCommand = new RelayCommand(FinishTournament, CanFinishTournament);
@@ -936,10 +1009,138 @@ namespace SportHubBase.ViewModels
             else
             {
                 var calculator = _statisticsFactory.GetCalculator(CurrentTournament.SportType);
-                Statistics = calculator.Calculate(CurrentTournament, ScheduleVM.Matches);
+                // Передаём ScheduleVM.Matches и ResultsTable
+                Statistics = calculator.Calculate(CurrentTournament, ScheduleVM.Matches, ResultsTable);
             }
 
             OnPropertyChanged(nameof(Statistics));
+        }
+
+        // Settings Tab Methods
+
+        /// Загружает список городов из CitiesService.
+        private void LoadCities()
+        {
+            var citiesService = new Services.CitiesService();
+            var cities = citiesService.LoadCities();
+            AvailableCities.Clear();
+            foreach (var city in cities)
+            {
+                AvailableCities.Add(city);
+            }
+        }
+
+        /// Загружает доступные стратегии расписания из фабрики.
+        private void LoadScheduleStrategies()
+        {
+            // Получаем доступные стратегии из фабрики
+            AvailableScheduleStrategies = new List<string>
+            {
+                "Круговая (Бергер)",
+                "Плей-офф (в разработке)",
+                "Швейцарка (в разработке)"
+            };
+        }
+
+        /// Загружает очки из калькулятора результатов для отображения.
+        private void LoadPointsFromCalculator()
+        {
+            if (CurrentTournament == null) return;
+
+            var calculator = _resultsFactory.GetCalculator(CurrentTournament);
+            // Для волейбола: победа = 2, поражение = 0
+            // Это упрощенная логика, в реальности нужно получить из калькулятора
+            if (CurrentTournament.SportType == "Волейбол")
+            {
+                WinPoints = 2;
+                DrawPoints = 0;
+                LossPoints = 0;
+            }
+            else
+            {
+                WinPoints = 3;
+                DrawPoints = 1;
+                LossPoints = 0;
+            }
+            OnPropertyChanged(nameof(WinPoints));
+            OnPropertyChanged(nameof(DrawPoints));
+            OnPropertyChanged(nameof(LossPoints));
+        }
+
+        /// Сохраняет изменения настроек турнира.
+        private void SaveSettings(object parameter)
+        {
+            if (CurrentTournament == null) return;
+
+            try
+            {
+                // Обновляем статус архивации
+                if (IsArchived)
+                {
+                    CurrentTournament.Status = "Архивирован";
+                }
+
+                // Сохраняем в хранилище
+                _storage.UpdateTournament(CurrentTournament);
+
+                MessageBox.Show("Настройки успешно сохранены.", "Сохранение", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Обновляем UI
+                OnPropertyChanged(nameof(CurrentTournament));
+                OnPropertyChanged(nameof(FormatText));
+                OnPropertyChanged(nameof(DatesText));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении настроек: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// Отменяет изменения настроек (перезагружает турнир).
+        private void CancelSettings(object parameter)
+        {
+            if (MessageBox.Show("Отменить все несохраненные изменения?", "Отмена", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                // Перезагружаем турнир из хранилища
+                var tournaments = _storage.LoadTournaments();
+                var reloaded = tournaments.Find(t => t.Id == CurrentTournament.Id);
+                if (reloaded != null)
+                {
+                    CurrentTournament = reloaded;
+                    OnPropertyChanged(nameof(CurrentTournament));
+                    OnPropertyChanged(nameof(FormatText));
+                    OnPropertyChanged(nameof(DatesText));
+                    MessageBox.Show("Изменения отменены.", "Отмена", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+
+        /// Удаляет турнир с подтверждением.
+        private void DeleteTournament(object parameter)
+        {
+            if (CurrentTournament == null) return;
+
+            var result = MessageBox.Show(
+                $"Вы уверены, что хотите удалить турнир \"{CurrentTournament.Name}\"?\n\nЭто действие необратимо!",
+                "Удаление турнира",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    _storage.DeleteTournament(CurrentTournament.Id);
+                    MessageBox.Show("Турнир успешно удален.", "Удаление", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Закрываем окно
+                    Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.DataContext == this)?.Close();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при удалении турнира: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
     }
