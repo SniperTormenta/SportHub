@@ -580,9 +580,13 @@
                                     x:Name="RowBorder">
                                             <Border.Style>
                                                 <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="White"/>
                                                     <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="Техническое поражение">
+                                                            <Setter Property="Background" Value="#FFF9C4"/>
+                                                        </DataTrigger>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#EFF6FF"/>
+                                                            <Setter Property="Background" Value="#F8FAFC"/>
                                                         </Trigger>
                                                     </Style.Triggers>
                                                 </Style>

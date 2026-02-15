@@ -105,7 +105,10 @@ namespace SportHubBase.Services.Results
                     !teamStats.TryGetValue(match.Team2, out var team2Stats))
                     continue;
 
-                if (!string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                bool isPlayed = string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase);
+                bool isTechDefeat = string.Equals(match.Status, "Техническое поражение", StringComparison.OrdinalIgnoreCase);
+
+                if (!isPlayed && !isTechDefeat)
                     continue;
 
                 // Парсинг счёта по сетам (SetsScore или QuickScore)
@@ -151,7 +154,8 @@ namespace SportHubBase.Services.Results
                     {
                         HomeSets = team1Sets,
                         AwaySets = team2Sets,
-                        DisplayText = $"{team1Sets}:{team2Sets}"
+                        DisplayText = $"{team1Sets}:{team2Sets}",
+                        IsTechnicalDefeat = isTechDefeat
                     };
 
                     // С точки зрения команды в строке t2 (Team2) — зеркально
@@ -159,7 +163,8 @@ namespace SportHubBase.Services.Results
                     {
                         HomeSets = team2Sets,
                         AwaySets = team1Sets,
-                        DisplayText = $"{team2Sets}:{team1Sets}"
+                        DisplayText = $"{team2Sets}:{team1Sets}",
+                        IsTechnicalDefeat = isTechDefeat
                     };
 
                     if (team1Sets > team2Sets)
@@ -311,7 +316,9 @@ namespace SportHubBase.Services.Results
         private static Dictionary<string, Dictionary<string, int>> BuildHeadToHead(ObservableCollection<Match> schedule)
         {
             var dict = new Dictionary<string, Dictionary<string, int>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var m in schedule.Where(m => string.Equals(m.Status, "Сыгран", StringComparison.OrdinalIgnoreCase)))
+            var playedStatuses = new[] { "Сыгран", "Техническое поражение" };
+            
+            foreach (var m in schedule.Where(m => playedStatuses.Contains(m.Status, StringComparer.OrdinalIgnoreCase)))
             {
                 var score = ParsePair(m.SetsScore) ?? ParsePair(m.Team1QuickScore, m.Team2QuickScore);
                 if (!score.HasValue) continue;

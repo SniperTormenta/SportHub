@@ -19,6 +19,9 @@ namespace SportHubBase.Converters
             if (!cell.IsPlayed)
                 return new SolidColorBrush(Color.FromRgb(249, 250, 251));      // очень светлый
 
+            if (cell.IsTechnicalDefeat)
+                return new SolidColorBrush(Color.FromRgb(254, 243, 199));      // желтый технички
+
             if (cell.IsWin)
                 return new SolidColorBrush(Color.FromRgb(220, 252, 231));      // светло-зелёный
 

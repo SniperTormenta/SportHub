@@ -38,6 +38,9 @@ namespace SportHubBase.ViewModels
             {
                 _match.Status = value;
                 OnPropertyChanged();
+                
+                // Показываем/скрываем блок технического поражения
+                IsTechnicalDefeatVisible = (value == "Техническое поражение");
             }
         }
 
@@ -131,6 +134,7 @@ namespace SportHubBase.ViewModels
         public ICommand RemoveSetCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
+        public ICommand CancelTechnicalDefeatCommand { get; }
 
         public event Action RequestClose;
 
@@ -154,6 +158,31 @@ namespace SportHubBase.ViewModels
             }
         }
 
+        // Техническое поражение
+        private bool _isTechnicalDefeatVisible;
+        public bool IsTechnicalDefeatVisible
+        {
+            get => _isTechnicalDefeatVisible;
+            set
+            {
+                _isTechnicalDefeatVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _technicalDefeatTeam;
+        public string TechnicalDefeatTeam
+        {
+            get => _technicalDefeatTeam;
+            set
+            {
+                _technicalDefeatTeam = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public List<string> TechnicalDefeatTeams => new List<string> { Team1, Team2 };
+
         public MatchDetailsViewModel(Match match, Guid tournamentId, IStorage storage, IMatchService matchService)
         {
             _match = match ?? throw new ArgumentNullException(nameof(match));
@@ -164,6 +193,7 @@ namespace SportHubBase.ViewModels
             RemoveSetCommand = new RelayCommand(RemoveSet, CanRemoveSet);
             SaveCommand = new RelayCommand(_ => Save());
             CancelCommand = new RelayCommand(_ => Cancel());
+            CancelTechnicalDefeatCommand = new RelayCommand(_ => CancelTechnicalDefeat());
 
             LoadSetsFromString();
             LoadPlayersFromTeams(tournamentId);
@@ -391,6 +421,27 @@ namespace SportHubBase.ViewModels
 
         private bool CanRemoveSet(object parameter) => parameter is SetScore;
 
+        private void CancelTechnicalDefeat()
+        {
+            // Сбрасываем статус на "Не сыгран"
+            Status = "Не сыгран";
+            
+            // Очищаем сеты
+            SetsList.Clear();
+            
+            // Очищаем быстрый счет
+            _match.Team1QuickScore = string.Empty;
+            _match.Team2QuickScore = string.Empty;
+            OnPropertyChanged(nameof(Team1QuickScore));
+            OnPropertyChanged(nameof(Team2QuickScore));
+            
+            // Сбрасываем выбор команды
+            TechnicalDefeatTeam = null;
+            
+            // Скрываем блок технического поражения
+            IsTechnicalDefeatVisible = false;
+        }
+
         private void Save()
         {
             ErrorMessage = string.Empty;
@@ -412,6 +463,45 @@ namespace SportHubBase.ViewModels
                 }
             }
 
+            // Обработка технического поражения
+            if (Status == "Техническое поражение")
+            {
+                if (string.IsNullOrWhiteSpace(TechnicalDefeatTeam))
+                {
+                    ErrorMessage = "Выберите команду, получившую техническое поражение.";
+                    return;
+                }
+
+                // Очищаем существующие сеты
+                SetsList.Clear();
+
+                // Добавляем 3 сета с автоматическими счетами
+                for (int i = 1; i <= 3; i++)
+                {
+                    var set = new SetScore { Number = i };
+                    
+                    // Если техничка у Team1, то счет 0:25, иначе 25:0
+                    if (TechnicalDefeatTeam == Team1)
+                    {
+                        set.Score1 = 0;
+                        set.Score2 = 25;
+                    }
+                    else
+                    {
+                        set.Score1 = 25;
+                        set.Score2 = 0;
+                    }
+                    
+                    set.PropertyChanged += (s, e) => 
+                    {
+                        RaiseCalculatedProperties();
+                        SyncSetsToQuickScore();
+                    };
+                    
+                    SetsList.Add(set);
+                }
+            }
+
             SaveSetsToString();
             
             // Синхронизируем быстрый счет со счетом по сетам перед сохранением
@@ -424,7 +514,11 @@ namespace SportHubBase.ViewModels
                 !string.IsNullOrWhiteSpace(_match.Team1QuickScore) ||
                 !string.IsNullOrWhiteSpace(_match.Team2QuickScore))
             {
-                _match.Status = "Сыгран";
+                // Если статус УЖЕ "Техническое поражение", не меняем его на "Сыгран"
+                if (Status != "Техническое поражение")
+                {
+                    _match.Status = "Сыгран";
+                }
             }
 
             RequestClose?.Invoke();

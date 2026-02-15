@@ -8,6 +8,8 @@ namespace SportHubBase.Models
         public string Outcome { get; set; }
         public int? HomeSets { get; set; }
         public int? AwaySets { get; set; }
+        public bool IsTechnicalDefeat { get; set; }
+
 
         public bool IsSelf
         {

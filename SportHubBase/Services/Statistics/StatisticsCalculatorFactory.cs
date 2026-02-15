@@ -48,7 +48,8 @@ namespace SportHubBase.Services.Statistics
             // 1. Сводка
             stats.TotalMatches = schedule.Count;
             stats.PlayedMatches = schedule.Count(m => !string.IsNullOrWhiteSpace(m.Status) && 
-                m.Status.Equals("Сыгран", StringComparison.OrdinalIgnoreCase));
+                (m.Status.Equals("Сыгран", StringComparison.OrdinalIgnoreCase) || 
+                 m.Status.Equals("Техническое поражение", StringComparison.OrdinalIgnoreCase)));
             stats.RemainingMatches = stats.TotalMatches - stats.PlayedMatches;
 
             // Считаем количество пятисетовок (матчи, где SetsScore = "3:2" или "2:3")
@@ -150,7 +151,8 @@ namespace SportHubBase.Services.Statistics
         {
             var playedMatches = schedule
                 .Where(m => !string.IsNullOrWhiteSpace(m.Status) && 
-                            m.Status.Equals("Сыгран", StringComparison.OrdinalIgnoreCase) &&
+                            (m.Status.Equals("Сыгран", StringComparison.OrdinalIgnoreCase) || 
+                             m.Status.Equals("Техническое поражение", StringComparison.OrdinalIgnoreCase)) &&
                             (m.Team1 == teamName || m.Team2 == teamName))
                 .OrderByDescending(m => m.MatchNumber.HasValue ? m.MatchNumber.Value : 0) // Последние матчи первыми
                 .Take(5)

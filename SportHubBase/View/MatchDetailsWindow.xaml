@@ -110,7 +110,29 @@
                         <sys:String>Идёт</sys:String>
                         <sys:String>Сыгран</sys:String>
                         <sys:String>Перенесён</sys:String>
+                        <sys:String>Техническое поражение</sys:String>
                     </ComboBox>
+                </StackPanel>
+
+                <!-- Техническое поражение -->
+                <StackPanel Margin="0,0,0,32" Visibility="{Binding IsTechnicalDefeatVisible, Converter={StaticResource BoolToVis}}">
+                    <Border Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="2" CornerRadius="8" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="⚠️ Техническое поражение" FontSize="16" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,12"/>
+                            
+                            <TextBlock Text="Какая команда получила техническое поражение?" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,8"/>
+                            <ComboBox SelectedItem="{Binding TechnicalDefeatTeam, UpdateSourceTrigger=PropertyChanged}"
+                                      ItemsSource="{Binding TechnicalDefeatTeams}"
+                                      Style="{StaticResource ModernComboBox}"
+                                      Width="300" HorizontalAlignment="Left" Margin="0,0,0,16"/>
+                            
+                            <Button Content="Отменить техническое поражение"
+                                    Command="{Binding CancelTechnicalDefeatCommand}"
+                                    Style="{StaticResource DefaultModernButton}"
+                                    Padding="16,10"
+                                    HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <!-- Быстрый счет (синхронизируется с расписанием) -->

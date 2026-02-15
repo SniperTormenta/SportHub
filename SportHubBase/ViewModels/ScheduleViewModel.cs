@@ -75,8 +75,8 @@ namespace SportHubBase.ViewModels
 
         // Статистика
         public int TotalMatches => Matches.Count;
-        public int Played => Matches.Count(m => m.Status == "Сыгран");
-        public int NotPlayed => Matches.Count(m => m.Status != "Сыгран");
+        public int Played => Matches.Count(m => m.Status == "Сыгран" || m.Status == "Техническое поражение");
+        public int NotPlayed => Matches.Count(m => m.Status != "Сыгран" && m.Status != "Техническое поражение");
         public int TotalEncounters => TotalMatches; // Пока то же самое
 
         // Свойство для доступа из UI к списку фильтров
@@ -252,10 +252,10 @@ namespace SportHubBase.ViewModels
             switch (_filter)
             {
                 case MatchFilterType.Played:
-                    typeMatch = match.Status == "Сыгран";
+                    typeMatch = match.Status == "Сыгран" || match.Status == "Техническое поражение";
                     break;
                 case MatchFilterType.NotPlayed:
-                    typeMatch = match.Status != "Сыгран";
+                    typeMatch = match.Status != "Сыгран" && match.Status != "Техническое поражение";
                     break;
             }
 

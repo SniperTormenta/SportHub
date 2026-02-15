@@ -208,7 +208,8 @@ namespace SportHubBase.ViewModels
         /// Сыгранные матчи.
         
         public int TotalMatchesPlayed => ScheduleVM?.Matches.Count(m => !string.IsNullOrWhiteSpace(m.Status) &&
-            string.Equals(m.Status, "Сыгран", StringComparison.OrdinalIgnoreCase)) ?? 0;
+            (string.Equals(m.Status, "Сыгран", StringComparison.OrdinalIgnoreCase) || 
+             string.Equals(m.Status, "Техническое поражение", StringComparison.OrdinalIgnoreCase))) ?? 0;
 
         
         /// Всего сыгранных сетов (партий).
@@ -315,7 +316,8 @@ namespace SportHubBase.ViewModels
                 foreach (var match in ScheduleVM?.Matches ?? Enumerable.Empty<Match>())
                 {
                     if (string.IsNullOrWhiteSpace(match.Status) ||
-                        !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                        (!string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase) &&
+                         !string.Equals(match.Status, "Техническое поражение", StringComparison.OrdinalIgnoreCase)))
                         continue;
 
                     var outcome = GetOutcome(match);
@@ -352,7 +354,8 @@ namespace SportHubBase.ViewModels
                 foreach (var match in ScheduleVM?.Matches ?? Enumerable.Empty<Match>())
                 {
                     if (string.IsNullOrWhiteSpace(match.Status) ||
-                        !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                        (!string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase) &&
+                         !string.Equals(match.Status, "Техническое поражение", StringComparison.OrdinalIgnoreCase)))
                         continue;
 
                     var outcome = GetOutcome(match);
@@ -378,7 +381,8 @@ namespace SportHubBase.ViewModels
                 foreach (var match in ScheduleVM?.Matches ?? Enumerable.Empty<Match>())
                 {
                     if (string.IsNullOrWhiteSpace(match.Status) ||
-                        !string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase))
+                        (!string.Equals(match.Status, "Сыгран", StringComparison.OrdinalIgnoreCase) &&
+                         !string.Equals(match.Status, "Техническое поражение", StringComparison.OrdinalIgnoreCase)))
                         continue;
 
                     if (match.Team1 == teamName || match.Team2 == teamName)
