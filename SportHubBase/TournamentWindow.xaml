@@ -192,6 +192,37 @@
                                 </StackPanel>
                             </Button>
 
+                            <!-- Кнопка импорта команд -->
+                            <Button Command="{Binding ImportTeamsExcelCommand}"
+                                    Style="{StaticResource AddTeamButtonStyle}"
+                                    Margin="0,0,0,8"
+                                    Background="#F3F4F6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📥" FontSize="16" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Импорт команд (Excel)"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Кнопка экспорта команд -->
+                            <Button Command="{Binding ExportTeamsExcelCommand}"
+                                    Style="{StaticResource AddTeamButtonStyle}"
+                                    Margin="0,0,0,8"
+                                    Background="#F3F4F6">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📤" FontSize="16" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Экспорт команд (Excel)"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Кнопка шаблона -->
+                            <Button Command="{Binding DownloadTemplateCommand}"
+                                    Style="{StaticResource AddTeamButtonStyle}"
+                                    Margin="0,0,0,16"
+                                    Background="Transparent"
+                                    BorderThickness="0">
+                                <TextBlock Text="Скачать шаблон для импорта" FontSize="12" Foreground="#137FEC" TextDecorations="Underline"/>
+                            </Button>
+
                             <!-- Кнопка завершить турнир -->
                             <Button Command="{Binding FinishTournamentCommand}"
                                     Style="{StaticResource AddTeamButtonStyle}"
@@ -380,14 +411,25 @@
 
                         <TextBlock Grid.Column="0" Text="Результаты" VerticalAlignment="Center"/>
 
-                        <Button Grid.Column="2"
-                                Content="Экспорт"
-                                Command="{Binding ExportResultsCommand}"
-                                Visibility="{Binding ElementName=ResultsTab, Path=IsSelected, Converter={StaticResource BoolToVisibilityConverter}}"
-                                Style="{StaticResource AddTeamButtonStyle}"
-                                Padding="8,4"
-                                Margin="8,0,0,0"
-                                FontSize="12"/>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Button Content="Экспорт (PNG)"
+                                    Command="{Binding ExportResultsCommand}"
+                                    Visibility="{Binding ElementName=ResultsTab, Path=IsSelected, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Style="{StaticResource AddTeamButtonStyle}"
+                                    Padding="8,4"
+                                    Margin="8,0,0,0"
+                                    FontSize="12"/>
+
+                            <Button Content="Экспорт (Excel)"
+                                    Command="{Binding ExportResultsExcelCommand}"
+                                    Visibility="{Binding ElementName=ResultsTab, Path=IsSelected, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Style="{StaticResource AddTeamButtonStyle}"
+                                    Background="#10B981"
+                                    Foreground="White"
+                                    Padding="8,4"
+                                    Margin="8,0,0,0"
+                                    FontSize="12"/>
+                        </StackPanel>
                     </Grid>
                 </TabItem.Header>
                 <Grid Margin="40,32">
@@ -829,37 +871,34 @@
                         </Grid.RowDefinitions>
 
                         <!-- 1. Сводка (сверху) -->
-                        <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
-                            <UniformGrid Rows="1">
-                                <!-- Сыграно -->
-                                <StackPanel Margin="0,0,16,0">
-                                    <TextBlock Text="Сыграно матчей" FontSize="13" Foreground="#6B7280"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <TextBlock Text="{Binding Statistics.PlayedMatches}" FontSize="24" FontWeight="Bold" Foreground="#111418"/>
-                                        <TextBlock Text="/" FontSize="24" FontWeight="Bold" Foreground="#9CA3AF" Margin="4,0"/>
-                                        <TextBlock Text="{Binding Statistics.TotalMatches}" FontSize="24" FontWeight="Bold" Foreground="#9CA3AF"/>
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <!-- Осталось -->
-                                <StackPanel Margin="16,0">
-                                    <TextBlock Text="Осталось матчей" FontSize="13" Foreground="#6B7280"/>
-                                    <TextBlock Text="{Binding Statistics.RemainingMatches}" FontSize="24" FontWeight="Bold" Foreground="#F59E0B" Margin="0,4,0,0"/>
-                                </StackPanel>
-
-                                <!-- Пятисетовки -->
-                                <StackPanel Margin="16,0">
-                                    <TextBlock Text="Количество пятисетовок" FontSize="13" Foreground="#6B7280"/>
-                                    <TextBlock Text="{Binding Statistics.FiveSetMatches}" FontSize="24" FontWeight="Bold" Foreground="#10B981" Margin="0,4,0,0"/>
-                                </StackPanel>
-
-                                <!-- Среднее -->
-                                <StackPanel Margin="16,0">
-                                    <TextBlock Text="Средняя разыгровка мячей" FontSize="13" Foreground="#6B7280"/>
-                                    <TextBlock Text="{Binding Statistics.AvgGoals}" FontSize="24" FontWeight="Bold" Foreground="#6366F1" Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </UniformGrid>
-                        </Border>
+                        <ItemsControl Grid.Row="0" ItemsSource="{Binding Statistics.ExtraBlocks}" Margin="0,0,0,24">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="8" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E5E7EB" BorderThickness="1">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.05"/>
+                                        </Border.Effect>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" FontSize="13" Foreground="#6B7280" Margin="0,0,0,4"/>
+                                                <TextBlock Text="{Binding Value}" FontSize="24" FontWeight="Bold" Foreground="#111418"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20" Background="{Binding Color}" Opacity="0.1" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="📊" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{Binding Color}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
                         <!-- 2. Лидер турнира (середина) -->
                         <Border Grid.Row="1" CornerRadius="12" Margin="0,0,0,24">

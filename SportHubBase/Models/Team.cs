@@ -6,11 +6,17 @@ namespace SportHubBase.Models
 {
     public class Team
     {
+        [JsonProperty("id")]
+        public System.Guid Id { get; set; }
+
         [JsonProperty("name")]
         public string Name { get; set; }
 
         [JsonProperty("captain")]
         public string Captain { get; set; }
+
+        [JsonProperty("city")]
+        public string City { get; set; }
 
         [JsonProperty("logoUrl")]
         public string LogoUrl { get; set; }

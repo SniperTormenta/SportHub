@@ -51,10 +51,15 @@ namespace SportHubBase.Services.Statistics
                 (m.Status.Equals("Сыгран", StringComparison.OrdinalIgnoreCase) || 
                  m.Status.Equals("Техническое поражение", StringComparison.OrdinalIgnoreCase)));
             stats.RemainingMatches = stats.TotalMatches - stats.PlayedMatches;
+            stats.TechnicalDefeatsCount = schedule.Count(m => !string.IsNullOrWhiteSpace(m.Status) && 
+                 m.Status.Equals("Техническое поражение", StringComparison.OrdinalIgnoreCase));
 
-            // Считаем количество пятисетовок (матчи, где SetsScore = "3:2" или "2:3")
+            // Считаем количество пятисетовок и самый результативный матч
             int fiveSetCount = 0;
             int totalPoints = 0;
+            int maxMatchPoints = -1;
+            Match mostProductiveMatch = null;
+
             foreach (var match in schedule)
             {
                 if (!string.IsNullOrWhiteSpace(match.SetsScore))
@@ -66,7 +71,7 @@ namespace SportHubBase.Services.Statistics
                     }
                 }
                 
-                // Считаем общее количество мячей для средней разыгровки
+                // Считаем общее количество мячей
                 if (!string.IsNullOrWhiteSpace(match.TotalScore))
                 {
                     var parts = match.TotalScore.Split(':');
@@ -74,12 +79,25 @@ namespace SportHubBase.Services.Statistics
                         int.TryParse(parts[0].Trim(), out int p1) && 
                         int.TryParse(parts[1].Trim(), out int p2))
                     {
-                        totalPoints += (p1 + p2);
+                        int currentMatchPoints = p1 + p2;
+                        totalPoints += currentMatchPoints;
+
+                        if (currentMatchPoints > maxMatchPoints)
+                        {
+                            maxMatchPoints = currentMatchPoints;
+                            mostProductiveMatch = match;
+                        }
                     }
                 }
             }
             stats.FiveSetMatches = fiveSetCount;
             stats.AvgGoals = stats.PlayedMatches > 0 ? Math.Round((double)totalPoints / stats.PlayedMatches, 1) : 0;
+            
+            if (mostProductiveMatch != null)
+            {
+                stats.MostProductiveMatch = string.Format("{0} — {1} ({2})", 
+                    mostProductiveMatch.Team1, mostProductiveMatch.Team2, mostProductiveMatch.TotalScore);
+            }
 
             // 2. Лидер
             if (results != null)
@@ -89,13 +107,20 @@ namespace SportHubBase.Services.Statistics
                 {
                     stats.LeaderName = leader.TeamName;
                     stats.LeaderPoints = leader.Points;
-                    
-                    // Форма лидера (последние 5 матчей)
                     stats.LeaderForm = GetTeamForm(leader.TeamName, schedule);
                 }
             }
 
-            // 3. Топ MVP
+            // 3. Заполнение ExtraBlocks для динамических карточек
+            stats.ExtraBlocks.Clear();
+            stats.ExtraBlocks.Add(new StatBlock { Title = "Всего матчей", Value = stats.TotalMatches.ToString(), Color = "#3F51B5" });
+            stats.ExtraBlocks.Add(new StatBlock { Title = "Сыграно", Value = stats.PlayedMatches.ToString(), Color = "#4CAF50" });
+            stats.ExtraBlocks.Add(new StatBlock { Title = "Осталось", Value = stats.RemainingMatches.ToString(), Color = "#FF9800" });
+            stats.ExtraBlocks.Add(new StatBlock { Title = "Пятисетки (3-2)", Value = stats.FiveSetMatches.ToString(), Color = "#E91E63" });
+            stats.ExtraBlocks.Add(new StatBlock { Title = "Тех. поражения", Value = stats.TechnicalDefeatsCount.ToString(), Color = "#F44336" });
+            stats.ExtraBlocks.Add(new StatBlock { Title = "Лидер", Value = stats.LeaderName, Color = "#9C27B0" });
+
+            // 4. Топ MVP
             var mvpGroups = schedule
                 .Where(m => !string.IsNullOrWhiteSpace(m.Mvp) && m.Mvp != "—")
                 .GroupBy(m => m.Mvp)

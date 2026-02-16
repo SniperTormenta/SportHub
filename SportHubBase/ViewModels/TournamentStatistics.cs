@@ -20,7 +20,9 @@ namespace SportHubBase.ViewModels
         public int TotalMatches { get; set; }
         public int PlayedMatches { get; set; }
         public int RemainingMatches { get; set; }
-        public int FiveSetMatches { get; set; } // Количество пятисетовок
+        public int FiveSetMatches { get; set; } // Количество пятисетовок (3:2 или 2:3)
+        public string MostProductiveMatch { get; set; } = "—"; // Самый результативный матч
+        public int TechnicalDefeatsCount { get; set; } // Количество технических поражений
         public double AvgGoals { get; set; } // Средняя разыгровка мячей
 
         // --- Лидер ---
@@ -29,7 +31,8 @@ namespace SportHubBase.ViewModels
         public int LeaderPoints { get; set; }
         public string LeaderForm { get; set; } // W D L W W
 
-        // --- Списки ---
+        // --- Списки и блоки ---
+        public ObservableCollection<StatBlock> ExtraBlocks { get; set; } = new ObservableCollection<StatBlock>();
         public ObservableCollection<MvpItem> TopMvps { get; set; } = new ObservableCollection<MvpItem>();
         public ObservableCollection<TeamMatchHistory> LastMatches { get; set; } = new ObservableCollection<TeamMatchHistory>();
 

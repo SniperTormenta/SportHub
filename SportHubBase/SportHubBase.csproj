@@ -67,6 +67,7 @@
     <Compile Include="Converters\ResultCellBackgroundConverter.cs" />
     <Compile Include="Converters\IsSelfCellConverter.cs" />
     <Compile Include="Converters\ProgressConverter.cs" />
+    <Compile Include="Interfaces\IExcelService.cs" />
     <Compile Include="Interfaces\IImageEncoderStrategy.cs" />
     <Compile Include="Interfaces\IImageEncoderStrategyFactory.cs" />
     <Compile Include="Interfaces\IMatchService.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
     <Compile Include="Interfaces\IScoringStrategy.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
+    <Compile Include="Models\StatBlock.cs" />
     <Compile Include="Models\Admin.cs" />
     <Compile Include="Models\CellResult.cs" />
     <Compile Include="Models\Player.cs" />
@@ -85,6 +87,7 @@
     <Compile Include="Models\TeamMatchHistory.cs" />
     <Compile Include="Models\ResultRow.cs" />
     <Compile Include="Services\CitiesService.cs" />
+    <Compile Include="Services\Export\ExcelService.cs" />
     <Compile Include="Services\Export\ImageEncoderStrategyFactory.cs" />
     <Compile Include="Services\Export\JpgImageEncoderStrategy.cs" />
     <Compile Include="Services\Export\PngImageEncoderStrategy.cs" />

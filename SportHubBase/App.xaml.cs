@@ -43,6 +43,7 @@ namespace SportHubBase
             Container.Register<IResultsCalculatorFactory, ResultsCalculatorFactory>(Lifestyle.Singleton);
             Container.Register<IStatisticsCalculatorFactory, StatisticsCalculatorFactory>(Lifestyle.Singleton);
             Container.Register<IImageEncoderStrategyFactory, ImageEncoderStrategyFactory>(Lifestyle.Singleton);
+            Container.Register<IExcelService, ExcelService>(Lifestyle.Singleton);
 
             // Верификация контейнера
             Container.Verify();

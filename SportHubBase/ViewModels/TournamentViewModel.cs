@@ -48,6 +48,9 @@ namespace SportHubBase.ViewModels
         /// Сервис матчей. Инжектируется через конструктор.
         private readonly IMatchService _matchService;
 
+        /// Сервис Excel. Инжектируется через конструктор.
+        private readonly IExcelService _excelService;
+
         public ScheduleViewModel ScheduleVM { get; }
 
         /// Фабрика стратегий кодирования изображений. Инжектируется через конструктор.
@@ -427,8 +430,19 @@ namespace SportHubBase.ViewModels
         public ICommand OpenMatchCommand { get; }
 
         /// Команда экспорта результатов.
-
         public ICommand ExportResultsCommand { get; }
+
+        /// Команда экспорта результатов в Excel.
+        public ICommand ExportResultsExcelCommand { get; }
+
+        /// Команда импорта команд из Excel.
+        public ICommand ImportTeamsExcelCommand { get; }
+
+        /// Команда экспорта команд в Excel.
+        public ICommand ExportTeamsExcelCommand { get; }
+
+        /// Команда скачивания шаблона для импорта команд.
+        public ICommand DownloadTemplateCommand { get; }
 
         // Settings Tab Properties and Commands
         
@@ -552,7 +566,8 @@ namespace SportHubBase.ViewModels
             IResultsCalculatorFactory resultsFactory,
             IStatisticsCalculatorFactory statisticsFactory,
             IImageEncoderStrategyFactory imageEncoderFactory,
-            IMatchService matchService)
+            IMatchService matchService,
+            IExcelService excelService)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _scheduleFactory = scheduleFactory ?? throw new ArgumentNullException(nameof(scheduleFactory));
@@ -560,6 +575,7 @@ namespace SportHubBase.ViewModels
             _statisticsFactory = statisticsFactory ?? throw new ArgumentNullException(nameof(statisticsFactory));
             _imageEncoderFactory = imageEncoderFactory ?? throw new ArgumentNullException(nameof(imageEncoderFactory));
             _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
+            _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
 
             var tournaments = _storage.LoadTournaments();
             CurrentTournament = tournaments.Find(t => t.Id == tournamentId);
@@ -596,6 +612,10 @@ namespace SportHubBase.ViewModels
             EditTeamCommand = new RelayCommand(EditTeam, t => t is Team);
             OpenMatchCommand = new RelayCommand(OpenMatchCard, m => m is Match);
             ExportResultsCommand = new RelayCommand(OpenExportWindow);
+            ExportResultsExcelCommand = new RelayCommand(ExportResultsExcel);
+            ImportTeamsExcelCommand = new RelayCommand(ImportTeamsExcel);
+            ExportTeamsExcelCommand = new RelayCommand(ExportTeamsExcel);
+            DownloadTemplateCommand = new RelayCommand(DownloadTemplate);
 
             // GenerateSchedule(); // Теперь в ScheduleVM
             GenerateResults();
@@ -1188,6 +1208,122 @@ namespace SportHubBase.ViewModels
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Ошибка при удалении турнира: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportResultsExcel(object parameter)
+        {
+            var sfd = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel CSV (*.csv)|*.csv",
+                FileName = string.Format("Результаты_{0}_{1:yyyyMMdd}", CurrentTournament.Name, DateTime.Now)
+            };
+
+            if (sfd.ShowDialog() == true)
+            {
+                try
+                {
+                    var headers = new List<string> { "Место", "Команда", "В", "П", "ВП", "ПП", "Очки" };
+                    _excelService.ExportResults(CurrentTournament.Name, headers, ResultsTable, sfd.FileName);
+                    MessageBox.Show("Экспорт завершен успешно!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(string.Format("Ошибка при экспорте: {0}", ex.Message), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ImportTeamsExcel(object parameter)
+        {
+            var ofd = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Excel CSV (*.csv)|*.csv"
+            };
+
+            if (ofd.ShowDialog() == true)
+            {
+                try
+                {
+                    var importedTeams = _excelService.ImportTeams(ofd.FileName);
+                    if (importedTeams.Any())
+                    {
+                        var result = MessageBox.Show(string.Format("Найдено команд: {0}. Добавить их в турнир?", importedTeams.Count), 
+                            "Импорт команд", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            foreach (var team in importedTeams)
+                            {
+                                if (!Teams.Any(t => t.Name.Equals(team.Name, StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    CurrentTournament.Teams.Add(team);
+                                    Teams.Add(team);
+                                }
+                            }
+                            _storage.UpdateTournament(CurrentTournament);
+                            OnPropertyChanged(nameof(TeamsCount));
+                            
+                            ScheduleVM.LoadMatches();
+                            GenerateResults();
+                            UpdateStatistics();
+                            
+                            MessageBox.Show("Импорт завершен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Файл пуст или имеет неверный формат.", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(string.Format("Ошибка при импорте: {0}", ex.Message), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportTeamsExcel(object parameter)
+        {
+            var sfd = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel CSV (*.csv)|*.csv",
+                FileName = string.Format("Команды_{0}_{1:yyyyMMdd}", CurrentTournament.Name, DateTime.Now)
+            };
+
+            if (sfd.ShowDialog() == true)
+            {
+                try
+                {
+                    _excelService.ExportTeams(Teams, sfd.FileName);
+                    MessageBox.Show("Экспорт завершен успешно!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(string.Format("Ошибка при экспорте: {0}", ex.Message), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DownloadTemplate(object parameter)
+        {
+            var sfd = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel CSV (*.csv)|*.csv",
+                FileName = "Шаблон_команд"
+            };
+
+            if (sfd.ShowDialog() == true)
+            {
+                try
+                {
+                    _excelService.SaveTemplate(sfd.FileName);
+                    MessageBox.Show("Шаблон сохранен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(string.Format("Ошибка при сохранении шаблона: {0}", ex.Message), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
