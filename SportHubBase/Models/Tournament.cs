@@ -58,6 +58,18 @@ namespace SportHubBase.Models
         [JsonProperty("matches")]
         public List<Match> Matches { get; set; } = new List<Match>();
 
+        [JsonProperty("scoringSystem")]
+        public string ScoringSystem { get; set; } // Итальянская, FIVB, Пользовательская
+
+        [JsonProperty("customWinPoints")]
+        public int CustomWinPoints { get; set; }
+
+        [JsonProperty("customDrawPoints")]
+        public int CustomDrawPoints { get; set; }
+
+        [JsonProperty("customLossPoints")]
+        public int CustomLossPoints { get; set; }
+
         // Live — только если сейчас между началом и концом (или конец не указан)
         [JsonIgnore]
         public bool IsLive => DateTime.Now >= StartDate && (EndDate == null || DateTime.Now <= EndDate.Value);

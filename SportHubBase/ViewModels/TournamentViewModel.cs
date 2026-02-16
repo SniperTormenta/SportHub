@@ -447,30 +447,75 @@ namespace SportHubBase.ViewModels
         /// Доступные виды спорта.
         
         public List<string> AvailableSportTypes { get; } = new List<string> { "Волейбол", "Футбол", "Баскетбол" };
-
-        /// Очки за победу (только для отображения).
         
-        public int WinPoints { get; private set; }
+        /// Доступные системы начисления очков.
+        public List<string> AvailableScoringSystems { get; } = new List<string> { "Итальянская", "FIVB", "Пользовательская" };
 
-        /// Очки за ничью (только для отображения).
-        
-        public int DrawPoints { get; private set; }
-
-        /// Очки за поражение (только для отображения).
-        
-        public int LossPoints { get; private set; }
-
-        /// Флаг архивации турнира.
-        
-        private bool _isArchived;
-        public bool IsArchived
+        private string _scoringDescription;
+        public string ScoringDescription
         {
-            get => _isArchived;
+            get => _scoringDescription;
             set
             {
-                if (_isArchived != value)
+                if (_scoringDescription != value)
                 {
-                    _isArchived = value;
+                    _scoringDescription = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool IsCustomScoring => CurrentTournament?.ScoringSystem == "Пользовательская";
+
+        public string SelectedScoringSystem
+        {
+            get => CurrentTournament?.ScoringSystem ?? "Итальянская";
+            set
+            {
+                if (CurrentTournament != null && CurrentTournament.ScoringSystem != value)
+                {
+                    CurrentTournament.ScoringSystem = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsCustomScoring));
+                    UpdateScoringDescription();
+                }
+            }
+        }
+
+        public int LossPoints
+        {
+            get => CurrentTournament?.CustomLossPoints ?? 0;
+            set
+            {
+                if (CurrentTournament != null && CurrentTournament.CustomLossPoints != value)
+                {
+                    CurrentTournament.CustomLossPoints = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        
+        public int WinPoints
+        {
+            get => CurrentTournament?.CustomWinPoints ?? 0;
+            set
+            {
+                if (CurrentTournament != null && CurrentTournament.CustomWinPoints != value)
+                {
+                    CurrentTournament.CustomWinPoints = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public int DrawPoints
+        {
+            get => CurrentTournament?.CustomDrawPoints ?? 0;
+            set
+            {
+                if (CurrentTournament != null && CurrentTournament.CustomDrawPoints != value)
+                {
+                    CurrentTournament.CustomDrawPoints = value;
                     OnPropertyChanged();
                 }
             }
@@ -576,7 +621,7 @@ namespace SportHubBase.ViewModels
             // Загрузка данных для Settings
             LoadCities();
             LoadScheduleStrategies();
-            LoadPointsFromCalculator();
+            UpdateScoringDescription();
             
             // Инициализация команды завершения
             FinishTournamentCommand = new RelayCommand(FinishTournament, CanFinishTournament);
@@ -1046,29 +1091,12 @@ namespace SportHubBase.ViewModels
             };
         }
 
-        /// Загружает очки из калькулятора результатов для отображения.
-        private void LoadPointsFromCalculator()
+        /// Обновляет описание системы очков.
+        private void UpdateScoringDescription()
         {
             if (CurrentTournament == null) return;
-
-            var calculator = _resultsFactory.GetCalculator(CurrentTournament);
-            // Для волейбола: победа = 2, поражение = 0
-            // Это упрощенная логика, в реальности нужно получить из калькулятора
-            if (CurrentTournament.SportType == "Волейбол")
-            {
-                WinPoints = 2;
-                DrawPoints = 0;
-                LossPoints = 0;
-            }
-            else
-            {
-                WinPoints = 3;
-                DrawPoints = 1;
-                LossPoints = 0;
-            }
-            OnPropertyChanged(nameof(WinPoints));
-            OnPropertyChanged(nameof(DrawPoints));
-            OnPropertyChanged(nameof(LossPoints));
+            var strategy = ScoringStrategyFactory.GetStrategy(CurrentTournament);
+            ScoringDescription = strategy.Description;
         }
 
         /// Сохраняет изменения настроек турнира.
@@ -1076,23 +1104,40 @@ namespace SportHubBase.ViewModels
         {
             if (CurrentTournament == null) return;
 
+            // Валидация
+            if (IsCustomScoring)
+            {
+                if (WinPoints < 0 || DrawPoints < 0 || LossPoints < 0)
+                {
+                    MessageBox.Show("Очки не могут быть отрицательными.", "Ошибка валидации", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
+            var result = MessageBox.Show(
+                "Пересчитать очки и таблицу? Это может занять время. Продолжить?", 
+                "Сохранение", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes) return;
+
             try
             {
-                // Обновляем статус архивации
-                if (IsArchived)
-                {
-                    CurrentTournament.Status = "Архивирован";
-                }
-
                 // Сохраняем в хранилище
                 _storage.UpdateTournament(CurrentTournament);
 
-                MessageBox.Show("Настройки успешно сохранены.", "Сохранение", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Принудительный пересчёт
+                UpdateResultsFromMatches();
+                UpdateStatistics();
+
+                MessageBox.Show("Настройки успешно сохранены и результаты обновлены.", "Сохранение", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 // Обновляем UI
                 OnPropertyChanged(nameof(CurrentTournament));
                 OnPropertyChanged(nameof(FormatText));
                 OnPropertyChanged(nameof(DatesText));
+                OnPropertyChanged(nameof(TournamentStatusText));
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 ﻿// Services/Results/VolleyballResultsCalculator.cs
 using SportHubBase.Models;
+using SportHubBase.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,7 +15,9 @@ namespace SportHubBase.Services.Results
     /// Только для кругового формата (другие — в будущем).
     public class VolleyballResultsCalculator : IResultsCalculator
     {
-        public string Name => "Волейбол (итальянская система)";
+        public string Name => "Волейбол (динамическая система)";
+
+        private IScoringStrategy _scoringStrategy;
 
         public void Calculate(Tournament tournament,
                               ObservableCollection<Match> schedule,
@@ -29,6 +32,8 @@ namespace SportHubBase.Services.Results
                 resultsTable.Clear();
                 return;
             }
+
+            _scoringStrategy = ScoringStrategyFactory.GetStrategy(tournament);
 
             if (tournament.Teams == null || tournament.Teams.Count == 0)
             {
@@ -137,9 +142,9 @@ namespace SportHubBase.Services.Results
                 team2Stats.PointsScored += team2Points;
                 team2Stats.PointsConceded += team1Points;
 
-                // Итальянские очки
-                team1Stats.Points += CalculateItalianPoints(team1Sets, team2Sets);
-                team2Stats.Points += CalculateItalianPoints(team2Sets, team1Sets);
+                // Очки по выбранной стратегии
+                team1Stats.Points += _scoringStrategy.CalculatePoints(team1Sets, team2Sets);
+                team2Stats.Points += _scoringStrategy.CalculatePoints(team2Sets, team1Sets);
 
                 // Победы/поражения
                 if (team1Sets > team2Sets) { team1Stats.Wins++; team2Stats.Losses++; }
@@ -201,20 +206,18 @@ namespace SportHubBase.Services.Results
             // Личные встречи (для сортировки равных)
             var headToHead = BuildHeadToHead(schedule);
 
-            // Сортировка по очкам → коэф.сетам → коэф.мячам → личные встречи
+            // Сортировка по очкам → стратегии → личные встречи
             var sorted = teamStats.Values
-                .OrderByDescending(s => s.Points)
-                .ThenByDescending(s => s.SetsRatio)
-                .ThenByDescending(s => s.PointsRatio)
+                .OrderBy(s => s, new ResultRowComparer(_scoringStrategy))
                 .ToList();
 
-            ApplyHeadToHeadTieBreaker(sorted, headToHead);
+            ApplyHeadToHeadTieBreaker(sorted, headToHead, _scoringStrategy);
 
             // Места
             int place = 1;
             for (int i = 0; i < sorted.Count; i++)
             {
-                if (i > 0 && IsBetter(sorted[i - 1], sorted[i]))
+                if (i > 0 && _scoringStrategy.Compare(sorted[i - 1], sorted[i]) < 0)
                     place = i + 1;
                 sorted[i].Place = place;
             }
@@ -313,6 +316,13 @@ namespace SportHubBase.Services.Results
             return 0;
         }
 
+        private class ResultRowComparer : IComparer<ResultRow>
+        {
+            private readonly IScoringStrategy _strategy;
+            public ResultRowComparer(IScoringStrategy strategy) => _strategy = strategy;
+            public int Compare(ResultRow x, ResultRow y) => _strategy.Compare(x, y);
+        }
+
         private static Dictionary<string, Dictionary<string, int>> BuildHeadToHead(ObservableCollection<Match> schedule)
         {
             var dict = new Dictionary<string, Dictionary<string, int>>(StringComparer.OrdinalIgnoreCase);
@@ -334,15 +344,13 @@ namespace SportHubBase.Services.Results
             return dict;
         }
 
-        private static void ApplyHeadToHeadTieBreaker(List<ResultRow> sorted, Dictionary<string, Dictionary<string, int>> headToHead)
+        private static void ApplyHeadToHeadTieBreaker(List<ResultRow> sorted, Dictionary<string, Dictionary<string, int>> headToHead, IScoringStrategy strategy)
         {
             for (int i = 0; i < sorted.Count; i++)
             {
                 var current = sorted[i];
                 var equals = sorted.Skip(i + 1)
-                    .TakeWhile(t => t.Points == current.Points &&
-                                    Math.Abs(t.SetsRatio - current.SetsRatio) < 0.000001 &&
-                                    Math.Abs(t.PointsRatio - current.PointsRatio) < 0.000001)
+                    .TakeWhile(t => strategy.Compare(current, t) == 0)
                     .ToList();
 
                 if (equals.Count > 0)

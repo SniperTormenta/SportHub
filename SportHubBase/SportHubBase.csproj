@@ -73,6 +73,7 @@
     <Compile Include="Interfaces\IResultsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IStatisticsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
+    <Compile Include="Interfaces\IScoringStrategy.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Models\Admin.cs" />
     <Compile Include="Models\CellResult.cs" />
@@ -91,6 +92,10 @@
     <Compile Include="Services\MatchService.cs" />
     <Compile Include="Services\Result\IResultsCalculator.cs" />
     <Compile Include="Services\Result\ResultsCalculatorFactory.cs" />
+    <Compile Include="Services\Result\ScoringStrategyFactory.cs" />
+    <Compile Include="Services\Result\Scoring\CustomScoringStrategy.cs" />
+    <Compile Include="Services\Result\Scoring\FivbScoringStrategy.cs" />
+    <Compile Include="Services\Result\Scoring\ItalianScoringStrategy.cs" />
     <Compile Include="Services\Result\VolleyballResultsCalculator.cs" />
     <Compile Include="Services\Scheduling\IScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\RoundRobinBergerScheduleStrategy.cs" />
