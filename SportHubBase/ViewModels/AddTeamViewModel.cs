@@ -142,6 +142,7 @@ namespace SportHubBase.ViewModels
                     // Создание новой команды
                     var newTeam = new Team
                     {
+                        Id = Guid.NewGuid(),
                         Name = TeamName,
                         Captain = SelectedCaptain?.Name ?? "Капитан не выбран"
                     };
@@ -161,8 +162,16 @@ namespace SportHubBase.ViewModels
                 else
                 {
                     // Обновление существующей команды
+                    // Ищем по ID, так как он уникален
                     var teamToUpdate = tournament.Teams
-                        .FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
+                        .FirstOrDefault(t => t.Id == _existingTeam.Id);
+
+                    // Fallback для старых данных без ID (хотя после импорта/создания они должны быть)
+                    if (teamToUpdate == null && _existingTeam.Id == Guid.Empty)
+                    {
+                         teamToUpdate = tournament.Teams
+                            .FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
+                    }
 
                     if (teamToUpdate != null)
                     {
@@ -205,8 +214,14 @@ namespace SportHubBase.ViewModels
             var tournament = tournaments.Find(t => t.Id == _tournamentId);
             if (tournament != null)
             {
-                var teamToRemove = tournament.Teams
-                    .FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
+                var teamToRemove = tournament.Teams.FirstOrDefault(t => t.Id == _existingTeam.Id);
+
+                // Fallback для старых данных
+                if (teamToRemove == null && _existingTeam.Id == Guid.Empty)
+                {
+                    teamToRemove = tournament.Teams
+                        .FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
+                }
 
                 if (teamToRemove != null)
                 {

@@ -20,7 +20,7 @@ namespace SportHubBase.ViewModels
 
     public class ScheduleViewModel : BaseViewModel
     {
-        private readonly Tournament _tournament;
+        private Tournament _tournament;
         private readonly IStorage _storage;
         private readonly IScheduleStrategyFactory _scheduleFactory;
         private readonly IMatchService _matchService;
@@ -272,6 +272,12 @@ namespace SportHubBase.ViewModels
             if (match.MatchNumber.HasValue && match.MatchNumber.Value.ToString().Contains(q)) return true;
 
             return false;
+        }
+        public void UpdateTournamentReference(Tournament tournament)
+        {
+            _tournament = tournament ?? throw new ArgumentNullException(nameof(tournament));
+            // Также обновляем matches, если они изменились в новом объекте
+            // Но LoadMatches() все равно перезагрузит их
         }
     }
 }

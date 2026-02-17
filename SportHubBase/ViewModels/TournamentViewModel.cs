@@ -718,14 +718,16 @@ namespace SportHubBase.ViewModels
                     var updated = _storage.LoadTournaments().Find(t => t.Id == CurrentTournament.Id);
                     if (updated != null)
                     {
+                        // ВАЖНО: Обновляем ссылку на объект турнира, чтобы он не был устаревшим
+                        CurrentTournament = updated;
+                        ScheduleVM.UpdateTournamentReference(updated);
+                        
                         Teams.Clear();
                         foreach (var team in updated.Teams)
                         {
                             Teams.Add(team);
                         }
                     }
-                    OnPropertyChanged(nameof(TeamsCount));
-
                     OnPropertyChanged(nameof(TeamsCount));
  
                     // Обновляем расписание и результаты после добавления команды
@@ -776,14 +778,16 @@ namespace SportHubBase.ViewModels
                     var updated = _storage.LoadTournaments().Find(t => t.Id == CurrentTournament.Id);
                     if (updated != null)
                     {
+                        // ВАЖНО: Обновляем ссылку на объект турнира
+                        CurrentTournament = updated;
+                        ScheduleVM.UpdateTournamentReference(updated);
+
                         Teams.Clear();
                         foreach (var t in updated.Teams)
                         {
                             Teams.Add(t);
                         }
                     }
-                    OnPropertyChanged(nameof(TeamsCount));
-
                     OnPropertyChanged(nameof(TeamsCount));
  
                     // Обновляем расписание и результаты после редактирования команды
@@ -1176,6 +1180,7 @@ namespace SportHubBase.ViewModels
                 if (reloaded != null)
                 {
                     CurrentTournament = reloaded;
+                    ScheduleVM.UpdateTournamentReference(reloaded);
                     OnPropertyChanged(nameof(CurrentTournament));
                     OnPropertyChanged(nameof(FormatText));
                     OnPropertyChanged(nameof(DatesText));
@@ -1276,6 +1281,9 @@ namespace SportHubBase.ViewModels
                         _storage.UpdateTournament(CurrentTournament);
                         OnPropertyChanged(nameof(TeamsCount));
                         
+                        // Обновляем ссылку в ScheduleVM, так как объект турнира (списки внутри) изменились радикально
+                        ScheduleVM.UpdateTournamentReference(CurrentTournament);
+
                         // Полный сброс и генерация нового расписания
                         ScheduleVM.LoadMatches();
                         GenerateResults();
