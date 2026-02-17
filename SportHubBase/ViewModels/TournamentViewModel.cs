@@ -1216,7 +1216,7 @@ namespace SportHubBase.ViewModels
         {
             var sfd = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "Excel CSV (*.csv)|*.csv",
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
                 FileName = string.Format("Результаты_{0}_{1:yyyyMMdd}", CurrentTournament.Name, DateTime.Now)
             };
 
@@ -1239,38 +1239,49 @@ namespace SportHubBase.ViewModels
         {
             var ofd = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "Excel CSV (*.csv)|*.csv"
+                Filter = "Excel Files (*.xlsx)|*.xlsx"
             };
 
             if (ofd.ShowDialog() == true)
             {
+                if (MessageBox.Show("ВНИМАНИЕ! Импорт команд полностью очистит текущий турнир.\n" +
+                                    "Все текущие команды, матчи и результаты будут удалены.\n\n" +
+                                    "Вы уверены, что хотите продолжить?",
+                                    "Подтверждение импорта", 
+                                    MessageBoxButton.YesNo, 
+                                    MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
                 try
                 {
                     var importedTeams = _excelService.ImportTeams(ofd.FileName);
                     if (importedTeams.Any())
                     {
-                        var result = MessageBox.Show(string.Format("Найдено команд: {0}. Добавить их в турнир?", importedTeams.Count), 
-                            "Импорт команд", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        // Очистка текущих данных
+                        CurrentTournament.Teams.Clear();
+                        if (CurrentTournament.Matches != null)
+                            CurrentTournament.Matches.Clear();
                         
-                        if (result == MessageBoxResult.Yes)
+                        Teams.Clear();
+
+                        // Применение новых данных
+                        foreach (var team in importedTeams)
                         {
-                            foreach (var team in importedTeams)
-                            {
-                                if (!Teams.Any(t => t.Name.Equals(team.Name, StringComparison.OrdinalIgnoreCase)))
-                                {
-                                    CurrentTournament.Teams.Add(team);
-                                    Teams.Add(team);
-                                }
-                            }
-                            _storage.UpdateTournament(CurrentTournament);
-                            OnPropertyChanged(nameof(TeamsCount));
-                            
-                            ScheduleVM.LoadMatches();
-                            GenerateResults();
-                            UpdateStatistics();
-                            
-                            MessageBox.Show("Импорт завершен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                            CurrentTournament.Teams.Add(team);
+                            Teams.Add(team);
                         }
+                        
+                        _storage.UpdateTournament(CurrentTournament);
+                        OnPropertyChanged(nameof(TeamsCount));
+                        
+                        // Полный сброс и генерация нового расписания
+                        ScheduleVM.LoadMatches();
+                        GenerateResults();
+                        UpdateStatistics();
+                        
+                        MessageBox.Show($"Импорт завершен! Загружено команд: {importedTeams.Count}.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
@@ -1288,7 +1299,7 @@ namespace SportHubBase.ViewModels
         {
             var sfd = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "Excel CSV (*.csv)|*.csv",
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
                 FileName = string.Format("Команды_{0}_{1:yyyyMMdd}", CurrentTournament.Name, DateTime.Now)
             };
 
@@ -1310,7 +1321,7 @@ namespace SportHubBase.ViewModels
         {
             var sfd = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "Excel CSV (*.csv)|*.csv",
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
                 FileName = "Шаблон_команд"
             };
 
