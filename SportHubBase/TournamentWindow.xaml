@@ -141,7 +141,8 @@
                         </Border>
 
                         <!-- Сайдбар справа -->
-                        <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="24" Margin="24,0,0,0">
+                        <ScrollViewer Grid.Column="1">
+                            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="24" Margin="24,0,0,0">
                             <StackPanel>
                                 <StackPanel Margin="0,0,0,24">
                                     <TextBlock Text="Статус" Foreground="#617589" FontSize="13"/>
@@ -203,6 +204,7 @@
                                 </Button>
                             </StackPanel>
                         </Border>
+                        </ScrollViewer>
                     </Grid>
 
                     <!-- Нижние кнопки импорта/экспорта -->
