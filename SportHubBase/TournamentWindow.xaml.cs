@@ -18,7 +18,7 @@ namespace SportHubBase
             // Создание ViewModel через контейнер зависимостей
             var storage = App.Container.GetInstance<IStorage>();
             var scheduleFactory = App.Container.GetInstance<IScheduleStrategyFactory>();
-            var resultsFactory = App.Container.GetInstance<IResultsCalculatorFactory>();
+            var resultsFactory = App.Container.GetInstance<IResultsProviderFactory>();
             var statisticsFactory = App.Container.GetInstance<IStatisticsCalculatorFactory>();
             var imageEncoderFactory = App.Container.GetInstance<IImageEncoderStrategyFactory>();
             var matchService = App.Container.GetInstance<IMatchService>();

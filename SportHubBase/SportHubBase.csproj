@@ -110,6 +110,8 @@
     <Compile Include="Interfaces\IMatchService.cs" />
     <Compile Include="Interfaces\IResultsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IStatisticsCalculatorFactory.cs" />
+    <Compile Include="Interfaces\IResultsProvider.cs" />
+    <Compile Include="Interfaces\IResultsProviderFactory.cs" />
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
     <Compile Include="Interfaces\IScoringStrategy.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
@@ -122,6 +124,11 @@
     <Compile Include="Models\Match.cs" />
     <Compile Include="Models\MvpItem.cs" />
     <Compile Include="Models\TeamMatchHistory.cs" />
+    <Compile Include="Models\Results\ResultsData.cs" />
+    <Compile Include="Models\Results\RoundRobinResultsData.cs" />
+    <Compile Include="Models\Results\OlympicBracketResultsData.cs" />
+    <Compile Include="Models\Results\SwissResultsData.cs" />
+    <Compile Include="Models\Results\MultiStageResultsData.cs" />
     <Compile Include="Models\ResultRow.cs" />
     <Compile Include="Services\CitiesService.cs" />
     <Compile Include="Services\Export\ExcelService.cs" />
@@ -141,6 +148,8 @@
     <Compile Include="Services\Scheduling\RoundRobinBergerScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\ScheduleStrategyFactory.cs" />
     <Compile Include="Services\Scheduling\StubStrategies.cs" />
+    <Compile Include="Services\Result\ResultsProviderFactory.cs" />
+    <Compile Include="Services\Result\RoundRobinResultsProvider.cs" />
     <Compile Include="Converters\ResultCellColorConverter.cs" />
     <Compile Include="Services\Statistics\IStatisticsCalculator.cs" />
     <Compile Include="Services\Statistics\StatisticsCalculatorFactory.cs" />
@@ -196,6 +205,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\MatchDetailsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources\ResultTemplates.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
