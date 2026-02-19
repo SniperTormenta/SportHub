@@ -1,4 +1,4 @@
-
+﻿
     <Window x:Class="SportHubBase.TournamentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -13,7 +13,12 @@
         MinHeight="800">
 
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/ResultTemplates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid>
@@ -38,7 +43,7 @@
             </Grid>
         </Border>
 
-        <!-- Название турнира -->
+        <!-- РќР°Р·РІР°РЅРёРµ С‚СѓСЂРЅРёСЂР° -->
         <StackPanel Margin="40,100,40,0">
             <TextBlock Text="{Binding CurrentTournament.Name}"
                        FontSize="36" FontWeight="Black" Foreground="#111418"/>
@@ -50,7 +55,7 @@
                     SelectedIndex="0"
                     SelectionChanged="TabControl_SelectionChanged">
 
-            <TabItem Header="Главная" Style="{StaticResource TailwindTabItem}">
+            <TabItem Header="Р“Р»Р°РІРЅР°СЏ" Style="{StaticResource TailwindTabItem}">
                 <Grid Margin="40,32">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -63,7 +68,7 @@
                             <ColumnDefinition Width="320"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Карточки команд -->
+                        <!-- РљР°СЂС‚РѕС‡РєРё РєРѕРјР°РЅРґ -->
                         <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="16">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemsSource="{Binding Teams}" AlternationCount="2">
@@ -140,27 +145,27 @@
                             </ScrollViewer>
                         </Border>
 
-                        <!-- Сайдбар справа -->
+                        <!-- РЎР°Р№РґР±Р°СЂ СЃРїСЂР°РІР° -->
                         <ScrollViewer Grid.Column="1">
                             <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="24" Margin="24,0,0,0">
                             <StackPanel>
                                 <StackPanel Margin="0,0,0,24">
-                                    <TextBlock Text="Статус" Foreground="#617589" FontSize="13"/>
+                                    <TextBlock Text="РЎС‚Р°С‚СѓСЃ" Foreground="#617589" FontSize="13"/>
                                     <TextBlock Text="{Binding TournamentStatusText}" FontSize="20" FontWeight="Bold" Foreground="#137FEC"/>
                                 </StackPanel>
 
                                 <StackPanel Margin="0,0,0,24">
-                                    <TextBlock Text="Количество команд" Foreground="#617589" FontSize="13"/>
+                                    <TextBlock Text="РљРѕР»РёС‡РµСЃС‚РІРѕ РєРѕРјР°РЅРґ" Foreground="#617589" FontSize="13"/>
                                     <TextBlock Text="{Binding TeamsCount}" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
                                 </StackPanel>
 
                                 <StackPanel Margin="0,0,0,24">
-                                    <TextBlock Text="Сыграно матчей" Foreground="#617589" FontSize="13"/>
+                                    <TextBlock Text="РЎС‹РіСЂР°РЅРѕ РјР°С‚С‡РµР№" Foreground="#617589" FontSize="13"/>
                                     <TextBlock Text="{Binding MatchesProgressText}" FontSize="20" FontWeight="Bold" Foreground="#111418"/>
                                 </StackPanel>
 
                                 <StackPanel Margin="0,0,0,24">
-                                    <TextBlock Text="Лидер турнира" Foreground="#617589" FontSize="13"/>
+                                    <TextBlock Text="Р›РёРґРµСЂ С‚СѓСЂРЅРёСЂР°" Foreground="#617589" FontSize="13"/>
                                     <TextBlock Text="{Binding LeaderText}"
                                    FontSize="16"
                                    FontWeight="Bold"
@@ -169,12 +174,12 @@
                                 </StackPanel>
 
                                 <StackPanel Margin="0,0,0,24">
-                                    <TextBlock Text="Формат" Foreground="#617589" FontSize="13"/>
+                                    <TextBlock Text="Р¤РѕСЂРјР°С‚" Foreground="#617589" FontSize="13"/>
                                     <TextBlock Text="{Binding FormatText}" FontSize="18" FontWeight="Bold" Foreground="#111418"/>
                                 </StackPanel>
 
                                 <StackPanel Margin="0,0,0,40">
-                                    <TextBlock Text="Даты проведения" Foreground="#617589" FontSize="13"/>
+                                    <TextBlock Text="Р”Р°С‚С‹ РїСЂРѕРІРµРґРµРЅРёСЏ" Foreground="#617589" FontSize="13"/>
                                     <TextBlock Text="{Binding DatesText}"
                                    FontSize="18"
                                    FontWeight="Bold"
@@ -187,7 +192,7 @@
                             Margin="0,0,0,16">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="+" FontSize="18" Margin="0,0,8,0"/>
-                                        <TextBlock Text="Добавить команду"/>
+                                        <TextBlock Text="Р”РѕР±Р°РІРёС‚СЊ РєРѕРјР°РЅРґСѓ"/>
                                     </StackPanel>
                                 </Button>
 
@@ -198,8 +203,8 @@
                             BorderBrush="#FECDD3"
                             BorderThickness="1">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="🏁" FontSize="16" Margin="0,0,8,0"/>
-                                        <TextBlock Text="Завершить турнир"/>
+                                        <TextBlock Text="рџЏЃ" FontSize="16" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Р—Р°РІРµСЂС€РёС‚СЊ С‚СѓСЂРЅРёСЂ"/>
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -207,7 +212,7 @@
                         </ScrollViewer>
                     </Grid>
 
-                    <!-- Нижние кнопки импорта/экспорта -->
+                    <!-- РќРёР¶РЅРёРµ РєРЅРѕРїРєРё РёРјРїРѕСЂС‚Р°/СЌРєСЃРїРѕСЂС‚Р° -->
                     <StackPanel Grid.Row="1"
                     Orientation="Horizontal"
                     Margin="0,16,0,0"
@@ -220,8 +225,8 @@
                     Background="#F3F4F6"
                     Padding="16,10">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📥" FontSize="16" Margin="0,0,8,0"/>
-                                <TextBlock Text="Импорт команд (Excel)"/>
+                                <TextBlock Text="рџ“Ґ" FontSize="16" Margin="0,0,8,0"/>
+                                <TextBlock Text="РРјРїРѕСЂС‚ РєРѕРјР°РЅРґ (Excel)"/>
                             </StackPanel>
                         </Button>
 
@@ -231,8 +236,8 @@
                     Background="#F3F4F6"
                     Padding="16,10">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📤" FontSize="16" Margin="0,0,8,0"/>
-                                <TextBlock Text="Экспорт команд (Excel)"/>
+                                <TextBlock Text="рџ“¤" FontSize="16" Margin="0,0,8,0"/>
+                                <TextBlock Text="Р­РєСЃРїРѕСЂС‚ РєРѕРјР°РЅРґ (Excel)"/>
                             </StackPanel>
                         </Button>
 
@@ -241,7 +246,7 @@
                     Background="Transparent"
                     BorderThickness="0"
                     Padding="0">
-                            <TextBlock Text="Скачать шаблон для импорта"
+                            <TextBlock Text="РЎРєР°С‡Р°С‚СЊ С€Р°Р±Р»РѕРЅ РґР»СЏ РёРјРїРѕСЂС‚Р°"
                            FontSize="13"
                            Foreground="#137FEC"
                            TextDecorations="Underline"/>
@@ -250,8 +255,8 @@
                 </Grid>
             </TabItem>
 
-            <!-- Вкладка расписания -->
-            <TabItem Header="Расписание" Style="{StaticResource TailwindTabItem}">
+            <!-- Р’РєР»Р°РґРєР° СЂР°СЃРїРёСЃР°РЅРёСЏ -->
+            <TabItem Header="Р Р°СЃРїРёСЃР°РЅРёРµ" Style="{StaticResource TailwindTabItem}">
                 <Grid Margin="40,32">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -281,20 +286,20 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="🔍" Margin="12,0,8,0" VerticalAlignment="Center" Foreground="#9CA3AF"/>
+                                    <TextBlock Text="рџ”Ќ" Margin="12,0,8,0" VerticalAlignment="Center" Foreground="#9CA3AF"/>
                                     <TextBox Text="{Binding ScheduleVM.SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                              BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center"
                                              FontSize="14" Grid.Column="1"
-                                             Tag="Поиск..."/>
+                                             Tag="РџРѕРёСЃРє..."/>
                                 </Grid>
                             </Border>
 
                             <!-- Refresh Button -->
-                            <Button Grid.Column="1" Content="↺" 
+                            <Button Grid.Column="1" Content="в†є" 
                                     Command="{Binding ScheduleVM.RefreshCommand}"
                                     Style="{StaticResource DefaultModernButton}"
                                     Padding="12,0" Height="48" Margin="0,0,16,0"
-                                    ToolTip="Обновить расписание"/>
+                                    ToolTip="РћР±РЅРѕРІРёС‚СЊ СЂР°СЃРїРёСЃР°РЅРёРµ"/>
 
                             <!-- Filter -->
                             <ComboBox Grid.Column="2" 
@@ -370,7 +375,7 @@
                                                 </Grid>
 
                                                 <!-- Edit Button -->
-                                                <Button Grid.Column="3" Content="Подробнее" 
+                                                <Button Grid.Column="3" Content="РџРѕРґСЂРѕР±РЅРµРµ" 
                                                         Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
                                                         CommandParameter="{Binding}" 
                                                         Style="{StaticResource AddTeamButtonStyle}" 
@@ -387,470 +392,61 @@
                     <!-- Sidebar -->
                     <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="24" VerticalAlignment="Top">
                         <StackPanel>
-                            <TextBlock Text="Статистика" FontWeight="Bold" FontSize="16" Margin="0,0,0,24" Foreground="Black"/>
+                            <TextBlock Text="РЎС‚Р°С‚РёСЃС‚РёРєР°" FontWeight="Bold" FontSize="16" Margin="0,0,0,24" Foreground="Black"/>
                             
                             <Grid Margin="0,0,0,16">
-                                <TextBlock Text="Всего матчей" Foreground="#6B7280"/>
+                                <TextBlock Text="Р’СЃРµРіРѕ РјР°С‚С‡РµР№" Foreground="#6B7280"/>
                                 <TextBlock Text="{Binding ScheduleVM.TotalMatches}" FontWeight="Bold" HorizontalAlignment="Right" Foreground="Black"/>
                             </Grid>
                             <Grid Margin="0,0,0,16">
-                                <TextBlock Text="Сыграно" Foreground="#6B7280"/>
+                                <TextBlock Text="РЎС‹РіСЂР°РЅРѕ" Foreground="#6B7280"/>
                                 <TextBlock Text="{Binding ScheduleVM.Played}" FontWeight="Bold" Foreground="#10B981" HorizontalAlignment="Right"/>
                             </Grid>
                             <Grid Margin="0,0,0,24">
-                                <TextBlock Text="Осталось" Foreground="#6B7280"/>
+                                <TextBlock Text="РћСЃС‚Р°Р»РѕСЃСЊ" Foreground="#6B7280"/>
                                 <TextBlock Text="{Binding ScheduleVM.NotPlayed}" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Right"/>
                             </Grid>
                             
                             <Separator Background="#E5E7EB" Margin="0,0,0,24"/>
                             
-                            <TextBlock Text="Фильтр и поиск" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" Foreground="Black"/>
-                            <TextBlock Text="Используйте поиск для фильтрации по названию команды или номеру матча." FontSize="13" Foreground="#6B7280" TextWrapping="Wrap"/>
+                            <TextBlock Text="Р¤РёР»СЊС‚СЂ Рё РїРѕРёСЃРє" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" Foreground="Black"/>
+                            <TextBlock Text="РСЃРїРѕР»СЊР·СѓР№С‚Рµ РїРѕРёСЃРє РґР»СЏ С„РёР»СЊС‚СЂР°С†РёРё РїРѕ РЅР°Р·РІР°РЅРёСЋ РєРѕРјР°РЅРґС‹ РёР»Рё РЅРѕРјРµСЂСѓ РјР°С‚С‡Р°." FontSize="13" Foreground="#6B7280" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                 </Grid>
             </TabItem>
             <TabItem x:Name="ResultsTab" Style="{StaticResource TailwindTabItem}">
                 <TabItem.Header>
-                    <TextBlock Text="Результаты" VerticalAlignment="Center"/>
+                    <TextBlock Text="Р РµР·СѓР»СЊС‚Р°С‚С‹" VerticalAlignment="Center"/>
                 </TabItem.Header>
 
                 <Grid Margin="40,32">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <!-- Сообщение -->
+                        <!-- РЎРѕРѕР±С‰РµРЅРёРµ -->
                         <RowDefinition Height="*"/>
-                        <!-- Таблица -->
+                        <!-- РўР°Р±Р»РёС†Р° -->
                         <RowDefinition Height="Auto"/>
-                        <!-- Легенда -->
+                        <!-- Р›РµРіРµРЅРґР° -->
                         <RowDefinition Height="Auto"/>
-                        <!-- Кнопка экспорта PNG снизу слева -->
+                        <!-- РљРЅРѕРїРєР° СЌРєСЃРїРѕСЂС‚Р° PNG СЃРЅРёР·Сѓ СЃР»РµРІР° -->
                     </Grid.RowDefinitions>
 
-                    <!-- Сообщение -->
-                    <TextBlock Grid.Row="0" Text="{Binding ResultsMessage}"
+                    <!-- РЎРѕРѕР±С‰РµРЅРёРµ -->
+                    <TextBlock Grid.Row="0" Text="{Binding CurrentResults.StatusMessage}"
                    FontSize="16"
                    Foreground="#617589"
                    Margin="0,0,0,16"
                    TextWrapping="Wrap"
                    HorizontalAlignment="Center"/>
 
-                    <!-- Таблица — на всё пространство -->
-                    <ScrollViewer Grid.Row="1"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <!-- Заголовок -->
-                                <RowDefinition Height="*"/>
-                                <!-- Тело -->
-                            </Grid.RowDefinitions>
+                    <!-- РўР°Р±Р»РёС†Р° вЂ” РЅР° РІСЃС‘ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ -->
+                    <!-- Polymorphic Results Content -->
+                    <ContentControl Grid.Row="1" Content="{Binding CurrentResults}" />
 
-                            <!-- Заголовок таблицы -->
-                            <Border Grid.Row="0"
-                        Background="#F9FAFB"
-                        BorderBrush="#E5E7EB"
-                        BorderThickness="0,0,0,1"
-                        Padding="0">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="80"/>
-                                        <!-- Rk. -->
-                                        <ColumnDefinition Width="280"/>
-                                        <!-- Команда -->
-                                        <ColumnDefinition Width="*"/>
-                                        <!-- Шахматная таблица -->
-                                        <ColumnDefinition Width="60"/>
-                                        <!-- В -->
-                                        <ColumnDefinition Width="60"/>
-                                        <!-- П -->
-                                        <ColumnDefinition Width="60"/>
-                                        <!-- ВП -->
-                                        <ColumnDefinition Width="60"/>
-                                        <!-- ПП -->
-                                        <ColumnDefinition Width="70"/>
-                                        <!-- Очки -->
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Rk. -->
-                                    <Border Grid.Column="0"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="0,0,1,0"
-                                Padding="16,14"
-                                Background="#F9FAFB">
-                                        <TextBlock Text="№"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"
-                                       Foreground="#617589"
-                                       HorizontalAlignment="Center"/>
-                                    </Border>
-
-                                    <!-- Команда -->
-                                    <Border Grid.Column="1"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="0,0,1,0"
-                                Padding="16,14"
-                                Background="#F9FAFB">
-                                        <TextBlock Text="Команда"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"
-                                       Foreground="#617589"
-                                       HorizontalAlignment="Left"/>
-                                    </Border>
-
-                                    <!-- Номера столбцов шахматной таблицы -->
-                                    <ScrollViewer Grid.Column="2"
-                                      HorizontalScrollBarVisibility="Auto"
-                                      VerticalScrollBarVisibility="Disabled">
-                                        <ItemsControl ItemsSource="{Binding ResultsHeaderNumbers}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Orientation="Horizontal"/>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Width="60"
-                                                Height="70"
-                                                BorderBrush="#E5E7EB"
-                                                BorderThickness="0,0,1,0"
-                                                Background="#F9FAFB">
-                                                        <TextBlock Text="{Binding}"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"
-                                                       FontSize="12"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="#617589"/>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </ScrollViewer>
-
-                                    <!-- В -->
-                                    <Border Grid.Column="3"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="0,0,1,0"
-                                Padding="8,14"
-                                Background="#F9FAFB">
-                                        <TextBlock Text="В"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"
-                                       Foreground="#617589"
-                                       HorizontalAlignment="Center"
-                                       ToolTip="Выигранные матчи"/>
-                                    </Border>
-
-                                    <!-- П -->
-                                    <Border Grid.Column="4"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="0,0,1,0"
-                                Padding="8,14"
-                                Background="#F9FAFB">
-                                        <TextBlock Text="П"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"
-                                       Foreground="#617589"
-                                       HorizontalAlignment="Center"
-                                       ToolTip="Проигранные матчи"/>
-                                    </Border>
-
-                                    <!-- ВП -->
-                                    <Border Grid.Column="5"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="0,0,1,0"
-                                Padding="8,14"
-                                Background="#F9FAFB">
-                                        <TextBlock Text="ВП"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"
-                                       Foreground="#617589"
-                                       HorizontalAlignment="Center"
-                                       ToolTip="Выигранные партии/сеты"/>
-                                    </Border>
-
-                                    <!-- ПП -->
-                                    <Border Grid.Column="6"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="0,0,1,0"
-                                Padding="8,14"
-                                Background="#F9FAFB">
-                                        <TextBlock Text="ПП"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"
-                                       Foreground="#617589"
-                                       HorizontalAlignment="Center"
-                                       ToolTip="Проигранные партии/сеты"/>
-                                    </Border>
-
-                                    <!-- Очки -->
-                                    <Border Grid.Column="7"
-                                BorderBrush="#E5E7EB"
-                                BorderThickness="0,0,0,0"
-                                Padding="8,14"
-                                Background="#F9FAFB">
-                                        <TextBlock Text="Очки"
-                                       FontSize="11"
-                                       FontWeight="SemiBold"
-                                       Foreground="#617589"
-                                       HorizontalAlignment="Center"
-                                       ToolTip="Очки по итальянской системе"/>
-                                    </Border>
-                                </Grid>
-                            </Border>
-
-                            <!-- Тело таблицы -->
-                            <ItemsControl Grid.Row="1" ItemsSource="{Binding ResultsTable}" Margin="0,5,0,-5">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="#E5E7EB"
-                                    BorderThickness="0,0,0,1"
-                                    Background="White"
-                                    x:Name="RowBorder">
-                                            <Border.Style>
-                                                <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="White"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Status}" Value="Техническое поражение">
-                                                            <Setter Property="Background" Value="#FFF9C4"/>
-                                                        </DataTrigger>
-                                                        <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter Property="Background" Value="#F8FAFC"/>
-                                                        </Trigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Border.Style>
-                                            <Grid Height="70">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="80"/>
-                                                    <!-- Rk. -->
-                                                    <ColumnDefinition Width="280"/>
-                                                    <!-- Команда -->
-                                                    <ColumnDefinition Width="*"/>
-                                                    <!-- Шахматная таблица -->
-                                                    <ColumnDefinition Width="60"/>
-                                                    <!-- В -->
-                                                    <ColumnDefinition Width="60"/>
-                                                    <!-- П -->
-                                                    <ColumnDefinition Width="60"/>
-                                                    <!-- ВП -->
-                                                    <ColumnDefinition Width="60"/>
-                                                    <!-- ПП -->
-                                                    <ColumnDefinition Width="70"/>
-                                                    <!-- Очки -->
-                                                </Grid.ColumnDefinitions>
-
-                                                <!-- Место -->
-                                                <Border Grid.Column="0"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="0,0,1,0"
-                                            Background="White">
-                                                    <Border Width="32"
-                                                Height="32"
-                                                CornerRadius="6"
-                                                Background="#F3F4F6"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding Place}"
-                                                       FontSize="14"
-                                                       FontWeight="Bold"
-                                                       Foreground="#111418"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"/>
-                                                    </Border>
-                                                </Border>
-
-                                                <!-- Название команды -->
-                                                <Border Grid.Column="1"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="0,0,1,0"
-                                            Background="White">
-                                                    <TextBlock Text="{Binding TeamName}"
-                                                   FontSize="15"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#111418"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center"
-                                                   Margin="16,0"/>
-                                                </Border>
-
-                                                <!-- Шахматная таблица (ячейки) -->
-                                                <ScrollViewer Grid.Column="2"
-                                                  HorizontalScrollBarVisibility="Auto"
-                                                  VerticalScrollBarVisibility="Hidden">
-                                                    <ItemsControl ItemsSource="{Binding Cells}">
-                                                        <ItemsControl.ItemsPanel>
-                                                            <ItemsPanelTemplate>
-                                                                <StackPanel Orientation="Horizontal"/>
-                                                            </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <Border Width="57"
-                                                            Height="60"
-                                                            Margin="0,0,4,0"
-                                                            BorderBrush="#E5E7EB"
-                                                            BorderThickness="0,0,1,0"
-                                                            Background="{Binding Converter={StaticResource ResultCellBackgroundConverter}}"
-                                                            x:Name="CellBorder">
-                                                                    <Border.Style>
-                                                                        <Style TargetType="Border">
-                                                                            <Style.Triggers>
-                                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                                    <Setter Property="Background" Value="#F1F5F9"/>
-                                                                                </Trigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                                    </Border.Style>
-                                                                    <Grid>
-                                                                        <Path Data="M0,0 L60,60 M0,60 L60,0"
-                                                                  Stroke="#E5E7EB"
-                                                                  StrokeThickness="1.5"
-                                                                  Stretch="None"
-                                                                  Visibility="Collapsed"
-                                                                  x:Name="DiagonalLines">
-                                                                            <Path.Style>
-                                                                                <Style TargetType="Path">
-                                                                                    <Style.Triggers>
-                                                                                        <DataTrigger Binding="{Binding}" Value="SELF">
-                                                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                                                        </DataTrigger>
-                                                                                    </Style.Triggers>
-                                                                                </Style>
-                                                                            </Path.Style>
-                                                                        </Path>
-                                                                        <TextBlock HorizontalAlignment="Center"
-                                                                       VerticalAlignment="Center"
-                                                                       FontSize="15"
-                                                                       FontWeight="SemiBold"
-                                                                       Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}"
-                                                                       Text="{Binding DisplayText}">
-                                                                            <TextBlock.Style>
-                                                                                <Style TargetType="TextBlock">
-                                                                                    <Style.Triggers>
-                                                                                        <DataTrigger Binding="{Binding IsSelf}" Value="True">
-                                                                                            <Setter Property="Text" Value=""/>
-                                                                                        </DataTrigger>
-                                                                                        <DataTrigger Binding="{Binding Outcome}" Value="NOT_PLAYED">
-                                                                                            <Setter Property="Text" Value="-"/>
-                                                                                        </DataTrigger>
-                                                                                    </Style.Triggers>
-                                                                                </Style>
-                                                                            </TextBlock.Style>
-                                                                        </TextBlock>
-                                                                    </Grid>
-                                                                </Border>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </ScrollViewer>
-
-                                                <!-- В -->
-                                                <Border Grid.Column="3"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="0,0,1,0"
-                                            Background="White">
-                                                    <TextBlock Text="{Binding Wins}"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#111418"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                                </Border>
-
-                                                <!-- П -->
-                                                <Border Grid.Column="4"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="0,0,1,0"
-                                            Background="White">
-                                                    <TextBlock Text="{Binding Losses}"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#111418"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                                </Border>
-
-                                                <!-- ВП -->
-                                                <Border Grid.Column="5"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="0,0,1,0"
-                                            Background="White">
-                                                    <TextBlock Text="{Binding SetsWon}"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#111418"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                                </Border>
-
-                                                <!-- ПП -->
-                                                <Border Grid.Column="6"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="0,0,1,0"
-                                            Background="White">
-                                                    <TextBlock Text="{Binding SetsLost}"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#111418"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                                </Border>
-
-                                                <!-- Очки -->
-                                                <Border Grid.Column="7"
-                                            BorderBrush="#E5E7EB"
-                                            BorderThickness="0,0,0,0"
-                                            Background="White">
-                                                    <TextBlock Text="{Binding Points}"
-                                                   FontSize="14"
-                                                   FontWeight="Bold"
-                                                   Foreground="#137FEC"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                                </Border>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Grid>
-                    </ScrollViewer>
-
-                    <!-- Легенда -->
-                    <Border Grid.Row="2"
-                Margin="0,16,0,16"
-                Padding="16"
-                Background="#F9FAFB"
-                CornerRadius="8"
-                BorderBrush="#E5E7EB"
-                BorderThickness="1">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBlock Text="Легенда:"
-                           FontSize="12"
-                           FontWeight="SemiBold"
-                           Foreground="#617589"
-                           Margin="0,0,16,0"
-                           VerticalAlignment="Center"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                                <Border Width="12" Height="12" CornerRadius="2" Background="#10B981" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Победа (1)" FontSize="12" Foreground="#617589" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,24,0">
-                                <Border Width="12" Height="12" CornerRadius="2" Background="#617589" Opacity="0.5" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Ничья (½)" FontSize="12" Foreground="#617589" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="12" Height="12" CornerRadius="2" Background="#F43F5E" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Поражение (0)" FontSize="12" Foreground="#617589" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Кнопка Экспорт (PNG) — снизу слева -->
+                    <!-- РљРЅРѕРїРєР° Р­РєСЃРїРѕСЂС‚ (PNG) вЂ” СЃРЅРёР·Сѓ СЃР»РµРІР° -->
                     <Button Grid.Row="3"
-                            Content="Экспорт (PNG)"
+                            Content="Р­РєСЃРїРѕСЂС‚ (PNG)"
                             Command="{Binding ExportResultsCommand}"
                             Style="{StaticResource AddTeamButtonStyle}"
                             Padding="16,10"
@@ -862,26 +458,26 @@
                             Foreground="White"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Статистика" Style="{StaticResource TailwindTabItem}">
+            <TabItem Header="РЎС‚Р°С‚РёСЃС‚РёРєР°" Style="{StaticResource TailwindTabItem}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,32,0,0">
                     <Grid Margin="40,0,40,40">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <!-- Сводка -->
+                            <!-- РЎРІРѕРґРєР° -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Лидер -->
+                            <!-- Р›РёРґРµСЂ -->
                             <RowDefinition Height="*"/>
-                            <!-- Списки -->
+                            <!-- РЎРїРёСЃРєРё -->
                             <RowDefinition Height="Auto"/>
-                            <!-- Кнопка экспорта снизу слева -->
+                            <!-- РљРЅРѕРїРєР° СЌРєСЃРїРѕСЂС‚Р° СЃРЅРёР·Сѓ СЃР»РµРІР° -->
                         </Grid.RowDefinitions>
 
-                        <!-- 1. Сводка (сверху) -->
+                        <!-- 1. РЎРІРѕРґРєР° (СЃРІРµСЂС…Сѓ) -->
                         <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
                             <UniformGrid Rows="1">
-                                <!-- Сыграно -->
+                                <!-- РЎС‹РіСЂР°РЅРѕ -->
                                 <StackPanel Margin="0,0,16,0">
-                                    <TextBlock Text="Сыграно матчей" FontSize="13" Foreground="#6B7280"/>
+                                    <TextBlock Text="РЎС‹РіСЂР°РЅРѕ РјР°С‚С‡РµР№" FontSize="13" Foreground="#6B7280"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                         <TextBlock Text="{Binding Statistics.PlayedMatches}" FontSize="24" FontWeight="Bold" Foreground="#111418"/>
                                         <TextBlock Text="/" FontSize="24" FontWeight="Bold" Foreground="#9CA3AF" Margin="4,0"/>
@@ -889,36 +485,36 @@
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Осталось -->
+                                <!-- РћСЃС‚Р°Р»РѕСЃСЊ -->
                                 <StackPanel Margin="16,0">
-                                    <TextBlock Text="Осталось матчей" FontSize="13" Foreground="#6B7280"/>
+                                    <TextBlock Text="РћСЃС‚Р°Р»РѕСЃСЊ РјР°С‚С‡РµР№" FontSize="13" Foreground="#6B7280"/>
                                     <TextBlock Text="{Binding Statistics.RemainingMatches}" FontSize="24" FontWeight="Bold" Foreground="#F59E0B" Margin="0,4,0,0"/>
                                 </StackPanel>
 
-                                <!-- Пятисетовки -->
+                                <!-- РџСЏС‚РёСЃРµС‚РѕРІРєРё -->
                                 <StackPanel Margin="16,0">
-                                    <TextBlock Text="Количество пятисетовок" FontSize="13" Foreground="#6B7280"/>
+                                    <TextBlock Text="РљРѕР»РёС‡РµСЃС‚РІРѕ РїСЏС‚РёСЃРµС‚РѕРІРѕРє" FontSize="13" Foreground="#6B7280"/>
                                     <TextBlock Text="{Binding Statistics.FiveSetMatches}" FontSize="24" FontWeight="Bold" Foreground="#10B981" Margin="0,4,0,0"/>
                                 </StackPanel>
 
-                                <!-- Среднее -->
+                                <!-- РЎСЂРµРґРЅРµРµ -->
                                 <StackPanel Margin="16,0">
-                                    <TextBlock Text="Средняя разыгровка мячей" FontSize="13" Foreground="#6B7280"/>
+                                    <TextBlock Text="РЎСЂРµРґРЅСЏСЏ СЂР°Р·С‹РіСЂРѕРІРєР° РјСЏС‡РµР№" FontSize="13" Foreground="#6B7280"/>
                                     <TextBlock Text="{Binding Statistics.AvgGoals}" FontSize="24" FontWeight="Bold" Foreground="#6366F1" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </UniformGrid>
                         </Border>
 
-                        <!-- 2. Лидер турнира (середина) -->
+                        <!-- 2. Р›РёРґРµСЂ С‚СѓСЂРЅРёСЂР° (СЃРµСЂРµРґРёРЅР°) -->
                         <Border Grid.Row="1" CornerRadius="12" Margin="0,0,0,24">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                                     <GradientStop Color="#28c08e" Offset="0.0"/>
-                                    <!-- начало, самый светлый -->
+                                    <!-- РЅР°С‡Р°Р»Рѕ, СЃР°РјС‹Р№ СЃРІРµС‚Р»С‹Р№ -->
                                     <GradientStop Color="#27b091" Offset="0.5"/>
-                                    <!-- середина, основной акцент -->
+                                    <!-- СЃРµСЂРµРґРёРЅР°, РѕСЃРЅРѕРІРЅРѕР№ Р°РєС†РµРЅС‚ -->
                                     <GradientStop Color="#269f94" Offset="1.0"/>
-                                    <!-- конец, чуть темнее и "глубже" -->
+                                    <!-- РєРѕРЅРµС†, С‡СѓС‚СЊ С‚РµРјРЅРµРµ Рё "РіР»СѓР±Р¶Рµ" -->
                                 </LinearGradientBrush>
                             </Border.Background>
                             <Border Padding="24">
@@ -930,21 +526,21 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Column="0" Width="48" Height="48" CornerRadius="24" Background="White" Margin="0,0,16,0">
-                                        <TextBlock Text="♛" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#059669"/>
+                                        <TextBlock Text="в™›" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#059669"/>
                                     </Border>
 
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="ТЕКУЩИЙ ЛИДЕР" FontSize="12" FontWeight="Bold" Foreground="#D1FAE5"/>
+                                        <TextBlock Text="РўР•РљРЈР©РР™ Р›РР”Р•Р " FontSize="12" FontWeight="Bold" Foreground="#D1FAE5"/>
                                         <TextBlock Text="{Binding Statistics.LeaderName}" FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,2,0,0"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                         <StackPanel Margin="0,0,24,0" HorizontalAlignment="Right">
-                                            <TextBlock Text="Очки" FontSize="12" Foreground="#D1FAE5" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="РћС‡РєРё" FontSize="12" Foreground="#D1FAE5" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding Statistics.LeaderPoints}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right">
-                                            <TextBlock Text="Форма" FontSize="12" Foreground="#D1FAE5" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="Р¤РѕСЂРјР°" FontSize="12" Foreground="#D1FAE5" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding Statistics.LeaderForm}" FontSize="18" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"
                                            FontFamily="Consolas, Monospace"/>
                                         </StackPanel>
@@ -953,7 +549,7 @@
                             </Border>
                         </Border>
 
-                        <!-- 3. Списки (Топ MVP + Последние матчи) -->
+                        <!-- 3. РЎРїРёСЃРєРё (РўРѕРї MVP + РџРѕСЃР»РµРґРЅРёРµ РјР°С‚С‡Рё) -->
                         <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -961,10 +557,10 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Топ MVP -->
+                            <!-- РўРѕРї MVP -->
                             <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20" VerticalAlignment="Top" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="Топ-5 MVP" FontSize="16" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
+                                    <TextBlock Text="РўРѕРї-5 MVP" FontSize="16" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
 
                                     <ItemsControl ItemsSource="{Binding Statistics.TopMvps}">
                                         <ItemsControl.ItemTemplate>
@@ -994,14 +590,14 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
 
-                                    <TextBlock Text="Данные собираются на основе карточек матчей" FontSize="11" Foreground="#9CA3AF" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Р”Р°РЅРЅС‹Рµ СЃРѕР±РёСЂР°СЋС‚СЃСЏ РЅР° РѕСЃРЅРѕРІРµ РєР°СЂС‚РѕС‡РµРє РјР°С‚С‡РµР№" FontSize="11" Foreground="#9CA3AF" Margin="0,8,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- Последние матчи -->
+                            <!-- РџРѕСЃР»РµРґРЅРёРµ РјР°С‚С‡Рё -->
                             <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20" VerticalAlignment="Top" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="Последние матчи" FontSize="16" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
+                                    <TextBlock Text="РџРѕСЃР»РµРґРЅРёРµ РјР°С‚С‡Рё" FontSize="16" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,16"/>
 
                                     <ItemsControl ItemsSource="{Binding Statistics.LastMatches}">
                                         <ItemsControl.ItemTemplate>
@@ -1028,12 +624,12 @@
                             </Border>
                         </Grid>
 
-                        <!-- Кнопка экспорта — снизу слева -->
+                        <!-- РљРЅРѕРїРєР° СЌРєСЃРїРѕСЂС‚Р° вЂ” СЃРЅРёР·Сѓ СЃР»РµРІР° -->
                         <StackPanel Grid.Row="3" 
                         Orientation="Horizontal" 
                         HorizontalAlignment="Left" 
                         Margin="0,24,0,0">
-                            <Button Content="Экспорт в Excel"
+                            <Button Content="Р­РєСЃРїРѕСЂС‚ РІ Excel"
                         Command="{Binding ExportResultsExcelCommand}"
                         Style="{StaticResource AddTeamButtonStyle}"
                         Background="#10B981"
@@ -1045,7 +641,7 @@
                     </Grid>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="Настройки" Style="{StaticResource TailwindTabItem}">
+            <TabItem Header="РќР°СЃС‚СЂРѕР№РєРё" Style="{StaticResource TailwindTabItem}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="40,32,40,40" MaxWidth="900">
                         <Grid.RowDefinitions>
@@ -1056,13 +652,13 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- 1. Основная информация -->
+                        <!-- 1. РћСЃРЅРѕРІРЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ -->
                         <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="Основная информация" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
+                                <TextBlock Text="РћСЃРЅРѕРІРЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
 
-                                <!-- Название турнира -->
-                                <TextBlock Text="Название турнира" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                <!-- РќР°Р·РІР°РЅРёРµ С‚СѓСЂРЅРёСЂР° -->
+                                <TextBlock Text="РќР°Р·РІР°РЅРёРµ С‚СѓСЂРЅРёСЂР°" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
                                 <TextBox Text="{Binding CurrentTournament.Name, UpdateSourceTrigger=PropertyChanged}" 
                                          FontSize="14" Padding="10" Margin="0,0,0,16" 
                                          BorderBrush="#D1D5DB" BorderThickness="1"/>
@@ -1074,23 +670,23 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Дата начала -->
+                                    <!-- Р”Р°С‚Р° РЅР°С‡Р°Р»Р° -->
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Дата начала" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                        <TextBlock Text="Р”Р°С‚Р° РЅР°С‡Р°Р»Р°" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
                                         <DatePicker SelectedDate="{Binding CurrentTournament.StartDate}" 
                                                     FontSize="14" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1"/>
                                     </StackPanel>
 
-                                    <!-- Дата окончания -->
+                                    <!-- Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ -->
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Дата окончания" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                        <TextBlock Text="Р”Р°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
                                         <DatePicker SelectedDate="{Binding CurrentTournament.EndDate}" 
                                                     FontSize="14" Padding="10" BorderBrush="#D1D5DB" BorderThickness="1"/>
                                     </StackPanel>
                                 </Grid>
 
-                                <!-- Место проведения -->
-                                <TextBlock Text="Место проведения" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                <!-- РњРµСЃС‚Рѕ РїСЂРѕРІРµРґРµРЅРёСЏ -->
+                                <TextBlock Text="РњРµСЃС‚Рѕ РїСЂРѕРІРµРґРµРЅРёСЏ" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
                                 <ComboBox ItemsSource="{Binding AvailableCities}" 
                                           SelectedItem="{Binding CurrentTournament.Location}" 
                                           FontSize="14" Padding="10" Margin="0,0,0,0" 
@@ -1098,10 +694,10 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 2. Настройки формата -->
+                        <!-- 2. РќР°СЃС‚СЂРѕР№РєРё С„РѕСЂРјР°С‚Р° -->
                         <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="Настройки формата" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
+                                <TextBlock Text="РќР°СЃС‚СЂРѕР№РєРё С„РѕСЂРјР°С‚Р°" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
 
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -1110,25 +706,25 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Тип турнира -->
+                                    <!-- РўРёРї С‚СѓСЂРЅРёСЂР° -->
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Тип турнира" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                        <TextBlock Text="РўРёРї С‚СѓСЂРЅРёСЂР°" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
                                         <Border Background="#F9FAFB" CornerRadius="8" Padding="12" BorderBrush="#E5E7EB" BorderThickness="1">
                                             <TextBlock Text="{Binding CurrentTournament.Type}" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
                                         </Border>
                                     </StackPanel>
 
-                                    <!-- Вид спорта -->
+                                    <!-- Р’РёРґ СЃРїРѕСЂС‚Р° -->
                                     <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Вид спорта" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                        <TextBlock Text="Р’РёРґ СЃРїРѕСЂС‚Р°" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
                                         <Border Background="#F9FAFB" CornerRadius="8" Padding="12" BorderBrush="#E5E7EB" BorderThickness="1">
                                             <TextBlock Text="{Binding CurrentTournament.SportType}" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
                                         </Border>
                                     </StackPanel>
                                 </Grid>
 
-                                <!-- Очки (динамическая система) -->
-                                <TextBlock Text="Система начисления очков" FontSize="13" Foreground="#6B7280" Margin="0,16,0,6"/>
+                                <!-- РћС‡РєРё (РґРёРЅР°РјРёС‡РµСЃРєР°СЏ СЃРёСЃС‚РµРјР°) -->
+                                <TextBlock Text="РЎРёСЃС‚РµРјР° РЅР°С‡РёСЃР»РµРЅРёСЏ РѕС‡РєРѕРІ" FontSize="13" Foreground="#6B7280" Margin="0,16,0,6"/>
                                 <ComboBox ItemsSource="{Binding AvailableScoringSystems}" 
                                           SelectedItem="{Binding SelectedScoringSystem}" 
                                           Style="{DynamicResource ModernComboBox}"
@@ -1137,12 +733,12 @@
 
                                 <Border Background="#F0F9FF" CornerRadius="8" Padding="16" BorderBrush="#BAE6FD" BorderThickness="1" Margin="0,0,0,16">
                                     <StackPanel>
-                                        <TextBlock Text="Описание правил:" FontSize="12" FontWeight="Bold" Foreground="#0369A1" Margin="0,0,0,4"/>
+                                        <TextBlock Text="РћРїРёСЃР°РЅРёРµ РїСЂР°РІРёР»:" FontSize="12" FontWeight="Bold" Foreground="#0369A1" Margin="0,0,0,4"/>
                                         <TextBlock Text="{Binding ScoringDescription}" FontSize="13" Foreground="#075985" TextWrapping="Wrap"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Пользовательские очки -->
+                                <!-- РџРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёРµ РѕС‡РєРё -->
                                 <StackPanel Visibility="{Binding IsCustomScoring, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <Grid Margin="0,0,0,16">
                                         <Grid.ColumnDefinitions>
@@ -1153,15 +749,15 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="За победу" FontSize="12" Foreground="#6B7280"/>
+                                            <TextBlock Text="Р—Р° РїРѕР±РµРґСѓ" FontSize="12" Foreground="#6B7280"/>
                                             <TextBox Text="{Binding WinPoints}" FontSize="14" Padding="10" Margin="0,4,0,0"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="За ничью" FontSize="12" Foreground="#6B7280"/>
+                                            <TextBlock Text="Р—Р° РЅРёС‡СЊСЋ" FontSize="12" Foreground="#6B7280"/>
                                             <TextBox Text="{Binding DrawPoints}" FontSize="14" Padding="10" Margin="0,4,0,0"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="4">
-                                            <TextBlock Text="За поражение" FontSize="12" Foreground="#6B7280"/>
+                                            <TextBlock Text="Р—Р° РїРѕСЂР°Р¶РµРЅРёРµ" FontSize="12" Foreground="#6B7280"/>
                                             <TextBox Text="{Binding LossPoints}" FontSize="14" Padding="10" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Grid>
@@ -1169,14 +765,14 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 3. Дополнительные действия -->
+                        <!-- 3. Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ -->
                         <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="Дополнительные действия" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
+                                <TextBlock Text="Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
 
                                 <StackPanel Orientation="Horizontal">
-                                    <!-- Экспорт результатов -->
-                                    <Button Content="Экспорт результатов" 
+                                    <!-- Р­РєСЃРїРѕСЂС‚ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ -->
+                                    <Button Content="Р­РєСЃРїРѕСЂС‚ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ" 
                                             Command="{Binding ExportResultsCommand}"
                                             Background="#10B981" Foreground="White" 
                                             FontSize="14" FontWeight="SemiBold" 
@@ -1203,14 +799,14 @@
                                         </Button.Style>
                                     </Button>
 
-                                    <!-- Удалить турнир -->
-                                    <Button Content="Удалить турнир" 
+                                    <!-- РЈРґР°Р»РёС‚СЊ С‚СѓСЂРЅРёСЂ -->
+                                    <Button Content="РЈРґР°Р»РёС‚СЊ С‚СѓСЂРЅРёСЂ" 
                                             Command="{Binding DeleteTournamentCommand}"
                                             Background="#EF4444" Foreground="White" 
                                             FontSize="14" FontWeight="SemiBold" 
                                             Padding="16,10" BorderThickness="0" 
                                             Cursor="Hand">
-                                        <!-- Стиль кнопки удаления оставлен прежним -->
+                                        <!-- РЎС‚РёР»СЊ РєРЅРѕРїРєРё СѓРґР°Р»РµРЅРёСЏ РѕСЃС‚Р°РІР»РµРЅ РїСЂРµР¶РЅРёРј -->
                                         <Button.Style>
                                             <Style TargetType="Button">
                                                 <Setter Property="Template">
@@ -1235,11 +831,11 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 5. Кнопки сохранения/отмены -->
+                        <!-- 5. РљРЅРѕРїРєРё СЃРѕС…СЂР°РЅРµРЅРёСЏ/РѕС‚РјРµРЅС‹ -->
                         <Border Grid.Row="4" Background="#F9FAFB" CornerRadius="12" Padding="24" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <!-- Отмена -->
-                                <Button Content="Отмена" 
+                                <!-- РћС‚РјРµРЅР° -->
+                                <Button Content="РћС‚РјРµРЅР°" 
                                         Command="{Binding CancelSettingsCommand}"
                                         Background="White" Foreground="#374151" 
                                         FontSize="14" FontWeight="SemiBold" 
@@ -1268,8 +864,8 @@
                                     </Button.Style>
                                 </Button>
 
-                                <!-- Сохранить -->
-                                <Button Content="Сохранить изменения" 
+                                <!-- РЎРѕС…СЂР°РЅРёС‚СЊ -->
+                                <Button Content="РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ" 
                                         Command="{Binding SaveSettingsCommand}"
                                         Background="#3B82F6" Foreground="White" 
                                         FontSize="14" FontWeight="SemiBold" 

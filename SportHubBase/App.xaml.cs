@@ -40,7 +40,7 @@ namespace SportHubBase
 
             // Регистрация фабрик
             Container.Register<IScheduleStrategyFactory, ScheduleStrategyFactory>(Lifestyle.Singleton);
-            Container.Register<IResultsCalculatorFactory, ResultsCalculatorFactory>(Lifestyle.Singleton);
+            Container.Register<IResultsProviderFactory, ResultsProviderFactory>(Lifestyle.Singleton);
             Container.Register<IStatisticsCalculatorFactory, StatisticsCalculatorFactory>(Lifestyle.Singleton);
             Container.Register<IImageEncoderStrategyFactory, ImageEncoderStrategyFactory>(Lifestyle.Singleton);
             Container.Register<IExcelService, ExcelService>(Lifestyle.Singleton);

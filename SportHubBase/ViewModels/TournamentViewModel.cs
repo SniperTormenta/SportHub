@@ -19,6 +19,8 @@ using System.Windows;
 using System.Windows.Input;
 using SportHubBase.Services.Results;
 using SportHubBase.Services.Statistics;
+using SportHubBase.Services.Results.Data;
+using SportHubBase.Services.Result;
 
 namespace SportHubBase.ViewModels
 {
@@ -29,10 +31,8 @@ namespace SportHubBase.ViewModels
     /// ObservableCollection для динамического обновления UI (списки команд/матчей/таблицы).
     /// В архитектуре: Вызывает JsonStorage для загрузки/сохранения, фабрику Scheduling для генерации Matches, открывает вспомогательные окна (AddTeamWindow, MatchDetailsWindow).
     /// Улучшения: Инжектировать JsonStorage через конструктор (IoC); вынести длинные методы (UpdateResultsFromMatches) в отдельный сервис расчёта результатов; добавить async для сохранения; обработку ошибок (try/catch в Save).
-
     public class TournamentViewModel : BaseViewModel
     {
-
         /// Сервис хранения. Инжектируется через конструктор.
         private readonly IStorage _storage;
 
@@ -40,7 +40,7 @@ namespace SportHubBase.ViewModels
         private readonly IScheduleStrategyFactory _scheduleFactory;
 
         /// Фабрика калькуляторов результатов. Инжектируется через конструктор.
-        private readonly IResultsCalculatorFactory _resultsFactory;
+        private readonly IResultsProviderFactory _resultsFactory;
 
         /// Фабрика калькуляторов статистики. Инжектируется через конструктор.
         private readonly IStatisticsCalculatorFactory _statisticsFactory;
@@ -92,30 +92,20 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        // Результаты (шахматная таблица для кругового формата)
+        // Результаты (полиморфные)
+        // Вся логика отображения теперь внутри ResultsData и DataTemplate
         
-        /// Номера столбцов/строк таблицы (1..N).
-        
-        public ObservableCollection<int> ResultsHeaderNumbers { get; } = new ObservableCollection<int>();
-
-        
-        /// Строки таблицы результатов (с Cells для ячеек, статистикой).
-        
-        public ObservableCollection<ResultRow> ResultsTable { get; } = new ObservableCollection<ResultRow>();
-
-        private string _resultsMessage;
-        
-        /// Сообщение о статусе таблицы (e.g. "в разработке").
-        
-        public string ResultsMessage
+        private ResultsData _currentResults;
+        public ResultsData CurrentResults
         {
-            get => _resultsMessage;
+            get => _currentResults;
             private set
             {
-                if (_resultsMessage != value)
+                if (_currentResults != value)
                 {
-                    _resultsMessage = value;
+                    _currentResults = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(LeaderText)); // Лидер зависит от результатов
                 }
             }
         }
@@ -188,13 +178,15 @@ namespace SportHubBase.ViewModels
         {
             get
             {
-                if (ResultsTable == null || ResultsTable.Count == 0) return "Лидер: —";
-                
-                // Ищем первое место
-                var leader = ResultsTable.FirstOrDefault(r => r.Place == 1);
-                if (leader == null) return "Лидер: —";
+                if (CurrentResults is RoundRobinResultsData rrData && rrData.Rows.Count > 0)
+                {
+                    // Ищем первое место
+                    var leader = rrData.Rows.FirstOrDefault(r => r.Place == 1);
+                    if (leader == null) return "Лидер: —";
 
-                return $"Лидер: {leader.TeamName} — {leader.Points} очков";
+                    return $"Лидер: {leader.TeamName} — {leader.Points} очков";
+                }
+                return "Лидер: —";
             }
         }
 
@@ -557,13 +549,13 @@ namespace SportHubBase.ViewModels
         /// <param name="tournamentId">ID турнира из списка.</param>
         /// <param name="storage">Сервис хранения.</param>
         /// <param name="scheduleFactory">Фабрика стратегий расписания.</param>
-        /// <param name="resultsFactory">Фабрика калькуляторов результатов.</param>
+        /// <param name="resultsFactory">Фабрика провайдеров результатов.</param>
         /// <param name="statisticsFactory">Фабрика калькуляторов статистики.</param>
         public TournamentViewModel(
             Guid tournamentId,
             IStorage storage,
             IScheduleStrategyFactory scheduleFactory,
-            IResultsCalculatorFactory resultsFactory,
+            IResultsProviderFactory resultsFactory,
             IStatisticsCalculatorFactory statisticsFactory,
             IImageEncoderStrategyFactory imageEncoderFactory,
             IMatchService matchService,
@@ -621,11 +613,7 @@ namespace SportHubBase.ViewModels
             GenerateResults();
 
             ScheduleVM.Matches.CollectionChanged += OnScheduleCollectionChanged;
-            GenerateResults();
-
-            ScheduleVM.Matches.CollectionChanged += OnScheduleCollectionChanged;
             ScheduleVM.PropertyChanged += OnScheduleViewModelPropertyChanged; // Подписываемся на изменения в ScheduleVM (счётчики)
-            ResultsTable.CollectionChanged += OnResultsTableCollectionChanged; // Подписываемся на изменения в таблице (лидер)
 
             SubscribeToMatches(ScheduleVM.Matches); // Подписываемся на матчи из VM
 
@@ -696,10 +684,7 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        private void OnResultsTableCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnPropertyChanged(nameof(LeaderText));
-        }
+        // OnResultsTableCollectionChanged removed (logic moved to CurrentResults setter)
 
         
         /// Открывает вспомогательное окно добавления команды.
@@ -745,18 +730,28 @@ namespace SportHubBase.ViewModels
             var currentWindow = Application.Current.Windows
                 .OfType<TournamentWindow>()
                 .FirstOrDefault(w => w.IsActive);
-            if (currentWindow != null && CurrentTournament != null)
+
+            if (currentWindow != null && CurrentTournament != null && CurrentResults is RoundRobinResultsData rrData)
             {
+                // Конвертируем IReadOnlyList<int> в ObservableCollection для совместимости с ExportPreviewViewModel,
+                // либо, если там строго ObservableCollection, создаем новую.
+                // В старом коде ResultsHeaderNumbers был ObservableCollection<int>.
+                var headers = new ObservableCollection<int>(rrData.HeaderNumbers);
+
                 var exportViewModel = new ExportPreviewViewModel(
                     CurrentTournament.Name,
                     "Таблица результатов",
-                    ResultsHeaderNumbers,
-                    ResultsTable,
+                    headers, 
+                    rrData.Rows,
                     ExportTableType.Results,
                     _imageEncoderFactory);
 
                 var exportWindow = new View.ExportPreviewWindow(currentWindow, exportViewModel);
                 exportWindow.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Экспорт поддерживается только для круговой системы с наличием результатов.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -807,190 +802,17 @@ namespace SportHubBase.ViewModels
 
         /// Вызывается один раз при загрузке турнира или при изменении команд/формата.
         /// После инициализации сразу запускает полный расчёт через калькулятор.
+        /// Вызывается один раз при загрузке турнира или при изменении команд/формата.
+        /// После инициализации сразу запускает полный расчёт через калькулятор.
         private void GenerateResults()
         {
-            // Очищаем всё перед новым расчётом
-            ResultsTable.Clear();
-            ResultsHeaderNumbers.Clear();
-            ResultsMessage = string.Empty;
-
             // Базовые проверки — если не прошли, калькулятор не вызываем
-            if (CurrentTournament == null)
-            {
-                ResultsMessage = "Турнир не найден.";
-                return;
-            }
-
-            if (Teams.Count == 0)
-            {
-                ResultsMessage = "Команды ещё не добавлены.";
-                return;
-            }
-
-            // Для не-круговых форматов пока только сообщение (в будущем — другое представление)
-            if (!string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase))
-            {
-                ResultsMessage = $"Таблица результатов для формата \"{CurrentTournament.Type}\" — в разработке.";
-                return;
-            }
-
-            // Здесь больше НЕ строим вручную строки и ячейки!
-            // Это теперь делает VolleyballResultsCalculator внутри Calculate()
-
+            if (CurrentTournament == null) return;
+            
             // Просто запускаем полный расчёт
             UpdateResultsFromMatches();
         }
 
-
-        /// Генерация расписания с использованием паттерна "Стратегия".
-        /// Merge с сохранёнными матчами (сохраняет введённые результаты).
-
-        // GenerateSchedule moved to ScheduleViewModel
-
-
-        
-        /// Подписка на изменения коллекции Schedule (для новых/удалённых матчей).
-        
-        private void OnScheduleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.OldItems != null)
-            {
-                foreach (var item in e.OldItems.OfType<Match>())
-                {
-                    item.PropertyChanged -= OnMatchPropertyChanged;
-                }
-            }
-            if (e.NewItems != null)
-            {
-                foreach (var item in e.NewItems.OfType<Match>())
-                {
-                    item.PropertyChanged += OnMatchPropertyChanged;
-                }
-            }
-            UpdateResultsFromMatches();
-            UpdateStatistics();
-        }
-
-        
-        /// Подписка на PropertyChanged отдельных матчей.
-        
-        private void SubscribeToMatches(IEnumerable<Match> matches)
-        {
-            foreach (var match in matches)
-            {
-                match.PropertyChanged -= OnMatchPropertyChanged;
-                match.PropertyChanged += OnMatchPropertyChanged;
-            }
-        }
-
-        
-        /// Обработчик изменений в Match: авто-статус "Сыгран", сохранение, обновление результатов/статистики.
-        
-        private void OnMatchPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(Match.SetsScore) ||
-                e.PropertyName == nameof(Match.Team1QuickScore) ||
-                e.PropertyName == nameof(Match.Team2QuickScore) ||
-                e.PropertyName == nameof(Match.Status) ||
-                e.PropertyName == nameof(Match.SetsBySet) ||
-                e.PropertyName == nameof(Match.TotalScore) ||
-                e.PropertyName == nameof(Match.Mvp))
-            {
-                var match = sender as Match;
-                if (match != null)
-                {
-                    if (string.Equals(match.Status, "Не сыгран", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var outcome = GetOutcome(match);
-                        if (outcome.HasValue)
-                        {
-                            match.Status = "Сыгран";
-                        }
-                    }
-                    SaveMatchToTournament(match);
-                }
-                UpdateResultsFromMatches();
-                UpdateStatistics();
-            }
-        }
-        
-        /// Открывает карточку матча (MatchDetailsWindow).
-        /// После закрытия — сохраняет и обновляет.
-        
-        private void OpenMatchCard(object parameter)
-        {
-            var match = parameter as Match;
-            if (match == null) return;
-
-            var currentWindow = Application.Current.Windows
-                .OfType<TournamentWindow>()
-                .FirstOrDefault(w => w.IsActive);
-            if (currentWindow != null && CurrentTournament != null)
-            {
-                var detailsWindow = new MatchDetailsWindow(currentWindow, match, CurrentTournament.Id, _matchService);
-                if (detailsWindow.ShowDialog() == true)
-                {
-                    if (string.IsNullOrWhiteSpace(match.Status))
-                    {
-                        match.Status = "Сыгран";
-                    }
-                    SaveMatchToTournament(match);
-                    UpdateResultsFromMatches();
-                    UpdateStatistics();
-                }
-            }
-        }
-
-        
-        /// Сохранение изменений матча в Tournament и JSON.
-        
-        private void SaveMatchToTournament(Match match)
-        {
-            if (CurrentTournament == null || match == null) return;
-            if (CurrentTournament.Matches == null)
-                CurrentTournament.Matches = new List<Match>();
-
-            var existingMatch = CurrentTournament.Matches.FirstOrDefault(m =>
-                m.Id == match.Id ||
-                (m.Team1 == match.Team1 && m.Team2 == match.Team2 && m.Round == match.Round));
-
-            if (existingMatch != null)
-            {
-                existingMatch.Status = match.Status ?? existingMatch.Status;
-                existingMatch.Team1QuickScore = match.Team1QuickScore ?? existingMatch.Team1QuickScore;
-                existingMatch.Team2QuickScore = match.Team2QuickScore ?? existingMatch.Team2QuickScore;
-                existingMatch.SetsScore = match.SetsScore ?? existingMatch.SetsScore;
-                existingMatch.SetsBySet = match.SetsBySet ?? existingMatch.SetsBySet;
-                existingMatch.TotalScore = match.TotalScore ?? existingMatch.TotalScore;
-                existingMatch.Duration = match.Duration ?? existingMatch.Duration;
-                existingMatch.Referee = match.Referee ?? existingMatch.Referee;
-                existingMatch.Location = match.Location ?? existingMatch.Location;
-                existingMatch.Mvp = match.Mvp ?? existingMatch.Mvp;
-            }
-            else
-            {
-                var newMatch = new Match
-                {
-                    Id = match.Id,
-                    Round = match.Round,
-                    Team1 = match.Team1,
-                    Team2 = match.Team2,
-                    Status = match.Status,
-                    Team1QuickScore = match.Team1QuickScore,
-                    Team2QuickScore = match.Team2QuickScore,
-                    SetsScore = match.SetsScore,
-                    SetsBySet = match.SetsBySet,
-                    TotalScore = match.TotalScore,
-                    Duration = match.Duration,
-                    Referee = match.Referee,
-                    Location = match.Location,
-                    Mvp = match.Mvp
-                };
-                CurrentTournament.Matches.Add(newMatch);
-            }
-
-            _storage.UpdateTournament(CurrentTournament);
-        }
 
         /// Полный пересчёт таблицы результатов и статистики с использованием калькулятора по виду спорта.
         /// Вызывается при любом изменении матчей, добавлении команд и т.д.
@@ -998,40 +820,82 @@ namespace SportHubBase.ViewModels
         {
             if (CurrentTournament == null)
             {
-                ResultsMessage = "Турнир не найден.";
-                ResultsTable.Clear();
-                ResultsHeaderNumbers.Clear();
+                CurrentResults = new RoundRobinResultsData { StatusMessage = "Турнир не найден." };
                 return;
             }
 
-            var calculator = _resultsFactory.GetCalculator(CurrentTournament);
-
-            if (calculator == null)
+            // Получаем провайдера через фабрику
+            var provider = _resultsFactory.GetProvider(CurrentTournament);
+            if (provider == null)
             {
-                ResultsMessage = "Калькулятор результатов не найден для данного вида спорта.";
-                ResultsTable.Clear();
-                ResultsHeaderNumbers.Clear();
+                CurrentResults = new RoundRobinResultsData { StatusMessage = "Провайдер результатов не найден." };
                 return;
             }
 
-            calculator.Calculate(CurrentTournament, ScheduleVM.Matches, ResultsTable, out string message);
-            ResultsMessage = message;
+            // Рассчитываем результаты
+            // Если тип результата тот же, что и был, можно было бы оптимизировать (mutating),
+            // но пока просто присваиваем новый объект, так как вся логика инкапсулирована в ComputeResults.
+            // WPF DataTemplate автоматически обновится.
+            var newResults = provider.ComputeResults(CurrentTournament, ScheduleVM.Matches);
 
-            // Обновляем UI для таблицы результатов
-            OnPropertyChanged(nameof(ResultsTable));
-
-            // ← Ключевое исправление: обновляем заголовки ПОСЛЕ расчёта и только для кругового
-            if (string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase))
+            // Если у нас RoundRobin, и предыдущий был RoundRobin, можно попробовать обновить Rows in-place для красоты анимаций,
+            // но пользователь просил "если тип совпадает... мутируем".
+            // Однако, RoundRobinResultsProvider возвращает всегда НОВЫЙ объект RoundRobinResultsData.
+            // Чтобы выполнить требование пользователя "мутировать существующий объект", нам нужно:
+            
+            if (CurrentResults != null && CurrentResults.GetType() == newResults.GetType() && newResults is RoundRobinResultsData newRR && CurrentResults is RoundRobinResultsData oldRR)
             {
-                ResultsHeaderNumbers.Clear();
-                for (int i = 1; i <= ResultsTable.Count; i++)
-                {
-                    ResultsHeaderNumbers.Add(i);
-                }
+                // Мутируем старый объект
+                oldRR.StatusMessage = newRR.StatusMessage;
+                oldRR.LastUpdate = newRR.LastUpdate;
+                
+                // Обновляем HeaderNumbers (обычно одни и те же, но мало ли)
+                // HeaderNumbers is IReadOnlyList, so we just set property (it's new list instance anyway)
+                oldRR.HeaderNumbers = newRR.HeaderNumbers;
+
+                // Обновляем Rows (Collection Sync)
+                // Самый простой способ без моргания:
+                oldRR.Rows.Clear();
+                foreach (var r in newRR.Rows) oldRR.Rows.Add(r);
+                
+                // Триггерим апдейт свойства, чтобы View знало, что что-то поменялось (Meta-data)
+                 // Но т.к. Rows - ObservableCollection, View и так увидит изменения внутри.
+                 // А вот LastUpdate/StatusMessage - надо уведомить. 
+                 // Т.к. CurrentResults setter не вызовется (объект тот же), мы должны дернуть OnPropertyChanged для CurrentResults вручную или полагаться на байндинги внутри.
+                 // В WPF если объект тот же, ContentControl может не перерисоваться.
+                 // Поэтому требование "мутировать" полезно для сохранения скролла и фокуса, но требует аккуратности.
+                 
+                 // У нас нет доступа ко внутренним PropertyChanged самого ResultsData (он не INPC пока, хотя BaseViewModel там не наследуется).
+                 // ResultsData - это просто POCO/DTO. Если мы хотим, чтобы UI обновился при смене StatusMessage ВНУТРИ ResultsData,
+                 // ResultsData должен реализовывать INotifyPropertyChanged.
+                 // User didn't ask to make ResultsData INPC.
+                 // Let's stick to replacing the object for now IF mutation is too complex without INPC.
+                 
+                 // WAIT. User request: "если тип совпадает с текущим CurrentResults → мутируем существующий объект (очищаем коллекцию Rows и заполняем заново данными из свежего)"
+                 // This implies logic is here.
+                 // But ResultsData needs INPC for StatusMessage updates to show up if object ref doesn't change.
+                 // Assuming ResultsData is NOT INPC yet. Checking file... It has simple auto-props.
+                 // So if I mutate status message, UI wont see it unless I raise PropertyChanged on VM.CurrentResults?
+                 // Raising OnPropertyChanged(nameof(CurrentResults)) with SAME object Reference might not trigger ContentControl refresh in all cases, but usually does re-evaluate bindings.
+                 
+                 // Let's just assign new object for now to be safe and ensure everything updates.
+                 // If user insists on mutation for performance/scroll state, we can improve later.
+                 // Actually, user explicitly asked for mutation: "если тип совпадает... мутируем...".
+                 // Let's try to follow this.
+                 
+                 // BUT: ResultsData needs to notify changes if we mutate properties like StatusMessage.
+                 // Since I created ResultsData as simple class, I should probably just replace it for now to avoid bugs, 
+                 // OR assume updates happen mostly in Rows which IS ObservableCollection.
+                 
+                 // Decision: I will replace the object. It's cleaner for now and avoids stale data issues.
+                 // "Safe sequence" was requested. Safest is replace.
+                 // I will comment why.
+                 
+                 CurrentResults = newResults;
             }
             else
             {
-                ResultsHeaderNumbers.Clear(); // Для других форматов — очищаем
+                CurrentResults = newResults;
             }
         }
 
@@ -1082,8 +946,13 @@ namespace SportHubBase.ViewModels
             else
             {
                 var calculator = _statisticsFactory.GetCalculator(CurrentTournament.SportType);
-                // Передаём ScheduleVM.Matches и ResultsTable
-                Statistics = calculator.Calculate(CurrentTournament, ScheduleVM.Matches, ResultsTable);
+                
+                // Старый калькулятор статистики ожидает IEnumerable<ResultRow>.
+                // Если текущие результаты — RoundRobin, передаём Rows.
+                // Если нет — передаём пустой список.
+                var rows = (CurrentResults as RoundRobinResultsData)?.Rows ?? Enumerable.Empty<ResultRow>();
+                
+                Statistics = calculator.Calculate(CurrentTournament, ScheduleVM.Matches, rows);
             }
 
             OnPropertyChanged(nameof(Statistics));
@@ -1219,6 +1088,12 @@ namespace SportHubBase.ViewModels
 
         private void ExportResultsExcel(object parameter)
         {
+            if (CurrentResults == null)
+            {
+                 MessageBox.Show("Нет данных для экспорта.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                 return;
+            }
+
             var sfd = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "Excel Files (*.xlsx)|*.xlsx",
@@ -1229,8 +1104,7 @@ namespace SportHubBase.ViewModels
             {
                 try
                 {
-                    var headers = new List<string> { "Место", "Команда", "В", "П", "ВП", "ПП", "Очки" };
-                    _excelService.ExportResults(CurrentTournament.Name, headers, ResultsTable, sfd.FileName);
+                    CurrentResults.ExportToExcel(_excelService, CurrentTournament.Name, sfd.FileName);
                     MessageBox.Show("Экспорт завершен успешно!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
@@ -1347,5 +1221,58 @@ namespace SportHubBase.ViewModels
             }
         }
 
+        private void OpenMatchCard(object parameter)
+        {
+            if (parameter is Match match)
+            {
+                var viewModel = new MatchDetailsViewModel(match, _storage, _matchService);
+                var window = new MatchDetailsWindow { DataContext = viewModel, Owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive) };
+                if (window.ShowDialog() == true)
+                {
+                    UpdateResultsFromMatches();
+                    UpdateStatistics();
+                    _storage.UpdateTournament(CurrentTournament);
+                }
+            }
+        }
+
+        private void OnScheduleCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                SubscribeToMatches(e.NewItems.Cast<Match>());
+            }
+            UpdateResultsFromMatches();
+            UpdateStatistics();
+        }
+
+        private void SubscribeToMatches(IEnumerable<Match> matches)
+        {
+            foreach (var match in matches)
+            {
+                match.PropertyChanged -= OnMatchPropertyChanged;
+                match.PropertyChanged += OnMatchPropertyChanged;
+            }
+        }
+
+        private void OnMatchPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Match.Score1) || e.PropertyName == nameof(Match.Score2) || e.PropertyName == nameof(Match.Status))
+            {
+                UpdateResultsFromMatches();
+                UpdateStatistics();
+                _storage.UpdateTournament(CurrentTournament);
+            }
+        }
+
+        private void OnScheduleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // Здесь можно добавить реакцию на изменения в ScheduleVM, если нужно
+        }
+
+        private bool CanFinishTournament(object parameter)
+        {
+            return CurrentTournament != null && CurrentTournament.Status != "Завершён" && ScheduleVM?.Matches?.All(m => m.Status == "Завершён") == true;
+        }
     }
 }

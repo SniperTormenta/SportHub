@@ -108,7 +108,6 @@
     <Compile Include="Interfaces\IImageEncoderStrategy.cs" />
     <Compile Include="Interfaces\IImageEncoderStrategyFactory.cs" />
     <Compile Include="Interfaces\IMatchService.cs" />
-    <Compile Include="Interfaces\IResultsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IStatisticsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
     <Compile Include="Interfaces\IScoringStrategy.cs" />
@@ -130,13 +129,19 @@
     <Compile Include="Services\Export\PngImageEncoderStrategy.cs" />
     <Compile Include="Services\JsonStorageService.cs" />
     <Compile Include="Services\MatchService.cs" />
-    <Compile Include="Services\Result\IResultsCalculator.cs" />
-    <Compile Include="Services\Result\ResultsCalculatorFactory.cs" />
+    <Compile Include="Interfaces\IResultsProviderFactory.cs" />
+    <Compile Include="Services\Results\Data\ResultsData.cs" />
+    <Compile Include="Services\Results\Data\RoundRobinResultsData.cs" />
+    <Compile Include="Services\Results\Data\OlympicBracketResultsData.cs" />
+    <Compile Include="Services\Results\Data\SwissResultsData.cs" />
+    <Compile Include="Services\Results\Data\MultiStageResultsData.cs" />
+    <Compile Include="Services\Result\IResultsProvider.cs" />
+    <Compile Include="Services\Result\ResultsProviderFactory.cs" />
+    <Compile Include="Services\Result\RoundRobinResultsProvider.cs" />
     <Compile Include="Services\Result\ScoringStrategyFactory.cs" />
     <Compile Include="Services\Result\Scoring\CustomScoringStrategy.cs" />
     <Compile Include="Services\Result\Scoring\FivbScoringStrategy.cs" />
     <Compile Include="Services\Result\Scoring\ItalianScoringStrategy.cs" />
-    <Compile Include="Services\Result\VolleyballResultsCalculator.cs" />
     <Compile Include="Services\Scheduling\IScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\RoundRobinBergerScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\ScheduleStrategyFactory.cs" />
@@ -183,6 +188,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Resources\ResultTemplates.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="TournamentWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
