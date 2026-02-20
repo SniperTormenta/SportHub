@@ -58,6 +58,9 @@ namespace SportHubBase.Models
         [JsonProperty("matches")]
         public List<Match> Matches { get; set; } = new List<Match>();
 
+        [JsonProperty("bracket")]
+        public TournamentBracket Bracket { get; set; }
+
         [JsonProperty("scoringSystem")]
         public string ScoringSystem { get; set; } // Итальянская, FIVB, Пользовательская
 

@@ -20,7 +20,6 @@ using System.Windows.Input;
 using SportHubBase.Services.Results;
 using SportHubBase.Services.Statistics;
 using SportHubBase.Services.Results.Data;
-using SportHubBase.Services.Result;
 
 namespace SportHubBase.ViewModels
 {
@@ -74,6 +73,26 @@ namespace SportHubBase.ViewModels
         // public ObservableCollection<Match> Schedule { get; } = new ObservableCollection<Match>();
 
         public TournamentStatistics Statistics { get; private set; } = new TournamentStatistics();
+
+        private TournamentBracket _bracket;
+        /// <summary>
+        /// Олимпийская сетка турнира.
+        /// </summary>
+        public TournamentBracket Bracket
+        {
+            get => _bracket;
+            private set
+            {
+                _bracket = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsOlympic));
+            }
+        }
+
+        /// <summary>
+        /// Флаг, является ли турнир олимпийским (для отображения вкладки Сетка).
+        /// </summary>
+        public bool IsOlympic => CurrentTournament?.Type == "Олимпийский";
 
         private string _scheduleMessage;
         
@@ -600,6 +619,14 @@ namespace SportHubBase.ViewModels
             ScheduleVM = new ScheduleViewModel(CurrentTournament, _storage, _scheduleFactory, _matchService);
             ScheduleVM.OnOpenMatchRequest += OpenMatchCard;
 
+            // Загружаем сетку, если она есть
+            Bracket = CurrentTournament.Bracket;
+            if (Bracket != null)
+            {
+                Bracket.ReconnectReferences();
+                SubscribeToBracket(Bracket);
+            }
+
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
             EditTeamCommand = new RelayCommand(EditTeam, t => t is Team);
             OpenMatchCommand = new RelayCommand(OpenMatchCard, m => m is Match);
@@ -624,7 +651,11 @@ namespace SportHubBase.ViewModels
             SaveSettingsCommand = new RelayCommand(SaveSettings);
             CancelSettingsCommand = new RelayCommand(CancelSettings);
             DeleteTournamentCommand = new RelayCommand(DeleteTournament);
-            RegenerateScheduleCommand = new RelayCommand(param => ScheduleVM.RefreshCommand.Execute(null));
+            RegenerateScheduleCommand = new RelayCommand(param => 
+            {
+                if (IsOlympic) RegenerateBracket();
+                else ScheduleVM.RefreshCommand.Execute(null);
+            });
             
             // Загрузка данных для Settings
             LoadCities();
@@ -1225,8 +1256,8 @@ namespace SportHubBase.ViewModels
         {
             if (parameter is Match match)
             {
-                var viewModel = new MatchDetailsViewModel(match, _storage, _matchService);
-                var window = new MatchDetailsWindow { DataContext = viewModel, Owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive) };
+                var owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive);
+                var window = new MatchDetailsWindow(owner, match, CurrentTournament.Id, _matchService);
                 if (window.ShowDialog() == true)
                 {
                     UpdateResultsFromMatches();
@@ -1257,7 +1288,7 @@ namespace SportHubBase.ViewModels
 
         private void OnMatchPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(Match.Score1) || e.PropertyName == nameof(Match.Score2) || e.PropertyName == nameof(Match.Status))
+            if (e.PropertyName == nameof(Match.Team1QuickScore) || e.PropertyName == nameof(Match.Team2QuickScore) || e.PropertyName == nameof(Match.Status))
             {
                 UpdateResultsFromMatches();
                 UpdateStatistics();
@@ -1265,14 +1296,51 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        private void OnScheduleViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+
+        private void SubscribeToBracket(TournamentBracket bracket)
         {
-            // Здесь можно добавить реакцию на изменения в ScheduleVM, если нужно
+            if (bracket == null) return;
+            foreach (var round in bracket.Rounds)
+            {
+                foreach (var match in round.Matches)
+                {
+                    match.PropertyChanged += OnBracketMatchPropertyChanged;
+                }
+            }
+            if (bracket.BronzeMatch != null)
+                bracket.BronzeMatch.PropertyChanged += OnBracketMatchPropertyChanged;
         }
 
-        private bool CanFinishTournament(object parameter)
+        private void OnBracketMatchPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            return CurrentTournament != null && CurrentTournament.Status != "Завершён" && ScheduleVM?.Matches?.All(m => m.Status == "Завершён") == true;
+            // Если изменился счёт, продвигаем победителя
+            if (e.PropertyName == "Score1" || e.PropertyName == "Score2")
+            {
+                var match = sender as BracketMatch;
+                if (match != null)
+                {
+                    match.TryAdvance();
+                    _storage.UpdateTournament(CurrentTournament);
+                    UpdateStatistics();
+                }
+            }
+        }
+
+        private void RegenerateBracket()
+        {
+            var strategy = _scheduleFactory.GetStrategy(CurrentTournament.Type);
+            if (strategy != null)
+            {
+                var newBracket = strategy.GenerateBracket(Teams.ToList());
+                if (newBracket != null)
+                {
+                    Bracket = newBracket;
+                    CurrentTournament.Bracket = Bracket;
+                    _storage.UpdateTournament(CurrentTournament);
+                    SubscribeToBracket(Bracket);
+                    MessageBox.Show("Олимпийская сетка успешно пересоздана.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
         }
     }
 }

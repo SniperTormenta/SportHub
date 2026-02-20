@@ -32,6 +32,11 @@ namespace SportHubBase.Services.Scheduling
             // Пока что возвращаем пустой список — UI покажет сообщение "в разработке".
             return new List<Match>();
         }
+
+        public TournamentBracket GenerateBracket(IList<Team> teams)
+        {
+            return null;
+        }
     }
 
     /// Заглушка для швейцарской системы (парование по рейтингу после каждого тура).
@@ -39,11 +44,7 @@ namespace SportHubBase.Services.Scheduling
     {
         public SwissScheduleStrategy() : base("Швейцарский") { }
     }
-    /// Заглушка для олимпийской системы (knockout с раундами).
-    public class OlympicScheduleStrategy : BaseStubScheduleStrategy
-    {
-        public OlympicScheduleStrategy() : base("Олимпийский") { }
-    }
+
     /// Заглушка для поэтапного турнира (группы + плей-офф).
     public class StagedScheduleStrategy : BaseStubScheduleStrategy
     {

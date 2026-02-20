@@ -84,5 +84,10 @@ namespace SportHubBase.Services.Scheduling
 
             return matches;
         }
+
+        public TournamentBracket GenerateBracket(IList<Team> teams)
+        {
+            return null; // Круговой формат не использует сетку плей-офф напрямую
+        }
     }
 }

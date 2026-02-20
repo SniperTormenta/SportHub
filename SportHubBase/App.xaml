@@ -14,6 +14,12 @@
         <converters:IsSelfCellConverter x:Key="IsSelfCellConverter" x:Shared="False"/>
         <converters:ProgressConverter x:Key="ProgressConverter" x:Shared="False"/>
 
+        <converters:MatchWinnerBoldConverter x:Key="MatchWinnerBoldConverter"/>
+        <converters:MatchWinnerColorConverter x:Key="MatchWinnerColorConverter"/>
+        <converters:ScoreNullConverter x:Key="ScoreNullConverter"/>
+        <converters:IsLiveColorConverter x:Key="IsLiveColorConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
 
         <Style x:Key="ModernComboBox" TargetType="ComboBox">
             <Setter Property="Background" Value="White"/>

@@ -71,7 +71,6 @@ namespace SportHubBase.Services.Results
                     if (i == j)
                     {
                         cell.Outcome = "SELF";
-                        cell.IsSelf = true;
                         cell.DisplayText = "";
                     }
                     else

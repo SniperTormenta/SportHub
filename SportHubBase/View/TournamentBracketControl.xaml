@@ -1,0 +1,140 @@
+<UserControl x:Class="SportHubBase.View.TournamentBracketControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:models="clr-namespace:SportHubBase.Models"
+             xmlns:converters="clr-namespace:SportHubBase.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Name="BracketCtrl">
+    
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:MatchWinnerBoldConverter x:Key="MatchWinnerBoldConverter"/>
+        <converters:MatchWinnerColorConverter x:Key="MatchWinnerColorConverter"/>
+        <converters:ScoreNullConverter x:Key="ScoreNullConverter"/>
+        <converters:IsLiveColorConverter x:Key="IsLiveColorConverter"/>
+        
+        <!-- Шаблон для одного матча в сетке -->
+        <DataTemplate x:Key="MatchTemplate" DataType="{x:Type models:BracketMatch}">
+            <Border x:Name="MatchBorder" 
+                    Background="White" 
+                    CornerRadius="12" 
+                    BorderBrush="#E2E8F0" 
+                    BorderThickness="1" 
+                    Margin="0,15" 
+                    Width="240"
+                    Tag="{Binding Id}">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.05" Color="#64748B"/>
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Индикатор Live -->
+                    <Border Height="4" CornerRadius="2,2,0,0" 
+                            Background="{Binding IsInProgress, Converter={StaticResource IsLiveColorConverter}}"/>
+                    
+                    <Border Padding="16,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="1"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Команда 1 -->
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding DisplayTeam1}" 
+                                           FontSize="14" 
+                                           FontWeight="{Binding IsTeam1Winner, Converter={StaticResource MatchWinnerBoldConverter}}"
+                                           Foreground="{Binding IsTeam1Winner, Converter={StaticResource MatchWinnerColorConverter}}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBox Grid.Column="1" 
+                                         Text="{Binding Score1, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" 
+                                         Width="36" Height="32"
+                                         Style="{StaticResource DefaultModernTextBox}"
+                                         Padding="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                         FontWeight="Bold" Foreground="#1E293B"/>
+                            </Grid>
+                            
+                            <!-- Разделитель -->
+                            <Rectangle Grid.Row="1" Fill="#F1F5F9" Margin="-16,0"/>
+                            
+                            <!-- Команда 2 -->
+                            <Grid Grid.Row="2" Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding DisplayTeam2}" 
+                                           FontSize="14" 
+                                           FontWeight="{Binding IsTeam2Winner, Converter={StaticResource MatchWinnerBoldConverter}}"
+                                           Foreground="{Binding IsTeam2Winner, Converter={StaticResource MatchWinnerColorConverter}}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBox Grid.Column="1" 
+                                         Text="{Binding Score2, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" 
+                                         Width="36" Height="32"
+                                         Style="{StaticResource DefaultModernTextBox}"
+                                         Padding="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                         FontWeight="Bold" Foreground="#1E293B"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer x:Name="BracketScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="40">
+        <Grid x:Name="CanvasContainer">
+            <!-- Канвас для отрисовки линий-коннекторов -->
+            <Canvas x:Name="LineCanvas" IsHitTestVisible="False" Panel.ZIndex="0"/>
+            
+            <StackPanel Orientation="Horizontal" x:Name="RoundsContainer">
+                <ItemsControl ItemsSource="{Binding Bracket.Rounds}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="60,0">
+                                <!-- Заголовок раунда -->
+                                <Border Background="#F8FAFC" CornerRadius="8" Padding="12,6" Margin="0,0,0,20">
+                                    <TextBlock Text="{Binding Name}" 
+                                               FontSize="12" FontWeight="Bold" Foreground="#64748B" 
+                                               HorizontalAlignment="Center" TextAlignment="Center"/>
+                                </Border>
+                                
+                                <ItemsControl ItemsSource="{Binding Matches}" ItemTemplate="{StaticResource MatchTemplate}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                
+                <!-- Отдельный контейнер для матча за 3-е место -->
+                <StackPanel Margin="60,0" VerticalAlignment="Center" Visibility="{Binding Bracket.BronzeMatch, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Border Background="#FEF3C7" CornerRadius="8" Padding="12,6" Margin="0,0,0,20">
+                        <TextBlock Text="Матч за 3-е место" 
+                                   FontSize="12" FontWeight="Bold" Foreground="#D97706" 
+                                   HorizontalAlignment="Center" TextAlignment="Center"/>
+                    </Border>
+                    <ContentControl Content="{Binding Bracket.BronzeMatch}" ContentTemplate="{StaticResource MatchTemplate}"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

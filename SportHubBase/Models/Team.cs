@@ -1,13 +1,17 @@
-﻿// Models/Team.cs (для окна турнира)
+﻿// Models/Team.cs
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace SportHubBase.Models
 {
+    /// <summary>
+    /// Модель команды.
+    /// </summary>
     public class Team
     {
         [JsonProperty("id")]
-        public System.Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [JsonProperty("name")]
         public string Name { get; set; }
@@ -23,5 +27,13 @@ namespace SportHubBase.Models
 
         [JsonProperty("players")]
         public List<Player> Players { get; set; } = new List<Player>();
+
+        /// <summary>
+        /// Возвращает true, если это "техническая" команда для пропуска раунда (BYE).
+        /// </summary>
+        [JsonIgnore]
+        public bool IsBye => string.IsNullOrEmpty(Name) || Name.Equals("BYE", StringComparison.OrdinalIgnoreCase);
+
+        public override string ToString() => Name;
     }
 }

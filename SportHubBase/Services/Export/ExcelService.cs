@@ -20,7 +20,7 @@ namespace SportHubBase.Services.Export
                 worksheet.Cell(1, 1).Value = tournamentName;
                 var titleRange = worksheet.Range(1, 1, 1, headers.Count());
                 titleRange.Merge().Style.Font.Bold = true;
-                titleRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                titleRange.Style.Alignment.Horizontal = ClosedXML.Excel.XLAlignmentHorizontalValues.Center;
 
                 // Заголовки таблицы
                 int col = 1;

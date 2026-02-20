@@ -20,5 +20,10 @@ namespace SportHubBase.Services.Scheduling
 
         /// Генерация расписания на основе списка команд.
         IEnumerable<Match> GenerateSchedule(IList<Team> teams);
+
+        /// <summary>
+        /// Генерирует олимпийскую сетку (TournamentBracket) на основе списка команд.
+        /// </summary>
+        TournamentBracket GenerateBracket(IList<Team> teams);
     }
 }
