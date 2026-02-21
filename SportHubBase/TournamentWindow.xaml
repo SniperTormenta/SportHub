@@ -622,11 +622,6 @@
                     </Grid>
                 </ScrollViewer>
             </TabItem>
-
-            <TabItem Header="Сетка" Visibility="{Binding IsOlympic, Converter={StaticResource BoolToVisibilityConverter}}" Style="{StaticResource TailwindTabItem}">
-                <View:TournamentBracketControl DataContext="{Binding}"/>
-            </TabItem>
-
             <TabItem Header="Настройки" Style="{StaticResource TailwindTabItem}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="40,32,40,40" MaxWidth="900">

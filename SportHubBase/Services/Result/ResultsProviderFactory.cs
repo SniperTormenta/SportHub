@@ -1,6 +1,7 @@
 // Services/Results/ResultsProviderFactory.cs
 using SportHubBase.Interfaces;
 using SportHubBase.Models;
+using SportHubBase.Services.Result;
 using SportHubBase.Services.Results.Data;
 using System.Collections.ObjectModel;
 
@@ -13,13 +14,17 @@ namespace SportHubBase.Services.Results
             if (tournament == null)
                 return new StubResultsProvider("Неизвестно");
 
-            // Логика выбора по типу турнира (Round Robin)
-            if (string.Equals(tournament.Type, "Круговой", System.StringComparison.OrdinalIgnoreCase))
-            {
-                return new RoundRobinResultsProvider();
-            }
+            var typeLower = tournament.Type?.ToLowerInvariant() ?? "";
 
-            // Заглушка для других типов
+            if (typeLower.Contains("кругов") || typeLower == "круговой")
+                return new RoundRobinResultsProvider();
+
+            if (typeLower.Contains("олимп") || typeLower.Contains("плей-офф"))
+                return new OlympicResultsProvider();   // ← новый класс, ниже
+
+            //if (typeLower.Contains("Швейцарский"))
+            //    return new SwissResultsProvider();     // Не реализовано
+
             return new StubResultsProvider(tournament.Type);
         }
     }
@@ -52,4 +57,6 @@ namespace SportHubBase.Services.Results
             return new RoundRobinResultsData { StatusMessage = $"Тип \"{_type}\" пока не поддерживается." };
         }
     }
+
+
 }

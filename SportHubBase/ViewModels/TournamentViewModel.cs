@@ -887,43 +887,15 @@ namespace SportHubBase.ViewModels
                 // Обновляем Rows (Collection Sync)
                 // Самый простой способ без моргания:
                 oldRR.Rows.Clear();
-                foreach (var r in newRR.Rows) oldRR.Rows.Add(r);
-                
-                // Триггерим апдейт свойства, чтобы View знало, что что-то поменялось (Meta-data)
-                 // Но т.к. Rows - ObservableCollection, View и так увидит изменения внутри.
-                 // А вот LastUpdate/StatusMessage - надо уведомить. 
-                 // Т.к. CurrentResults setter не вызовется (объект тот же), мы должны дернуть OnPropertyChanged для CurrentResults вручную или полагаться на байндинги внутри.
-                 // В WPF если объект тот же, ContentControl может не перерисоваться.
-                 // Поэтому требование "мутировать" полезно для сохранения скролла и фокуса, но требует аккуратности.
-                 
-                 // У нас нет доступа ко внутренним PropertyChanged самого ResultsData (он не INPC пока, хотя BaseViewModel там не наследуется).
-                 // ResultsData - это просто POCO/DTO. Если мы хотим, чтобы UI обновился при смене StatusMessage ВНУТРИ ResultsData,
-                 // ResultsData должен реализовывать INotifyPropertyChanged.
-                 // User didn't ask to make ResultsData INPC.
-                 // Let's stick to replacing the object for now IF mutation is too complex without INPC.
-                 
-                 // WAIT. User request: "если тип совпадает с текущим CurrentResults → мутируем существующий объект (очищаем коллекцию Rows и заполняем заново данными из свежего)"
-                 // This implies logic is here.
-                 // But ResultsData needs INPC for StatusMessage updates to show up if object ref doesn't change.
-                 // Assuming ResultsData is NOT INPC yet. Checking file... It has simple auto-props.
-                 // So if I mutate status message, UI wont see it unless I raise PropertyChanged on VM.CurrentResults?
-                 // Raising OnPropertyChanged(nameof(CurrentResults)) with SAME object Reference might not trigger ContentControl refresh in all cases, but usually does re-evaluate bindings.
-                 
-                 // Let's just assign new object for now to be safe and ensure everything updates.
-                 // If user insists on mutation for performance/scroll state, we can improve later.
-                 // Actually, user explicitly asked for mutation: "если тип совпадает... мутируем...".
-                 // Let's try to follow this.
-                 
-                 // BUT: ResultsData needs to notify changes if we mutate properties like StatusMessage.
-                 // Since I created ResultsData as simple class, I should probably just replace it for now to avoid bugs, 
-                 // OR assume updates happen mostly in Rows which IS ObservableCollection.
-                 
-                 // Decision: I will replace the object. It's cleaner for now and avoids stale data issues.
-                 // "Safe sequence" was requested. Safest is replace.
-                 // I will comment why.
-                 
+                foreach (var r in newRR.Rows) oldRR.Rows.Add(r); 
                  CurrentResults = newResults;
             }
+
+            if (newResults is OlympicBracketResultsData olympic && olympic.Bracket == null)
+            {
+                olympic.Bracket = this.Bracket ?? CurrentTournament?.Bracket;
+            }
+
             else
             {
                 CurrentResults = newResults;

@@ -1,11 +1,12 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:data="clr-namespace:SportHubBase.Services.Results.Data"
-                    xmlns:converters="clr-namespace:SportHubBase.Converters">
+                    xmlns:converters="clr-namespace:SportHubBase.Converters" xmlns:View="clr-namespace:SportHubBase.View">
 
     <!-- Конвертеры для ячеек -->
     <converters:ResultCellBackgroundConverter x:Key="ResultCellBackgroundConverter"/>
     <converters:ResultCellColorConverter x:Key="ResultCellColorConverter"/>
+    
     <!-- Другие конвертеры, если нужны, можно добавить здесь или использовать из App.xaml -->
 
     <!-- Шаблон для Круговой системы (Round Robin) -->
@@ -236,13 +237,11 @@
         </ScrollViewer>
     </DataTemplate>
 
-    <!-- Шаблон для Олимпийской системы (заглушка) -->
+    <!-- Шаблон для Олимпийской системы (реальная сетка) -->
     <DataTemplate DataType="{x:Type data:OlympicBracketResultsData}">
-        <Grid Background="White" Margin="20">
-            <TextBlock Text="Олимпийская система (Плей-офф) - в разработке" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center" 
-                       FontSize="20" Foreground="#9CA3AF"/>
-        </Grid>
+        <View:TournamentBracketControl 
+        DataContext="{Binding DataContext, 
+                      RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
     </DataTemplate>
 
     <!-- Шаблон для Швейцарской системы (заглушка) -->

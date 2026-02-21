@@ -136,12 +136,14 @@
     <Compile Include="Services\Results\Data\SwissResultsData.cs" />
     <Compile Include="Services\Results\Data\MultiStageResultsData.cs" />
     <Compile Include="Services\Result\IResultsProvider.cs" />
+    <Compile Include="Services\Result\OlympicResultsProvider.cs" />
     <Compile Include="Services\Result\ResultsProviderFactory.cs" />
     <Compile Include="Services\Result\RoundRobinResultsProvider.cs" />
     <Compile Include="Services\Result\ScoringStrategyFactory.cs" />
     <Compile Include="Services\Result\Scoring\CustomScoringStrategy.cs" />
     <Compile Include="Services\Result\Scoring\FivbScoringStrategy.cs" />
     <Compile Include="Services\Result\Scoring\ItalianScoringStrategy.cs" />
+    <Compile Include="Services\Result\SwissResultsProvider.cs" />
     <Compile Include="Services\Scheduling\IScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\RoundRobinBergerScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\ScheduleStrategyFactory.cs" />
