@@ -29,93 +29,121 @@ namespace SportHubBase.Services.Scheduling
         /// </summary>
         public TournamentBracket GenerateBracket(IList<Team> teams)
         {
-            if (teams == null || teams.Count == 0) return null;
-            if (teams.Count > 16)
-                throw new ArgumentException("Максимум 16 команд для олимпийской системы.");
+            if (teams == null || teams.Count == 0)
+                return new TournamentBracket();
 
-            int teamsCount = teams.Count;
-            // Определяем количество участников в сетке (ближайшая степень 2)
-            int powerOf2 = 8;
-            if (teamsCount > 8) powerOf2 = 16;
-            else if (teamsCount <= 4) powerOf2 = 4;
-            else if (teamsCount <= 2) powerOf2 = 2;
-
-            if (powerOf2 < 8) powerOf2 = 8; // По задаче минимум 8
+            if (teams.Count > 32)
+                throw new ArgumentException("Максимум 32 команды");
 
             var bracket = new TournamentBracket();
-            int roundCount = (int)Math.Log(powerOf2, 2);
 
-            // 1. Создаем раунды и матчи
-            for (int r = 0; r < roundCount; r++)
+            int n = teams.Count;
+
+            // 1. Первый раунд: сколько реальных пар и бай
+            int realPairs = n / 2;
+            int byeCount = n % 2;
+            int firstRoundSlots = realPairs + byeCount;
+
+            // Создаём первый раунд
+            var firstRound = new BracketRound
             {
-                int matchesInRound = powerOf2 / (int)Math.Pow(2, r + 1);
+                Name = GetRoundName(firstRoundSlots),
+                RoundIndex = 0
+            };
+
+            for (int i = 0; i < firstRoundSlots; i++)
+            {
+                firstRound.Matches.Add(new BracketMatch
+                {
+                    RoundIndex = 0,
+                    MatchIndex = i
+                });
+            }
+            bracket.Rounds.Add(firstRound);
+
+            // 2. Остальные раунды
+            int currentSlots = firstRoundSlots;
+            int roundIndex = 1;
+
+            while (currentSlots > 1)
+            {
                 var round = new BracketRound
                 {
-                    Name = GetRoundName(matchesInRound),
-                    RoundIndex = r
+                    Name = GetRoundName(currentSlots / 2),
+                    RoundIndex = roundIndex++
                 };
 
-                for (int m = 0; m < matchesInRound; m++)
+                int matches = (currentSlots + 1) / 2;
+                for (int i = 0; i < matches; i++)
                 {
                     round.Matches.Add(new BracketMatch
                     {
-                        RoundIndex = r,
-                        MatchIndex = m,
-                        IsFinal = (matchesInRound == 1)
+                        RoundIndex = round.RoundIndex,
+                        MatchIndex = i,
+                        IsFinal = (currentSlots == 2)
                     });
                 }
+
                 bracket.Rounds.Add(round);
+                currentSlots = matches;
             }
 
-            // 2. Создаем матч за 3-е место
-            bracket.BronzeMatch = new BracketMatch
+            // 3. Бронза — только если есть полуфинал (минимум 4 команды)
+            if (n >= 4)
             {
-                IsBronzeMatch = true,
-                RoundIndex = roundCount - 1,
-                MatchIndex = 1 // Визуально рядом с финалом
-            };
-
-            // 3. Настраиваем связи (графовая структура)
-            for (int r = 0; r < roundCount - 1; r++)
-            {
-                var currentRound = bracket.Rounds[r];
-                var nextRound = bracket.Rounds[r + 1];
-
-                for (int m = 0; m < currentRound.Matches.Count; m++)
+                bracket.BronzeMatch = new BracketMatch
                 {
-                    var match = currentRound.Matches[m];
-                    var targetMatch = nextRound.Matches[m / 2];
+                    IsBronzeMatch = true,
+                    RoundIndex = bracket.Rounds.Count
+                };
+            }
 
-                    match.NextMatch = targetMatch;
-                    match.NextMatchId = targetMatch.Id;
-                    match.IsTeam1InNext = (m % 2 == 0);
+            // 4. Связи — только если есть куда вести
+            for (int r = 0; r < bracket.Rounds.Count - 1; r++)
+            {
+                var current = bracket.Rounds[r];
+                var next = bracket.Rounds[r + 1];
 
-                    // Если текущий раунд — полуфинал (в следующем раунде 1 матч), 
-                    // то проигравший идет в матч за 3-е место.
-                    if (nextRound.Matches.Count == 1)
+                for (int i = 0; i < current.Matches.Count; i++)
+                {
+                    var match = current.Matches[i];
+                    int targetIndex = i / 2;
+
+                    if (targetIndex < next.Matches.Count)
+                    {
+                        var target = next.Matches[targetIndex];
+                        match.NextMatch = target;
+                        match.IsTeam1InNext = (i % 2 == 0);
+                    }
+
+                    // Бронза — только если это полуфинал (следующий раунд — финал)
+                    if (bracket.BronzeMatch != null && next.Matches.Count == 1 && targetIndex < next.Matches.Count)
                     {
                         match.BronzeLoserTarget = bracket.BronzeMatch;
-                        match.BronzeLoserTargetId = bracket.BronzeMatch.Id;
                     }
                 }
             }
 
-            // 4. Заполняем первый раунд командами (с поддержкой BYE)
-            var firstRoundMatches = bracket.Rounds[0].Matches;
-            for (int i = 0; i < firstRoundMatches.Count; i++)
+            // 5. Заполняем первый раунд
+            if (bracket.Rounds.Count > 0)
             {
-                int teamIndex1 = i * 2;
-                int teamIndex2 = i * 2 + 1;
+                var firstRoundMatches = bracket.Rounds[0];
+                int teamIdx = 0;
 
-                if (teamIndex1 < teams.Count)
-                    firstRoundMatches[i].Team1 = teams[teamIndex1];
-
-                if (teamIndex2 < teams.Count)
-                    firstRoundMatches[i].Team2 = teams[teamIndex2];
-                else
+                // Реальные пары
+                for (int i = 0; i < realPairs; i++)
                 {
-                    // Вторая команда отсутствует — это BYE.
-                    // Победитель (Team1) должен быть продвинут автоматически при старте.
+                    var match = firstRoundMatches.Matches[i];
+                    match.Team1 = teams[teamIdx++];
+                    match.Team2 = teams[teamIdx++];
+                }
+
+                // Бай — последний слот, если есть
+                if (byeCount > 0 && teamIdx < teams.Count)
+                {
+                    var byeMatch = firstRoundMatches.Matches[firstRoundMatches.Matches.Count - 1];
+                    byeMatch.Team1 = teams[teamIdx++];
+                    // Team2 = null → IsBye = true
                 }
             }
 

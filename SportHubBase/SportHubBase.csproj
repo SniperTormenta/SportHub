@@ -163,6 +163,7 @@
     <Compile Include="ViewModels\TournamentStatistics.cs" />
     <Compile Include="ViewModels\ScheduleViewModel.cs" />
     <Compile Include="ViewModels\TournamentViewModel.cs" />
+    <Compile Include="Models\BracketConnection.cs" />
     <Compile Include="Models\BracketMatch.cs" />
     <Compile Include="Models\BracketRound.cs" />
     <Compile Include="Models\TournamentBracket.cs" />

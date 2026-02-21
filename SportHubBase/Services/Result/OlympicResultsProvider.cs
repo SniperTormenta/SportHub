@@ -14,13 +14,13 @@ namespace SportHubBase.Services.Result
     {
         public string Name => "Olympic Bracket Provider";
 
-        public ResultsData ComputeResults(Tournament tournament, ObservableCollection<Match> schedule)
+        public ResultsData ComputeResults(Tournament t, ObservableCollection<Match> s)
         {
             return new OlympicBracketResultsData
             {
                 StatusMessage = "Олимпийская сетка (плей-офф)",
                 LastUpdate = DateTime.Now,
-                Bracket = tournament.Bracket ?? new TournamentBracket() // на всякий
+                Bracket = t.Bracket ?? new TournamentBracket()
             };
         }
     }

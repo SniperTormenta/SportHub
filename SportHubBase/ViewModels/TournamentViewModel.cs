@@ -621,10 +621,12 @@ namespace SportHubBase.ViewModels
 
             // Загружаем сетку, если она есть
             Bracket = CurrentTournament.Bracket;
-            if (Bracket != null)
+            if (Bracket == null && CurrentTournament.Type == "Олимпийский" && Teams.Count >= 2)
             {
+                RegenerateBracket();
                 Bracket.ReconnectReferences();
                 SubscribeToBracket(Bracket);
+    
             }
 
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
@@ -739,9 +741,11 @@ namespace SportHubBase.ViewModels
                         ScheduleVM.UpdateTournamentReference(updated);
                         
                         Teams.Clear();
+                        RegenerateBracket();
                         foreach (var team in updated.Teams)
                         {
                             Teams.Add(team);
+                            RegenerateBracket();
                         }
                     }
                     OnPropertyChanged(nameof(TeamsCount));
@@ -750,6 +754,7 @@ namespace SportHubBase.ViewModels
                     ScheduleVM.LoadMatches(); // Обновляем через VM
                     GenerateResults();
                     UpdateStatistics();
+
                 }
             }
         }
@@ -869,37 +874,21 @@ namespace SportHubBase.ViewModels
             // WPF DataTemplate автоматически обновится.
             var newResults = provider.ComputeResults(CurrentTournament, ScheduleVM.Matches);
 
-            // Если у нас RoundRobin, и предыдущий был RoundRobin, можно попробовать обновить Rows in-place для красоты анимаций,
-            // но пользователь просил "если тип совпадает... мутируем".
-            // Однако, RoundRobinResultsProvider возвращает всегда НОВЫЙ объект RoundRobinResultsData.
-            // Чтобы выполнить требование пользователя "мутировать существующий объект", нам нужно:
-            
-            if (CurrentResults != null && CurrentResults.GetType() == newResults.GetType() && newResults is RoundRobinResultsData newRR && CurrentResults is RoundRobinResultsData oldRR)
+            // RoundRobin — мутируем существующий объект для плавного обновления (без моргания DataTemplate)
+            if (CurrentResults is RoundRobinResultsData oldRR2 && newResults is RoundRobinResultsData newRR2)
             {
-                // Мутируем старый объект
-                oldRR.StatusMessage = newRR.StatusMessage;
-                oldRR.LastUpdate = newRR.LastUpdate;
-                
-                // Обновляем HeaderNumbers (обычно одни и те же, но мало ли)
-                // HeaderNumbers is IReadOnlyList, so we just set property (it's new list instance anyway)
-                oldRR.HeaderNumbers = newRR.HeaderNumbers;
-
-                // Обновляем Rows (Collection Sync)
-                // Самый простой способ без моргания:
-                oldRR.Rows.Clear();
-                foreach (var r in newRR.Rows) oldRR.Rows.Add(r); 
-                 CurrentResults = newResults;
+                oldRR2.StatusMessage  = newRR2.StatusMessage;
+                oldRR2.LastUpdate     = newRR2.LastUpdate;
+                oldRR2.HeaderNumbers  = newRR2.HeaderNumbers;
+                oldRR2.Rows.Clear();
+                foreach (var r in newRR2.Rows) oldRR2.Rows.Add(r);
+                // CurrentResults уже тот же объект — PropertyChanged не нужен
+                return;
             }
 
-            if (newResults is OlympicBracketResultsData olympic && olympic.Bracket == null)
-            {
-                olympic.Bracket = this.Bracket ?? CurrentTournament?.Bracket;
-            }
-
-            else
-            {
-                CurrentResults = newResults;
-            }
+            // Для всех остальных (Olympic, Swiss и т.д.) — просто подставляем новый объект.
+            // OlympicBracketResultsData сам вычислит AllMatches/Connections в сеттере Bracket.
+            CurrentResults = newResults;
         }
 
         private double? GetOutcome(Match match)
@@ -1192,7 +1181,7 @@ namespace SportHubBase.ViewModels
             {
                 try
                 {
-                    _excelService.ExportTeams(Teams, sfd.FileName);
+                    _excelService.ExportTeams(Teams, sfd.FileName); 
                     MessageBox.Show("Экспорт завершен успешно!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
@@ -1301,17 +1290,32 @@ namespace SportHubBase.ViewModels
         private void RegenerateBracket()
         {
             var strategy = _scheduleFactory.GetStrategy(CurrentTournament.Type);
-            if (strategy != null)
+            if (strategy == null) return;
+
+            var newBracket = strategy.GenerateBracket(Teams.ToList());
+            if (newBracket != null)
             {
-                var newBracket = strategy.GenerateBracket(Teams.ToList());
-                if (newBracket != null)
-                {
-                    Bracket = newBracket;
-                    CurrentTournament.Bracket = Bracket;
-                    _storage.UpdateTournament(CurrentTournament);
-                    SubscribeToBracket(Bracket);
-                    MessageBox.Show("Олимпийская сетка успешно пересоздана.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                Bracket = newBracket;
+                CurrentTournament.Bracket = Bracket;
+                Bracket.ReconnectReferences(); // после десериализации
+                SubscribeToBracket(Bracket);
+                _storage.UpdateTournament(CurrentTournament);
+            }
+        }
+
+        public string BracketStatusMessage
+        {
+            get
+            {
+                if (CurrentTournament?.Type != "Олимпийский") return null;
+
+                if (Teams.Count < 2)
+                    return $"Добавьте ещё {2 - Teams.Count} команду — сетка сгенерируется автоматически";
+
+                if (Bracket == null)
+                    return "Сетка ещё не сгенерирована. Нажмите \"Пересоздать сетку\"";
+
+                return null;
             }
         }
     }

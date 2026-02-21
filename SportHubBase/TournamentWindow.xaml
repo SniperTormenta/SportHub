@@ -439,7 +439,7 @@
                    Margin="0,0,0,16"
                    TextWrapping="Wrap"
                    HorizontalAlignment="Center"/>
-
+                    
                     <ContentControl Grid.Row="1" Content="{Binding CurrentResults}" />
 
                     <Button Grid.Row="3"

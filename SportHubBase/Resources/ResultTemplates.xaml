@@ -239,9 +239,7 @@
 
     <!-- Шаблон для Олимпийской системы (реальная сетка) -->
     <DataTemplate DataType="{x:Type data:OlympicBracketResultsData}">
-        <View:TournamentBracketControl 
-        DataContext="{Binding DataContext, 
-                      RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+        <View:TournamentBracketControl />
     </DataTemplate>
 
     <!-- Шаблон для Швейцарской системы (заглушка) -->
