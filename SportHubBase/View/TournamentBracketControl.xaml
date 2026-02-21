@@ -4,13 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:models="clr-namespace:SportHubBase.Models"
-             mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1200">
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200">
 
-    <!--
-        DataContext здесь — OlympicBracketResultsData.
-        AllMatches  — List<BracketMatch>, у каждого XPosition/YPosition уже проставлены.
-        Connections — List<BracketConnection>, линии между карточками.
-    -->
     <ScrollViewer HorizontalScrollBarVisibility="Auto"
                   VerticalScrollBarVisibility="Auto">
         <Canvas x:Name="MainCanvas"
@@ -48,63 +44,84 @@
                 </ItemsControl.ItemContainerStyle>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:BracketMatch}">
-                        <Border Width="220" Height="90"
+                        <Border Width="220" Height="78"
                                 Background="White"
-                                BorderBrush="#CBD5E1"
+                                BorderBrush="#D1D5DB"
                                 BorderThickness="1"
-                                CornerRadius="8">
+                                CornerRadius="8"
+                                Margin="0,6,0,6">
+                            <!-- воздух между карточками -->
+
+                            <!-- Тень ТОЛЬКО СНИЗУ, слабая -->
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="6" ShadowDepth="2"
-                                                  Color="#CBD5E1" Opacity="0.4"/>
+                                <DropShadowEffect Color="#000000"
+                                                  Direction="270"    
+                                                  ShadowDepth="3"
+                                                  BlurRadius="10"
+                                                  Opacity="0.08"/>
+                                    <!-- очень лёгкая -->
                             </Border.Effect>
-                            <Grid Margin="10,6">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="1"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
 
-                                <!-- Команда 1 -->
-                                <Grid Grid.Row="0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="30"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0"
-                                               Text="{Binding DisplayTeam1}"
-                                               FontSize="13" FontWeight="SemiBold"
-                                               Foreground="#1E293B"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding Score1}"
-                                               FontSize="15" FontWeight="Bold"
-                                               Foreground="#137FEC"
-                                               HorizontalAlignment="Right"
-                                               VerticalAlignment="Center"/>
-                                </Grid>
+                            <Grid>
+                                <!-- Челка сверху (серый островок) -->
+                                <Border Height="28"
+                                        Background="#f8f9fa"
+                                        CornerRadius="8,8,0,0"
+                                        VerticalAlignment="Top"/>
 
-                                <!-- Разделитель -->
-                                <Rectangle Grid.Row="1" Fill="#E5E7EB"/>
+                                <!-- Основное содержимое (ниже челки) -->
+                                <Grid Margin="12,30,12,8">
+                                    <!-- 28 челки + 2 воздуха = 30 сверху -->
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
 
-                                <!-- Команда 2 -->
-                                <Grid Grid.Row="2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="30"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0"
-                                               Text="{Binding DisplayTeam2}"
-                                               FontSize="13" FontWeight="SemiBold"
-                                               Foreground="#1E293B"
-                                               VerticalAlignment="Center"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding Score2}"
-                                               FontSize="15" FontWeight="Bold"
-                                               Foreground="#137FEC"
-                                               HorizontalAlignment="Right"
-                                               VerticalAlignment="Center"/>
+                                    <!-- Команда 1 + счёт -->
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DisplayTeam1}"
+                                                   FontSize="13"
+                                                   FontWeight="Medium"
+                                                   Foreground="#1E293B"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"/>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Score1, TargetNullValue='–', FallbackValue='–'}"
+                                                   FontSize="15"
+                                                   FontWeight="Bold"
+                                                   Foreground="#1E293B"  
+                                                   Margin="12,0,0,0"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding DisplayTeam2}"
+                                                   FontSize="13"
+                                                   FontWeight="Medium"
+                                                   Foreground="#1E293B"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"/>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Score2, TargetNullValue='–', FallbackValue='–'}"
+                                                   FontSize="15"
+                                                   FontWeight="Bold"
+                                                   Foreground="#1E293B"
+                                                   Margin="12,0,0,0"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
                                 </Grid>
                             </Grid>
                         </Border>
