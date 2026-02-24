@@ -112,6 +112,8 @@
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
     <Compile Include="Interfaces\IScoringStrategy.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
+    <Compile Include="Interfaces\ISportScoreStrategy.cs" />
+    <Compile Include="Interfaces\ISportScoreStrategyFactory.cs" />
     <Compile Include="Models\StatBlock.cs" />
     <Compile Include="Models\Admin.cs" />
     <Compile Include="Models\CellResult.cs" />
@@ -119,6 +121,7 @@
     <Compile Include="Models\Team.cs" />
     <Compile Include="Models\Tournament.cs" />
     <Compile Include="Models\Match.cs" />
+    <Compile Include="Models\MatchEditContext.cs" />
     <Compile Include="Models\MvpItem.cs" />
     <Compile Include="Models\TeamMatchHistory.cs" />
     <Compile Include="Models\ResultRow.cs" />
@@ -143,6 +146,9 @@
     <Compile Include="Services\Result\Scoring\CustomScoringStrategy.cs" />
     <Compile Include="Services\Result\Scoring\FivbScoringStrategy.cs" />
     <Compile Include="Services\Result\Scoring\ItalianScoringStrategy.cs" />
+    <Compile Include="Services\Scoring\DefaultScoreStrategy.cs" />
+    <Compile Include="Services\Scoring\SportScoreStrategyFactory.cs" />
+    <Compile Include="Services\Scoring\VolleyballScoreStrategy.cs" />
     <Compile Include="Services\Result\SwissResultsProvider.cs" />
     <Compile Include="Services\Scheduling\IScheduleStrategy.cs" />
     <Compile Include="Services\Scheduling\RoundRobinBergerScheduleStrategy.cs" />
@@ -162,6 +168,9 @@
     <Compile Include="Converters\BracketConverters.cs" />
     <Compile Include="ViewModels\TournamentStatistics.cs" />
     <Compile Include="ViewModels\ScheduleViewModel.cs" />
+    <Compile Include="ViewModels\SetScore.cs" />
+    <Compile Include="ViewModels\SetScoreEditContext.cs" />
+    <Compile Include="ViewModels\SimpleScoreEditContext.cs" />
     <Compile Include="ViewModels\TournamentViewModel.cs" />
     <Compile Include="Models\BracketConnection.cs" />
     <Compile Include="Models\BracketMatch.cs" />

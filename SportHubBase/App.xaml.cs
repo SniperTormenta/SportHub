@@ -4,6 +4,7 @@ using SportHubBase.Services;
 using SportHubBase.Services.Export;
 using SportHubBase.Services.Results;
 using SportHubBase.Services.Scheduling;
+using SportHubBase.Services.Scoring;
 using SportHubBase.Services.Statistics;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,13 @@ namespace SportHubBase
             Container.Register<IStatisticsCalculatorFactory, StatisticsCalculatorFactory>(Lifestyle.Singleton);
             Container.Register<IImageEncoderStrategyFactory, ImageEncoderStrategyFactory>(Lifestyle.Singleton);
             Container.Register<IExcelService, ExcelService>(Lifestyle.Singleton);
+
+            Container.Collection.Register<ISportScoreStrategy>(new[]
+            {
+                typeof(DefaultScoreStrategy),
+                typeof(VolleyballScoreStrategy)
+            }, Lifestyle.Singleton);
+            Container.Register<ISportScoreStrategyFactory, SportScoreStrategyFactory>(Lifestyle.Singleton);
 
             // Верификация контейнера
             Container.Verify();

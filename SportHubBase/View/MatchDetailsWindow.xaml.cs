@@ -16,9 +16,14 @@ namespace SportHubBase.View
             InitializeComponent();
             Owner = owner;
 
-            // Создание ViewModel через контейнер зависимостей (Storage) и переданные сервисы
             var storage = App.Container.GetInstance<IStorage>();
-            _viewModel = new MatchDetailsViewModel(match, tournamentId, storage, matchService);
+            var factory = App.Container.GetInstance<ISportScoreStrategyFactory>();
+            
+            var tournaments = storage.LoadTournaments();
+            var tournament = tournaments.Find(t => t.Id == tournamentId);
+            var strategy = factory.GetStrategy(tournament?.SportType);
+
+            _viewModel = new MatchDetailsViewModel(match, tournamentId, storage, matchService, strategy);
             DataContext = _viewModel;
 
             _viewModel.RequestClose += () =>

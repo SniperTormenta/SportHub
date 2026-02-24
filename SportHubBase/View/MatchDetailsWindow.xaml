@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        xmlns:converters="clr-namespace:SportHubBase.Converters"
+        xmlns:local="clr-namespace:SportHubBase.ViewModels"
         Title="Match Statistics"
         Height="900" Width="900"
         WindowStartupLocation="CenterOwner"
@@ -10,8 +10,105 @@
         FontFamily="Inter, Segoe UI">
 
     <Window.Resources>
-        <!-- Конвертер для видимости "Нет сетов" -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Шаблон для простого счёта -->
+        <DataTemplate DataType="{x:Type local:SimpleScoreEditContext}">
+            <StackPanel Margin="0,0,0,32">
+                <TextBlock Text="Счет матча" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" 
+                            Width="120" Height="60" CornerRadius="8" 
+                            Background="White" BorderBrush="#137FEC" BorderThickness="2"
+                            HorizontalAlignment="Right" Margin="0,0,20,0">
+                        <TextBox Text="{Binding Team1QuickScore, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="Transparent" BorderThickness="0"
+                                 FontSize="24" FontWeight="Bold"
+                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="–" FontSize="32" Foreground="#617589" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                    <Border Grid.Column="2" 
+                            Width="120" Height="60" CornerRadius="8" 
+                            Background="White" BorderBrush="#E5E7EB" BorderThickness="2"
+                            HorizontalAlignment="Left">
+                        <TextBox Text="{Binding Team2QuickScore, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="Transparent" BorderThickness="0"
+                                 FontSize="24" FontWeight="Bold"
+                                 HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Шаблон для счёта по сетам -->
+        <DataTemplate DataType="{x:Type local:SetScoreEditContext}">
+            <StackPanel Margin="0,0,0,32">
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Счет по сетам" FontSize="16" FontWeight="Bold" Foreground="#617589" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Добавить сет" Style="{StaticResource SilentModernButton}" Padding="16,10" Background="#137FEC" Foreground="White" FontWeight="SemiBold" Command="{Binding AddSetCommand}"/>
+                </Grid>
+
+                <ItemsControl ItemsSource="{Binding SetsList}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,12" BorderBrush="#E5E7EB" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Number, StringFormat='Сет {0}'}" FontWeight="Bold" Foreground="#617589" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="1" Text="{Binding Score1, UpdateSourceTrigger=PropertyChanged}" Width="120" FontSize="18" FontWeight="SemiBold" TextAlignment="Center" Margin="20,0"/>
+                                    <TextBlock Grid.Column="2" Text="–" FontSize="24" Foreground="#617589" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="3" Text="{Binding Score2, UpdateSourceTrigger=PropertyChanged}" Width="120" FontSize="18" FontWeight="SemiBold" TextAlignment="Center" Margin="20,0"/>
+                                    <Button Grid.Column="4" Content="удалить" FontFamily="Segoe UI Symbol" Width="60" Height="40" Background="Transparent" Foreground="#EF4444" Command="{Binding DataContext.RemoveSetCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="Нет добавленных сетов" Foreground="#617589" FontStyle="Italic" Margin="0,20,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasSets}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- Total Ball Score (only for SetScoreContext) -->
+                <StackPanel Margin="0,32,0,0">
+                    <TextBlock Text="Всего мячей разыграно" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding TotalScoreLeft}" Height="50" FontSize="20" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="–" FontSize="32" Foreground="#617589" VerticalAlignment="Center" Margin="24,0"/>
+                        <TextBlock Grid.Column="2" Text="{Binding TotalScoreRight}" Height="50" FontSize="20" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid Margin="32">
@@ -21,7 +118,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Заголовок: команды + большой счёт сетов -->
+        <!-- Заголовок: команды + большой счёт -->
         <Grid Margin="0,0,0,40">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -36,49 +133,26 @@
                         <ImageBrush ImageSource="{Binding Team1Logo}" Stretch="UniformToFill"/>
                     </Ellipse.Fill>
                 </Ellipse>
-                <TextBlock Text="{Binding Team1}"
-                           FontSize="28"
-                           FontWeight="Bold"
-                           Foreground="#111418"
-                           VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Team1}" FontSize="28" FontWeight="Bold" Foreground="#111418" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="250"/>
             </StackPanel>
 
-            <!-- Центральный счёт по сетам -->
-                <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="Счет по встречи"
-                           FontSize="14"
-                           Foreground="#617589"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,8"/>
+            <!-- Центральный счёт -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0">
+                <TextBlock Text="Счет по встречи" FontSize="14" Foreground="#617589" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Border Width="100" Height="80"
-                            Background="White" BorderBrush="#137FEC" BorderThickness="2"
-                            Margin="0,0,20,0">
-                        <TextBlock Text="{Binding SetsScoreLeft}"
-                                 FontSize="40" FontWeight="Black"
-                                 TextAlignment="Center"
-                                 VerticalAlignment="Center"
-                                 HorizontalAlignment="Center"/>
+                    <Border Width="100" Height="80" Background="White" BorderBrush="#137FEC" BorderThickness="2" Margin="0,0,20,0">
+                        <TextBlock Text="{Binding EditContext.HeaderScore1}" FontSize="40" FontWeight="Black" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </Border>
                     <TextBlock Text="–" FontSize="48" Foreground="#617589" VerticalAlignment="Center" Margin="0,0,20,0"/>
-                    <Border Width="100" Height="80"
-                            Background="White" BorderBrush="#E5E7EB" BorderThickness="2">
-                        <TextBlock Text="{Binding SetsScoreRight}"
-                                 FontSize="40" FontWeight="Black"
-                                 TextAlignment="Center"
-                                 VerticalAlignment="Center"
-                                 HorizontalAlignment="Center"/>
+                    <Border Width="100" Height="80" Background="White" BorderBrush="#E5E7EB" BorderThickness="2">
+                        <TextBlock Text="{Binding EditContext.HeaderScore2}" FontSize="40" FontWeight="Black" TextAlignment="Center" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </Border>
                 </StackPanel>
             </StackPanel>
 
             <!-- Правая команда -->
             <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Team2}"
-                           FontSize="28"
-                           FontWeight="Bold"
-                           Foreground="#111418"
-                           VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Team2}" FontSize="28" FontWeight="Bold" Foreground="#111418" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="250"/>
                 <Ellipse Width="80" Height="80" Margin="20,0,0,0">
                     <Ellipse.Fill>
                         <ImageBrush ImageSource="{Binding Team2Logo}" Stretch="UniformToFill"/>
@@ -94,18 +168,14 @@
                 <!-- Номер матча -->
                 <StackPanel Margin="0,0,0,32">
                     <TextBlock Text="Номер матча" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
-                    <TextBox Text="{Binding MatchNumber, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
-                             Height="48" Padding="12" Width="150" HorizontalAlignment="Left"
-                             FontSize="16" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding MatchNumber, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" Height="48" Padding="12" Width="150" HorizontalAlignment="Left" FontSize="16" FontWeight="SemiBold"/>
                     <TextBlock Text="Оставьте пустым для авто-нумерации" FontSize="12" Foreground="#9CA3AF" Margin="0,4,0,0" FontStyle="Italic"/>
                 </StackPanel>
 
                 <!-- Статус матча -->
-                <StackPanel Margin="0,0,0,32">
+                <StackPanel Margin="0,0,0,32" DataContext="{Binding EditContext}">
                     <TextBlock Text="Статус матча" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
-                    <ComboBox SelectedItem="{Binding Status, UpdateSourceTrigger=PropertyChanged}"
-                              Style="{StaticResource ModernComboBox}"
-                              Width="300" HorizontalAlignment="Left">
+                    <ComboBox SelectedItem="{Binding Status, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernComboBox}" Width="300" HorizontalAlignment="Left">
                         <sys:String>Не сыгран</sys:String>
                         <sys:String>Идёт</sys:String>
                         <sys:String>Сыгран</sys:String>
@@ -115,7 +185,7 @@
                 </StackPanel>
 
                 <!-- Техническое поражение -->
-                <StackPanel Margin="0,0,0,32" Visibility="{Binding IsTechnicalDefeatVisible, Converter={StaticResource BoolToVis}}">
+                <StackPanel Margin="0,0,0,32" DataContext="{Binding EditContext}" Visibility="{Binding IsTechnicalDefeatVisible, Converter={StaticResource BoolToVis}}">
                     <Border Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="2" CornerRadius="8" Padding="16">
                         <StackPanel>
                             <TextBlock Text="⚠️ Техническое поражение" FontSize="16" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,12"/>
@@ -135,205 +205,33 @@
                     </Border>
                 </StackPanel>
 
-                <!-- Быстрый счет (синхронизируется с расписанием) -->
-                <StackPanel Margin="0,0,0,32">
-                    <TextBlock Text="Быстрый счет" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" 
-                                Width="120" 
-                                Height="60" 
-                                CornerRadius="8" 
-                                Background="White" 
-                                BorderBrush="#137FEC" 
-                                BorderThickness="2"
-                                HorizontalAlignment="Right"
-                                Margin="0,0,20,0">
-                            <TextBox Text="{Binding Team1QuickScore, UpdateSourceTrigger=PropertyChanged}"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     FontSize="24"
-                                     FontWeight="Bold"
-                                     HorizontalContentAlignment="Center"
-                                     VerticalContentAlignment="Center"/>
-                        </Border>
-                        <TextBlock Grid.Column="1" 
-                                   Text="–" 
-                                   FontSize="32" 
-                                   Foreground="#617589" 
-                                   VerticalAlignment="Center" 
-                                   Margin="0,0,20,0"/>
-                        <Border Grid.Column="2" 
-                                Width="120" 
-                                Height="60" 
-                                CornerRadius="8" 
-                                Background="White" 
-                                BorderBrush="#E5E7EB" 
-                                BorderThickness="2"
-                                HorizontalAlignment="Left">
-                            <TextBox Text="{Binding Team2QuickScore, UpdateSourceTrigger=PropertyChanged}"
-                                     Background="Transparent"
-                                     BorderThickness="0"
-                                     FontSize="24"
-                                     FontWeight="Bold"
-                                     HorizontalContentAlignment="Center"
-                                     VerticalContentAlignment="Center"/>
-                        </Border>
-                    </Grid>
-                    <TextBlock Text="Этот счет синхронизируется с расписанием. При вводе сетов счет обновляется автоматически."
-                               FontSize="12"
-                               Foreground="#617589"
-                               FontStyle="Italic"
-                               Margin="0,8,0,0"
-                               TextWrapping="Wrap"/>
-                </StackPanel>
-
-                <!-- Детальные сеты -->
-                <StackPanel Margin="0,0,0,32">
-                    <!-- Заголовок + кнопка -->
-                    <Grid Margin="0,0,0,16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0"
-                                   Text="Set Scores (Points)"
-                                   FontSize="16"
-                                   FontWeight="Bold"
-                                   Foreground="#617589"
-                                   VerticalAlignment="Center"/>
-                        <Button Content="Добавить сет"
-                                Style="{StaticResource SilentModernButton}"
-                                Padding="16,10"
-                                Background="#137FEC"
-                                Foreground="White"
-                                FontWeight="SemiBold"
-                                Command="{Binding AddSetCommand}"/>
-                    </Grid>
-
-                    <!-- Список сетов -->
-                    <ItemsControl ItemsSource="{Binding SetsList}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="White"
-                                        CornerRadius="8"
-                                        Padding="16"
-                                        Margin="0,0,0,12"
-                                        BorderBrush="#E5E7EB"
-                                        BorderThickness="1">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Column="0"
-                                                   Text="{Binding Number, StringFormat='Set {0}'}"
-                                                   FontWeight="Bold"
-                                                   Foreground="#617589"
-                                                   VerticalAlignment="Center"/>
-
-                                        <TextBox Grid.Column="1"
-                                                 Text="{Binding Score1, UpdateSourceTrigger=PropertyChanged}"
-                                                 Width="120"
-                                                 FontSize="18"
-                                                 FontWeight="SemiBold"
-                                                 TextAlignment="Center"
-                                                 Margin="20,0"/>
-
-                                        <TextBlock Grid.Column="2"
-                                                   Text="–"
-                                                   FontSize="24"
-                                                   Foreground="#617589"
-                                                   VerticalAlignment="Center"/>
-
-                                        <TextBox Grid.Column="3"
-                                                 Text="{Binding Score2, UpdateSourceTrigger=PropertyChanged}"
-                                                 Width="120"
-                                                 FontSize="18"
-                                                 FontWeight="SemiBold"
-                                                 TextAlignment="Center"
-                                                 Margin="20,0"/>
-
-                                        <Button Grid.Column="4"
-                                                Content="delete"
-                                                FontFamily="Segoe UI Symbol"
-                                                Width="40" Height="40"
-                                                Background="Transparent"
-                                                Foreground="#617589"
-                                                Command="{Binding RemoveSetCommand}"
-                                                CommandParameter="{Binding}"/>
-                                     </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <!-- Сообщение, если сетов нет -->
-                    <TextBlock Text="Нет добавленных сетов"
-                               Foreground="#617589"
-                               FontStyle="Italic"
-                               Margin="0,20,0,0">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasSets}" Value="False">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                </StackPanel>
-
-                <!-- Total Ball Score -->
-                <StackPanel Margin="0,0,0,32">
-                    <TextBlock Text="Всего мячей разыграно" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding TotalScoreLeft}" Height="50" FontSize="20" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Grid.Column="1" Text="–" FontSize="32" Foreground="#617589" VerticalAlignment="Center" Margin="24,0"/>
-                        <TextBlock Grid.Column="2" Text="{Binding TotalScoreRight}" Height="50" FontSize="20" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>
-                </StackPanel>
+                <!-- Полиморфная часть: Счёт матча (подставляется нужный DataTemplate) -->
+                <ContentControl Content="{Binding EditContext}" />
 
                 <!-- MVP и Referee -->
-                <Grid Margin="0,0,0,32">
+                <Grid Margin="0,0,0,32" DataContext="{Binding EditContext}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Margin="0,0,16,0">
                         <TextBlock Text="MVP встречи" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
-                        <ComboBox ItemsSource="{Binding PlayersList}"
+                        <!-- DataContext для ItemsSource берем из главного VM -->
+                        <ComboBox ItemsSource="{Binding DataContext.PlayersList, RelativeSource={RelativeSource AncestorType=Window}}"
                                   Style="{StaticResource ModernComboBox}"
                                   SelectedItem="{Binding Mvp, UpdateSourceTrigger=PropertyChanged}"
-                                  Height="48"
-                                  Padding="12"
-                                  IsEditable="True"/>
+                                  Height="48" Padding="12" IsEditable="True"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="16,0,0,0">
                         <TextBlock Text="Судья" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
-                        <TextBox Text="{Binding Referee}" Height="48" Padding="12"/>
+                        <TextBox Text="{Binding Referee, UpdateSourceTrigger=PropertyChanged}" Height="48" Padding="12"/>
                     </StackPanel>
                 </Grid>
 
                 <!-- Venue -->
-                <StackPanel>
+                <StackPanel DataContext="{Binding EditContext}">
                     <TextBlock Text="Место проведения встречи" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>
-                    <TextBox Text="{Binding Location}" Height="48" Padding="12"/>
+                    <TextBox Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}" Height="48" Padding="12"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
@@ -342,13 +240,8 @@
         <StackPanel Grid.Row="2" Margin="0,32,0,0">
             <TextBlock Text="{Binding ErrorMessage}" Foreground="#EF4444" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,0,0,8"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Отмена"
-                    Command="{Binding CancelCommand}"
-                    Style="{StaticResource DefaultModernButton}"
-                    Margin="0,0,10,0"/>
-            <Button Content="Сохранить статистику"
-                    Command="{Binding SaveCommand}"
-                    Style="{StaticResource SilentModernButton}"/>
+                <Button Content="Отмена" Command="{Binding CancelCommand}" Style="{StaticResource DefaultModernButton}" Margin="0,0,10,0"/>
+                <Button Content="Сохранить статистику" Command="{Binding SaveCommand}" Style="{StaticResource SilentModernButton}"/>
             </StackPanel>
         </StackPanel>
     </Grid>
