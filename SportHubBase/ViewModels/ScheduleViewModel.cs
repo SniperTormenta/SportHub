@@ -24,6 +24,7 @@ namespace SportHubBase.ViewModels
         private readonly IStorage _storage;
         private readonly IScheduleStrategyFactory _scheduleFactory;
         private readonly IMatchService _matchService;
+        private Dictionary<Guid, BracketMatch> _bracketMatchesMap = new Dictionary<Guid, BracketMatch>();
 
         private string _searchQuery;
         private MatchFilterType _filter;
@@ -31,6 +32,8 @@ namespace SportHubBase.ViewModels
 
         public ObservableCollection<Match> Matches { get; } = new ObservableCollection<Match>();
         public ICollectionView FilteredMatches { get; }
+
+        public bool IsGroupedView => _tournament?.Type == "Олимпийский";
 
         public string SearchQuery
         {
@@ -205,9 +208,70 @@ namespace SportHubBase.ViewModels
             _matchService.AssignAutoNumbers(_tournament.Matches);
 
             // Заполняем ObservableCollection
-            foreach (var match in _tournament.Matches)
+            // Заполняем ObservableCollection
+            if (IsGroupedView)
             {
-                Matches.Add(match);
+                _bracketMatchesMap.Clear();
+                if (_tournament.Bracket != null)
+                {
+                    int number = 1;
+                    foreach (var round in _tournament.Bracket.Rounds)
+                    {
+                        foreach (var bMatch in round.Matches)
+                        {
+                            if (bMatch.IsBye) continue;
+
+                            var m = new Match
+                            {
+                                Id = bMatch.Id,
+                                RoundName = round.Name,
+                                Team1 = bMatch.DisplayTeam1,
+                                Team2 = bMatch.DisplayTeam2,
+                                Team1QuickScore = bMatch.Score1,
+                                Team2QuickScore = bMatch.Score2,
+                                Status = bMatch.IsCompleted ? "Сыгран" : "Не сыгран",
+                                MatchNumber = number++
+                            };
+                            _bracketMatchesMap[m.Id] = bMatch;
+                            Matches.Add(m);
+                        }
+                    }
+                    if (_tournament.Bracket.BronzeMatch != null)
+                    {
+                        var bMatch = _tournament.Bracket.BronzeMatch;
+                        if (!bMatch.IsBye)
+                        {
+                            var m = new Match
+                            {
+                                Id = bMatch.Id,
+                                RoundName = "Матч за 3-е место",
+                                Team1 = bMatch.DisplayTeam1,
+                                Team2 = bMatch.DisplayTeam2,
+                                Team1QuickScore = bMatch.Score1,
+                                Team2QuickScore = bMatch.Score2,
+                                Status = bMatch.IsCompleted ? "Сыгран" : "Не сыгран",
+                                MatchNumber = number++
+                            };
+                            _bracketMatchesMap[m.Id] = bMatch;
+                            Matches.Add(m);
+                        }
+                    }
+                }
+
+                FilteredMatches.GroupDescriptions.Clear();
+                FilteredMatches.GroupDescriptions.Add(new PropertyGroupDescription(nameof(Match.RoundName)));
+            }
+            else
+            {
+                FilteredMatches.GroupDescriptions.Clear();
+                foreach (var match in _tournament.Matches)
+                {
+                    Matches.Add(match);
+                }
+            }
+
+            foreach (var match in Matches)
+            {
                 // Подписываемся на изменения
                 match.PropertyChanged -= Match_PropertyChanged;
                 match.PropertyChanged += Match_PropertyChanged;
@@ -218,6 +282,7 @@ namespace SportHubBase.ViewModels
                 ScheduleMessage = "Не удалось сгенерировать расписание (возможно, мало команд).";
             }
 
+            OnPropertyChanged(nameof(IsGroupedView));
             UpdateStats();
         }
 
@@ -232,6 +297,15 @@ namespace SportHubBase.ViewModels
              if (e.PropertyName == nameof(Match.MatchNumber))
              {
                  FilteredMatches.Refresh();
+             }
+             
+             if (IsGroupedView && (e.PropertyName == nameof(Match.Team1QuickScore) || e.PropertyName == nameof(Match.Team2QuickScore)))
+             {
+                 if (sender is Match m && _bracketMatchesMap.TryGetValue(m.Id, out var bMatch))
+                 {
+                     bMatch.Score1 = m.Team1QuickScore;
+                     bMatch.Score2 = m.Team2QuickScore;
+                 }
              }
         }
 

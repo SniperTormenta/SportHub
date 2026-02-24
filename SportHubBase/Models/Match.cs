@@ -39,6 +39,14 @@ namespace SportHubBase.Models
             set => SetField(ref _round, value);
         }
 
+        private string _roundName;
+        [Newtonsoft.Json.JsonIgnore]
+        public string RoundName
+        {
+            get => _roundName;
+            set => SetField(ref _roundName, value);
+        }
+
         public string Team1
         {
             get => _team1;
