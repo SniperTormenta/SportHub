@@ -28,6 +28,12 @@ namespace SportHubBase.Models
         [JsonProperty("players")]
         public List<Player> Players { get; set; } = new List<Player>();
 
+        [JsonProperty("ownerUserId")]
+        public Guid? OwnerUserId { get; set; }
+
+        [JsonProperty("memberUserIds")]
+        public List<Guid> MemberUserIds { get; set; } = new List<Guid>();
+
         /// <summary>
         /// Возвращает true, если это "техническая" команда для пропуска раунда (BYE).
         /// </summary>

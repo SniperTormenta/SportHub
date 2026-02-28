@@ -34,9 +34,6 @@ namespace SportHubBase.ViewModels
         /// Название турнира (биндинг TwoWay к TextBox).
         public string Name { get; set; }
 
-        /// Список администраторов (по умолчанию текущий пользователь как владелец; динамически редактируется в UI).
-        /// В UI: ListView или коллекция с добавлением/удалением.
-        public List<Admin> Admins { get; set; } = new List<Admin> { new Admin { Name = "Фарватер", IsOwner = true } };
 
         /// URL логотипа турнира (биндинг к TextBox; в UI — предпросмотр через Converter).
         public string LogoUrl { get; set; }
@@ -117,7 +114,6 @@ namespace SportHubBase.ViewModels
             var tournament = new Tournament
             {
                 Name = Name,
-                Admins = Admins,
                 LogoUrl = LogoUrl,
                 Status = Status,
                 SportType = SportType,

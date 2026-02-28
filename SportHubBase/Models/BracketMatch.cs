@@ -15,6 +15,9 @@ namespace SportHubBase.Models
         [JsonProperty("id")]
         public Guid Id { get; set; } = Guid.NewGuid();
 
+        [JsonProperty("createdByUserId")]
+        public Guid? CreatedByUserId { get; set; }
+
         [JsonProperty("team1")]
         public Team Team1
         {

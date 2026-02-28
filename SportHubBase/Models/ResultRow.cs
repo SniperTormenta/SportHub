@@ -1,5 +1,6 @@
 // Models/ResultRow.cs
 using System.Collections.ObjectModel;
+using Newtonsoft.Json;
 
 namespace SportHubBase.Models
 {
@@ -7,6 +8,7 @@ namespace SportHubBase.Models
     /// Одна строка шахматной таблицы результатов.
     /// Содержит название команды, ячейки результатов и статистику.
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn)]
     public class ResultRow
     {
         public int Index { get; set; }

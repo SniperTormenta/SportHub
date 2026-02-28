@@ -1,7 +1,9 @@
 ﻿using System;
+using Newtonsoft.Json;
 
 namespace SportHubBase.Models
 {
+    [JsonObject(MemberSerialization.OptIn)]
     public class CellResult
     {
         public string DisplayText { get; set; }

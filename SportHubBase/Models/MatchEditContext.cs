@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Input;
 using SportHubBase.ViewModels;
+using Newtonsoft.Json;
 
 namespace SportHubBase.Models
 {
+    [JsonObject(MemberSerialization.OptIn)]
     public abstract class MatchEditContext : BaseViewModel
     {
         protected readonly Match _match;

@@ -29,5 +29,12 @@ namespace SportHubBase.Models
             get => _isCaptain;
             set { _isCaptain = value; OnPropertyChanged(); }
         }
+
+        private Guid? _userId;
+        public Guid? UserId
+        {
+            get => _userId;
+            set { _userId = value; OnPropertyChanged(); }
+        }
     }
 }

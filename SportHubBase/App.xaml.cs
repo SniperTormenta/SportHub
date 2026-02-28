@@ -13,6 +13,8 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using SportHubBase.View;
+using SportHubBase.ViewModels;
 
 namespace SportHubBase
 {
@@ -29,6 +31,23 @@ namespace SportHubBase
 
             // Настройка контейнера зависимостей
             ConfigureContainer();
+
+            ShowAuthWindow();
+        }
+
+        private void ShowAuthWindow()
+        {
+            var authViewModel = Container.GetInstance<AuthViewModel>();
+            var authWindow = new AuthWindow { DataContext = authViewModel };
+
+            authViewModel.LoginSuccess += () =>
+            {
+                var mainWindow = new MainWindow();
+                mainWindow.Show();
+                authWindow.Close();
+            };
+
+            authWindow.Show();
         }
 
         private void ConfigureContainer()
@@ -52,6 +71,11 @@ namespace SportHubBase
                 typeof(VolleyballScoreStrategy)
             }, Lifestyle.Singleton);
             Container.Register<ISportScoreStrategyFactory, SportScoreStrategyFactory>(Lifestyle.Singleton);
+
+            // Регистрация сервисов для аккаунтов
+            Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
+            Container.Register<IAccountService, AccountService>(Lifestyle.Singleton);
+            Container.Register<AuthViewModel>(Lifestyle.Transient);
 
             // Верификация контейнера
             Container.Verify();

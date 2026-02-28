@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json;
 
 namespace SportHubBase.Models
 {
+    [JsonObject(MemberSerialization.OptIn)]
     public class StatBlock : INotifyPropertyChanged
     {
         private string _title;

@@ -13,8 +13,18 @@ namespace SportHubBase.Models
         [JsonProperty("name")]
         public string Name { get; set; }
 
-        [JsonProperty("admins")]
-        public List<Admin> Admins { get; set; } = new List<Admin>();
+
+        [JsonProperty("isPublic")]
+        public bool IsPublic { get; set; } = true;
+
+        [JsonProperty("ownerId")]
+        public Guid? OwnerId { get; set; }
+
+        [JsonProperty("allowedUserIds")]
+        public List<Guid> AllowedUserIds { get; set; } = new List<Guid>();
+
+        [JsonProperty("inviteCode")]
+        public string InviteCode { get; set; }
 
         [JsonProperty("logoUrl")]
         public string LogoUrl { get; set; }

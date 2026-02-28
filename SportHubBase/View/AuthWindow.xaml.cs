@@ -1,28 +1,51 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using SportHubBase.ViewModels;
 
 namespace SportHubBase.View
 {
-    /// <summary>
-    /// Логика взаимодействия для AuthWindow.xaml
-    /// </summary>
     public partial class AuthWindow : Window
     {
         public AuthWindow()
         {
             InitializeComponent();
-            DataContext = new SportHubBase.ViewModels.AuthViewModel();
+        }
+
+        private void AuthAction_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is AuthViewModel viewModel)
+            {
+                // Передаем пароль из PasswordBox в команду
+                if (viewModel.IsLoginMode)
+                {
+                    if (viewModel.LoginCommand.CanExecute(PasswordInput.Password))
+                    {
+                        viewModel.LoginCommand.Execute(PasswordInput.Password);
+                    }
+                }
+                else
+                {
+                    if (viewModel.RegisterCommand.CanExecute(PasswordInput.Password))
+                    {
+                        viewModel.RegisterCommand.Execute(PasswordInput.Password);
+                    }
+                }
+            }
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+        
+        // Позволяет перетаскивать окно без рамок
+        protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+        {
+            base.OnMouseLeftButtonDown(e);
+            if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed)
+            {
+                this.DragMove();
+            }
         }
     }
 }

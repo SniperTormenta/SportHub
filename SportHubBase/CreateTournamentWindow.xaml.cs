@@ -183,7 +183,6 @@ namespace SportHubBase
             var tournament = new Tournament
             {
                 Name = NameTextBox.Text,
-                Admins = new List<Admin> { new Admin { Name = "Фарватер", IsOwner = true } }, // Динамически, если нужно
                 LogoUrl = "", // Если есть поле для логотипа
                 Status = ((ComboBoxItem)StatusComboBox.SelectedItem).Content.ToString(),
                 SportType = ((ComboBoxItem)SportTypeComboBox.SelectedItem).Content.ToString(),
