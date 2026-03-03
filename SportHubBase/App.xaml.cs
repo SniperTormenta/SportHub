@@ -1,3 +1,4 @@
+// App.xaml.cs
 using SimpleInjector;
 using SportHubBase.Interfaces;
 using SportHubBase.Services;
@@ -6,12 +7,6 @@ using SportHubBase.Services.Results;
 using SportHubBase.Services.Scheduling;
 using SportHubBase.Services.Scoring;
 using SportHubBase.Services.Statistics;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using SportHubBase.View;
 using SportHubBase.ViewModels;
@@ -29,9 +24,7 @@ namespace SportHubBase
         {
             base.OnStartup(e);
 
-            // Настройка контейнера зависимостей
             ConfigureContainer();
-
             ShowAuthWindow();
         }
 
@@ -54,11 +47,19 @@ namespace SportHubBase
         {
             Container = new Container();
 
-            // Регистрация сервисов
-            Container.Register<IStorage, JsonStorageService>(Lifestyle.Singleton);
-            Container.Register<IMatchService, MatchService>(Lifestyle.Singleton);
+            // ── Инфраструктура БД ───────────────────────────────────────────────
+            // SqliteDatabaseService создаёт схему БД при первом запуске
+            Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
 
-            // Регистрация фабрик
+            // ── Хранилище данных ────────────────────────────────────────────────
+            // SqliteStorageService — основное хранилище (заменяет JsonStorageService)
+            Container.Register<IStorage, SqliteStorageService>(Lifestyle.Singleton);
+
+            // ── Прочие сервисы ──────────────────────────────────────────────────
+            Container.Register<IMatchService, MatchService>(Lifestyle.Singleton);
+            Container.Register<IAccountService, AccountService>(Lifestyle.Singleton);
+
+            // ── Фабрики стратегий ───────────────────────────────────────────────
             Container.Register<IScheduleStrategyFactory, ScheduleStrategyFactory>(Lifestyle.Singleton);
             Container.Register<IResultsProviderFactory, ResultsProviderFactory>(Lifestyle.Singleton);
             Container.Register<IStatisticsCalculatorFactory, StatisticsCalculatorFactory>(Lifestyle.Singleton);
@@ -72,12 +73,9 @@ namespace SportHubBase
             }, Lifestyle.Singleton);
             Container.Register<ISportScoreStrategyFactory, SportScoreStrategyFactory>(Lifestyle.Singleton);
 
-            // Регистрация сервисов для аккаунтов
-            Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
-            Container.Register<IAccountService, AccountService>(Lifestyle.Singleton);
+            // ── ViewModels ──────────────────────────────────────────────────────
             Container.Register<AuthViewModel>(Lifestyle.Transient);
 
-            // Верификация контейнера
             Container.Verify();
         }
     }

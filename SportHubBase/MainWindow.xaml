@@ -189,7 +189,7 @@
 
                                 <!-- Организатор -->
                                 <TextBlock Grid.Column="2"
-                                   Text="Организатор: Фарватер"
+                                   Text="{Binding OwnerName, StringFormat='Организатор: {0}', TargetNullValue='Организатор: Неизвестно'}"
                                    Foreground="#64748B"
                                    FontSize="14"
                                    VerticalAlignment="Center"/>

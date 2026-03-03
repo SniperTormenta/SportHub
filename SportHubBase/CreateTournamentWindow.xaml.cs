@@ -62,7 +62,7 @@ namespace SportHubBase
 
             var adminsText = new TextBlock
             {
-                Text = "Владелец - Фарватер", // можно из VM
+                Text = string.Format("Владелец - {0}", CurrentSession.Username),
                 Foreground = Brushes.Gray,
                 Margin = new Thickness(0, 4, 0, 0)
             };
@@ -193,7 +193,11 @@ namespace SportHubBase
                 Description = DescriptionTextBox.Text,
                 City = CityComboBox.Text,
                 Contacts = ContactsTextBox.Text,
-                StartDate = StartDatePicker.SelectedDate.Value
+                StartDate = StartDatePicker.SelectedDate.Value,
+                // Устанавливаем владельца из текущей сессии
+                OwnerId = CurrentSession.CurrentUser != null 
+                    ? CurrentSession.CurrentUser.Id.ToString() 
+                    : null
             };
 
             // Сохранение через сервис хранения

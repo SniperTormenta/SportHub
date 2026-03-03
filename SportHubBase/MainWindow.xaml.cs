@@ -1,9 +1,7 @@
-using Newtonsoft.Json;
+using SportHubBase.Interfaces;
 using SportHubBase.Models;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Windows;
 using System.Windows.Input;
 
@@ -11,9 +9,8 @@ namespace SportHubBase
 {
     public partial class MainWindow : Window
     {
+        private readonly IStorage _storage;
         public ObservableCollection<Tournament> Tournaments { get; set; } = new ObservableCollection<Tournament>();
-
-        private readonly string _jsonFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tournaments.json");
 
         public MainWindow()
         {
@@ -21,40 +18,35 @@ namespace SportHubBase
             WindowState = WindowState.Maximized;
             DataContext = this;
 
+            _storage = App.Container.GetInstance<IStorage>();
+
             Loaded += MainWindow_Loaded;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadTournamentsFromJson();
-            // Размеры рабочей области экрана (без панели задач Windows)
+            LoadTournamentsFromDatabase();
+
             double screenWidth = SystemParameters.WorkArea.Width;
             double screenHeight = SystemParameters.WorkArea.Height;
 
-            // Делаем окно примерно 92–95% от экрана — выглядит максимально большим, но остаются границы окна
             double targetWidth = screenWidth * 0.94;
             double targetHeight = screenHeight * 0.92;
 
-            // Уважем минимальные размеры
             Width = Math.Max(targetWidth, MinWidth);
             Height = Math.Max(targetHeight, MinHeight);
 
-            // Центрируем (на случай, если размер изменился)
             Left = (screenWidth - Width) / 2;
             Top = (screenHeight - Height) / 2;
         }
 
-        private void LoadTournamentsFromJson()
+        private void LoadTournamentsFromDatabase()
         {
             Tournaments.Clear();
 
-            if (!File.Exists(_jsonFilePath)) return;
-
             try
             {
-                string json = File.ReadAllText(_jsonFilePath);
-                var loaded = JsonConvert.DeserializeObject<List<Tournament>>(json);
-
+                var loaded = _storage.LoadTournaments();
                 if (loaded != null)
                 {
                     foreach (var t in loaded)
@@ -65,15 +57,21 @@ namespace SportHubBase
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка загрузки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    string.Format("Ошибка загрузки турниров: {0}", ex.Message),
+                    "Ошибка",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
         private void AddTurnament_Click(object sender, RoutedEventArgs e)
         {
             var createWindow = new CreateTournamentWindow();
-            createWindow.ShowDialog(); // Чтобы после закрытия обновить список
-            LoadTournamentsFromJson(); // Обновляем список
+            createWindow.Owner = this;
+            createWindow.ShowDialog();
+            // После закрытия окна создания — перезагружаем список из БД
+            LoadTournamentsFromDatabase();
         }
 
         private void TournamentItem_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)

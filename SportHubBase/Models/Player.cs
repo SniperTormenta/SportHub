@@ -1,36 +1,48 @@
-﻿using SportHubBase.ViewModels;
+﻿// Models/Player.cs
+using SportHubBase.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SportHubBase.Models
 {
-    public class Player : BaseViewModel // Наследуем от BaseViewModel для уведомлений
+    /// <summary>
+    /// Модель игрока. Наследует BaseViewModel для уведомлений об изменениях.
+    /// Содержит Id (Guid) для хранения в SQLite и привязки к команде.
+    /// </summary>
+    public class Player : BaseViewModel
     {
+        private Guid _id = Guid.NewGuid();
         private string _name;
+        private string _role = "Обычный игрок";
+        private bool _isCaptain;
+        private Guid? _userId;
+
+        /// <summary>
+        /// Уникальный идентификатор игрока.
+        /// </summary>
+        public Guid Id
+        {
+            get => _id;
+            set { _id = value; OnPropertyChanged(); }
+        }
+
         public string Name
         {
             get => _name;
             set { _name = value; OnPropertyChanged(); }
         }
 
-        private string _role = "Обычный игрок";
         public string Role
         {
             get => _role;
             set { _role = value; OnPropertyChanged(); }
         }
 
-        private bool _isCaptain;
         public bool IsCaptain
         {
             get => _isCaptain;
             set { _isCaptain = value; OnPropertyChanged(); }
         }
 
-        private Guid? _userId;
         public Guid? UserId
         {
             get => _userId;

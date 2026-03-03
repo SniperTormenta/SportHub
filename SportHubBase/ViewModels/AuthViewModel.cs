@@ -85,8 +85,10 @@ namespace SportHubBase.ViewModels
         private void ExecuteLogin(object parameter)
         {
             string password = parameter?.ToString();
-            if (_accountService.Login(Username, password, out string error))
+            UserAccount account;
+            if (_accountService.LoginAndGetAccount(Username, password, out account, out string error))
             {
+                CurrentSession.CurrentUser = account;
                 LoginSuccess?.Invoke();
             }
             else

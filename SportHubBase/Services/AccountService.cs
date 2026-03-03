@@ -1,6 +1,8 @@
 using System;
 using Microsoft.Data.Sqlite;
 using SportHubBase.Interfaces;
+using SportHubBase.Models;
+
 
 namespace SportHubBase.Services
 {
@@ -113,6 +115,72 @@ namespace SportHubBase.Services
                     return false;
                 }
 
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = string.Format("Ошибка при входе: {0}", ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Выполняет вход и при успехе возвращает заполненный UserAccount.
+        /// </summary>
+        public bool LoginAndGetAccount(string username, string password, out UserAccount account, out string errorMessage)
+        {
+            account = null;
+            errorMessage = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                errorMessage = "Имя пользователя и пароль обязательны.";
+                return false;
+            }
+
+            try
+            {
+                int foundId = 0;
+                string foundUsername = null;
+                string storedHash = null;
+
+                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                {
+                    connection.Open();
+
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT Id, Username, PasswordHash FROM Accounts WHERE Username = @Username";
+                        cmd.Parameters.AddWithValue("@Username", username);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                foundId       = Convert.ToInt32(reader["Id"]);
+                                foundUsername = reader["Username"]?.ToString();
+                                storedHash    = reader["PasswordHash"]?.ToString();
+                            }
+                        }
+                    }
+                }
+
+                if (string.IsNullOrEmpty(storedHash))
+                {
+                    errorMessage = "Неверное имя пользователя или пароль.";
+                    return false;
+                }
+
+                if (!PasswordHasher.VerifyPassword(password, storedHash))
+                {
+                    errorMessage = "Неверное имя пользователя или пароль.";
+                    return false;
+                }
+
+                account = new UserAccount
+                {
+                    Id           = foundId,
+                    Username     = foundUsername
+                };
                 return true;
             }
             catch (Exception ex)

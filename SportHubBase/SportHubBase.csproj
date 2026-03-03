@@ -266,6 +266,7 @@
     <Compile Include="Services\PasswordHasher.cs" />
     <Compile Include="Services\MatchService.cs" />
     <Compile Include="Services\SqliteDatabaseService.cs" />
+    <Compile Include="Services\SqliteStorageService.cs" />
     <Compile Include="Services\AccountService.cs" />
     <Compile Include="Interfaces\IResultsProviderFactory.cs" />
     <Compile Include="Services\Results\Data\ResultsData.cs" />

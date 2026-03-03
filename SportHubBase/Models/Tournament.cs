@@ -18,7 +18,7 @@ namespace SportHubBase.Models
         public bool IsPublic { get; set; } = true;
 
         [JsonProperty("ownerId")]
-        public Guid? OwnerId { get; set; }
+        public string OwnerId { get; set; }
 
         [JsonProperty("allowedUserIds")]
         public List<Guid> AllowedUserIds { get; set; } = new List<Guid>();
@@ -86,5 +86,12 @@ namespace SportHubBase.Models
         // Live — только если сейчас между началом и концом (или конец не указан)
         [JsonIgnore]
         public bool IsLive => DateTime.Now >= StartDate && (EndDate == null || DateTime.Now <= EndDate.Value);
+
+        /// <summary>
+        /// Имя владельца турнира. Заполняется при загрузке из БД.
+        /// Не сохраняется в JSON — только для отображения в UI.
+        /// </summary>
+        [JsonIgnore]
+        public string OwnerName { get; set; }
     }
 }

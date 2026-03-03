@@ -107,6 +107,10 @@ namespace SportHubBase.ViewModels
         }
 
         /// Метод выполнения команды: создаёт объект Tournament из свойств VM, сохраняет через сервис.
+        /// Имя текущего пользователя для отображения в качестве владельца.
+        public string OwnerName => CurrentSession.Username;
+
+        /// Метод выполнения команды: создаёт объект Tournament из свойств VM, сохраняет через сервис.
         /// После сохранения — турнир появляется в списке (в главном окне, если реализован MainViewModel с LoadTournaments).
         /// Улучшение: Добавить MessageBox или событие OnTournamentCreated; валидацию (if string.IsNullOrEmpty(Name) return;); обработку ошибок.
         private void CreateTournament(object parameter)
@@ -124,7 +128,11 @@ namespace SportHubBase.ViewModels
                 Description = Description,
                 City = City,
                 Contacts = Contacts,
-                StartDate = StartDate
+                StartDate = StartDate,
+                // Ставим текущего пользователя владельцем (Id приводим к строке)
+                OwnerId = CurrentSession.CurrentUser != null 
+                    ? CurrentSession.CurrentUser.Id.ToString() 
+                    : null
                 // EndDate = null по умолчанию (идёт)
                 // Teams/Matches = пустые списки
             };
