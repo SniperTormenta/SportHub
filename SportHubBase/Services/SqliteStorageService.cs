@@ -42,7 +42,21 @@ namespace SportHubBase.Services
                 // 2. Загружаем турниры
                 using (var cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = "SELECT * FROM Tournaments ORDER BY StartDate DESC";
+                    string currentUserId = CurrentSession.CurrentUser?.Id.ToString();
+                    
+                    cmd.CommandText = @"
+                        SELECT * FROM Tournaments 
+                        WHERE IsPublic = 1 
+                           OR OwnerId = @CurrentUserId
+                           OR (AllowedUserIds IS NOT NULL AND 
+                               (AllowedUserIds = @CurrentUserId 
+                                OR AllowedUserIds LIKE @CurrentUserId || ',%' 
+                                OR AllowedUserIds LIKE '%,' || @CurrentUserId || ',%' 
+                                OR AllowedUserIds LIKE '%,' || @CurrentUserId))
+                        ORDER BY StartDate DESC";
+                    
+                    cmd.Parameters.AddWithValue("@CurrentUserId", currentUserId ?? string.Empty);
+
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())

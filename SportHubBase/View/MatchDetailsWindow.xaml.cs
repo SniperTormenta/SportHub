@@ -11,7 +11,7 @@ namespace SportHubBase.View
     {
         private readonly MatchDetailsViewModel _viewModel;
 
-        public MatchDetailsWindow(Window owner, Match match, Guid tournamentId, IMatchService matchService)
+        public MatchDetailsWindow(Window owner, Match match, Guid tournamentId, IMatchService matchService, bool canEdit)
         {
             InitializeComponent();
             Owner = owner;
@@ -23,7 +23,7 @@ namespace SportHubBase.View
             var tournament = tournaments.Find(t => t.Id == tournamentId);
             var strategy = factory.GetStrategy(tournament?.SportType);
 
-            _viewModel = new MatchDetailsViewModel(match, tournamentId, storage, matchService, strategy);
+            _viewModel = new MatchDetailsViewModel(match, tournamentId, storage, matchService, strategy, canEdit);
             DataContext = _viewModel;
 
             _viewModel.RequestClose += () =>

@@ -57,8 +57,10 @@ namespace SportHubBase.ViewModels
 
         
         /// Текущий турнир (Model). Биндится к UI для заголовков/дат.
-        
         public Tournament CurrentTournament { get; private set; }
+        
+        public bool CanEdit { get; private set; }
+        public bool IsReadOnly => !CanEdit;
 
         
         /// Коллекция команд для UI (ListView/DataGrid). Observable для добавления/удаления.
@@ -457,6 +459,21 @@ namespace SportHubBase.ViewModels
 
         // Settings Tab Properties and Commands
         
+        public List<string> AvailableAccessModes { get; } = new List<string> { "Доступно всем", "Приватный" };
+
+        public string SelectedAccessMode
+        {
+            get => (CurrentTournament?.IsPublic ?? true) ? "Доступно всем" : "Приватный";
+            set
+            {
+                if (CurrentTournament != null)
+                {
+                    CurrentTournament.IsPublic = value != "Приватный";
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         /// Доступные города для выбора места проведения.
         
         public ObservableCollection<string> AvailableCities { get; } = new ObservableCollection<string>();
@@ -606,6 +623,19 @@ namespace SportHubBase.ViewModels
                     Type = "Круговой",
                     SportType = "Волейбол"
                 };
+            }
+
+            if (CurrentTournament != null)
+            {
+                string currentId = CurrentSession.CurrentUser?.Id.ToString();
+                bool isOwner = currentId != null && CurrentTournament.OwnerId == currentId;
+                bool isAllowed = currentId != null && CurrentTournament.AllowedUserIds != null && 
+                                 CurrentTournament.AllowedUserIds.Any(id => id.ToString() == currentId);
+                CanEdit = isOwner || isAllowed;
+            }
+            else
+            {
+                CanEdit = false;
             }
 
             if (CurrentTournament != null && CurrentTournament.Teams != null)
@@ -1218,7 +1248,7 @@ namespace SportHubBase.ViewModels
             if (parameter is Match match)
             {
                 var owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive);
-                var window = new MatchDetailsWindow(owner, match, CurrentTournament.Id, _matchService);
+                var window = new MatchDetailsWindow(owner, match, CurrentTournament.Id, _matchService, CanEdit);
                 if (window.ShowDialog() == true)
                 {
                     UpdateResultsFromMatches();

@@ -1,4 +1,4 @@
-﻿<Window x:Class="SportHubBase.TournamentWindow"
+<Window x:Class="SportHubBase.TournamentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:View="clr-namespace:SportHubBase.View"
@@ -189,7 +189,8 @@
 
                                     <Button Command="{Binding AddTeamCommand}"
                             Style="{StaticResource AddTeamButtonStyle}"
-                            Margin="0,0,0,16">
+                            Margin="0,0,0,16"
+                            Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="+" FontSize="18" Margin="0,0,8,0"/>
                                             <TextBlock Text="Добавить команду"/>
@@ -201,7 +202,8 @@
                             Background="#FFF1F2"
                             Foreground="#E11D48"
                             BorderBrush="#FECDD3"
-                            BorderThickness="1">
+                            BorderThickness="1"
+                            Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="🏁" FontSize="16" Margin="0,0,8,0"/>
                                             <TextBlock Text="Завершить турнир"/>
@@ -217,7 +219,8 @@
                     Orientation="Horizontal"
                     Margin="0,16,0,0"
                     HorizontalAlignment="Left"
-                    VerticalAlignment="Top">
+                    VerticalAlignment="Top"
+                    Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}">
 
                         <Button Command="{Binding ImportTeamsExcelCommand}"
                     Style="{StaticResource AddTeamButtonStyle}"
@@ -298,6 +301,7 @@
                             <Button Grid.Column="1" Content="↻" 
                                     Command="{Binding ScheduleVM.RefreshCommand}"
                                     Style="{StaticResource DefaultModernButton}"
+                                    Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}"
                                     Padding="12,0" Height="48" Margin="0,0,16,0"
                                     ToolTip="Обновить расписание"/>
 
@@ -459,6 +463,7 @@
                             Content="Экспорт (PNG)"
                             Command="{Binding ExportResultsCommand}"
                             Style="{StaticResource AddTeamButtonStyle}"
+                            Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}"
                             Padding="16,10"
                             Margin="0,16,0,0"
                             HorizontalAlignment="Left"
@@ -622,7 +627,8 @@
                         <StackPanel Grid.Row="3" 
                         Orientation="Horizontal" 
                         HorizontalAlignment="Left" 
-                        Margin="0,24,0,0">
+                        Margin="0,24,0,0"
+                        Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}">
                             <Button Content="Экспорт в Excel"
                         Command="{Binding ExportResultsExcelCommand}"
                         Style="{StaticResource AddTeamButtonStyle}"
@@ -635,7 +641,7 @@
                     </Grid>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="Настройки" Style="{StaticResource TailwindTabItem}">
+            <TabItem Header="Настройки" Style="{StaticResource TailwindTabItem}" Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="40,32,40,40" MaxWidth="900">
                         <Grid.RowDefinitions>
@@ -678,8 +684,14 @@
                                 <TextBlock Text="Место проведения" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
                                 <ComboBox ItemsSource="{Binding AvailableCities}" 
                                           SelectedItem="{Binding CurrentTournament.Location}" 
-                                          FontSize="14" Padding="10" Margin="0,0,0,0" 
+                                          FontSize="14" Padding="10" Margin="0,0,0,16" 
                                           BorderBrush="#D1D5DB" BorderThickness="1" IsEditable="True"/>
+
+                                <TextBlock Text="Режим доступа" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                <ComboBox ItemsSource="{Binding AvailableAccessModes}" 
+                                          SelectedItem="{Binding SelectedAccessMode, UpdateSourceTrigger=PropertyChanged}" 
+                                          FontSize="14" Padding="10" Margin="0,0,0,0" 
+                                          BorderBrush="#D1D5DB" BorderThickness="1"/>
                             </StackPanel>
                         </Border>
 

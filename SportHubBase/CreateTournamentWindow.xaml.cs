@@ -189,6 +189,7 @@ namespace SportHubBase
                 Type = selectedType,
                 EditMode = ((ComboBoxItem)EditModeComboBox.SelectedItem).Content.ToString(),
                 AccessMode = ((ComboBoxItem)AccessModeComboBox.SelectedItem).Content.ToString(),
+                IsPublic = ((ComboBoxItem)AccessModeComboBox.SelectedItem).Content.ToString() != "Приватный",
                 NoScore = NoScoreCheckBox.IsChecked ?? false,
                 Description = DescriptionTextBox.Text,
                 City = CityComboBox.Text,

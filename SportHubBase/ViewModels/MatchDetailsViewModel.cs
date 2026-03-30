@@ -15,6 +15,9 @@ namespace SportHubBase.ViewModels
         private readonly ISportScoreStrategy _strategy;
 
         public MatchEditContext EditContext { get; }
+        
+        public bool CanEdit { get; }
+        public bool IsReadOnly => !CanEdit;
 
         public string Team1 => _match.Team1;
         public string Team2 => _match.Team2;
@@ -48,8 +51,9 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        public MatchDetailsViewModel(Match match, Guid tournamentId, IStorage storage, IMatchService matchService, ISportScoreStrategy strategy)
+        public MatchDetailsViewModel(Match match, Guid tournamentId, IStorage storage, IMatchService matchService, ISportScoreStrategy strategy, bool canEdit)
         {
+            CanEdit = canEdit;
             _match = match ?? throw new ArgumentNullException(nameof(match));
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
