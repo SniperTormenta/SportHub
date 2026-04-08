@@ -690,6 +690,7 @@
                                 <TextBlock Text="Режим доступа" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
                                 <ComboBox ItemsSource="{Binding AvailableAccessModes}" 
                                           SelectedItem="{Binding SelectedAccessMode, UpdateSourceTrigger=PropertyChanged}" 
+                                          Style="{DynamicResource ModernComboBox}"
                                           FontSize="14" Padding="10" Margin="0,0,0,0" 
                                           BorderBrush="#D1D5DB" BorderThickness="1"/>
                             </StackPanel>
