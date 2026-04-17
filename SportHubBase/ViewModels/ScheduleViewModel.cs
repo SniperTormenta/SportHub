@@ -168,9 +168,11 @@ namespace SportHubBase.ViewModels
             {
                 foreach (var savedMatch in _tournament.Matches)
                 {
-                    string key = $"{savedMatch.Team1}|{savedMatch.Team2}|{savedMatch.Round}";
-                    // Используем уникальный ключ. Если команды могут играть несколько раз в одном раунде - нужен более сложный ключ?
-                    // В текущей реализации (GenSchedule) Round уникален для пары.
+                    // Ключ не должен зависеть от раунда, так как при добавлении команд раунды смещаются.
+                    // Команды упорядочиваем по алфавиту для уникальности пары.
+                    var teams = new[] { savedMatch.Team1, savedMatch.Team2 }.OrderBy(t => t).ToArray();
+                    string key = $"{teams[0]}|{teams[1]}";
+                    
                     if (!savedMatchesDict.ContainsKey(key))
                         savedMatchesDict[key] = savedMatch;
                 }
@@ -179,7 +181,8 @@ namespace SportHubBase.ViewModels
             var finalMatches = new List<Match>();
             foreach (var generatedMatch in generatedMatches)
             {
-                string key = $"{generatedMatch.Team1}|{generatedMatch.Team2}|{generatedMatch.Round}";
+                var teams = new[] { generatedMatch.Team1, generatedMatch.Team2 }.OrderBy(t => t).ToArray();
+                string key = $"{teams[0]}|{teams[1]}";
 
                 if (savedMatchesDict.TryGetValue(key, out Match savedMatch))
                 {
@@ -282,6 +285,7 @@ namespace SportHubBase.ViewModels
                 ScheduleMessage = "Не удалось сгенерировать расписание (возможно, мало команд).";
             }
 
+            FilteredMatches.Refresh(); // Принудительно обновляем View, чтобы UI отобразил новые матчи
             OnPropertyChanged(nameof(IsGroupedView));
             UpdateStats();
         }

@@ -403,9 +403,27 @@ namespace SportHubBase.Services
                     }
 
                     // Сохраняем матчи
+                    var validMatchIds = new List<string>();
                     foreach (var match in t.Matches ?? new List<Match>())
                     {
                         UpsertMatch(conn, t.Id, match, tx);
+                        validMatchIds.Add($"'{match.Id.ToString()}'");
+                    }
+
+                    // Очистка старых/удаленных матчей
+                    using (var delCmd = conn.CreateCommand())
+                    {
+                        delCmd.Transaction = tx;
+                        if (validMatchIds.Count > 0)
+                        {
+                            string idsStr = string.Join(",", validMatchIds);
+                            delCmd.CommandText = $"DELETE FROM Matches WHERE TournamentId = '{t.Id}' AND Id NOT IN ({idsStr})";
+                        }
+                        else
+                        {
+                            delCmd.CommandText = $"DELETE FROM Matches WHERE TournamentId = '{t.Id}'";
+                        }
+                        delCmd.ExecuteNonQuery();
                     }
 
                     tx.Commit();

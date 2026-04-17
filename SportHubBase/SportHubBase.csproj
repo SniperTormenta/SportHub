@@ -308,6 +308,7 @@
     <Compile Include="ViewModels\SetScore.cs" />
     <Compile Include="ViewModels\SetScoreEditContext.cs" />
     <Compile Include="ViewModels\SimpleScoreEditContext.cs" />
+    <Compile Include="ViewModels\AccountViewModel.cs" />
     <Compile Include="ViewModels\TournamentViewModel.cs" />
     <Compile Include="Models\BracketConnection.cs" />
     <Compile Include="Models\BracketMatch.cs" />
@@ -328,6 +329,9 @@
     </Compile>
     <Compile Include="View\ExportPreviewWindow.xaml.cs">
       <DependentUpon>ExportPreviewWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\AccountWindow.xaml.cs">
+      <DependentUpon>AccountWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="CreateTournamentWindow.xaml">
       <SubType>Designer</SubType>
@@ -373,6 +377,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\TournamentBracketControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\AccountWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

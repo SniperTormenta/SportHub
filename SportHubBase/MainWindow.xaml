@@ -1,4 +1,4 @@
-﻿<Window x:Class="SportHubBase.MainWindow"
+<Window x:Class="SportHubBase.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Турниры"
@@ -48,11 +48,18 @@
                        Foreground="#2D3748"
                        VerticalAlignment="Center"/>
 
-            <Button Grid.Column="1"
-                    x:Name="AddTurnament"
-                    Style="{StaticResource ModernAddButton}"
-                    Content="Добавить"
-                    Click="AddTurnament_Click"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="AccountButton"
+                        Style="{StaticResource DefaultModernButton}"
+                        Content="Аккаунт"
+                        Margin="0,0,10,0"
+                        Click="AccountButton_Click"/>
+                
+                <Button x:Name="AddTurnament"
+                        Style="{StaticResource ModernAddButton}"
+                        Content="Добавить"
+                        Click="AddTurnament_Click"/>
+            </StackPanel>
         </Grid>
 
         <!-- 3. Панель фильтров  -->

@@ -1,5 +1,6 @@
 using SportHubBase.Interfaces;
 using SportHubBase.Models;
+using SportHubBase.ViewModels;
 using System;
 using System.Collections.ObjectModel;
 using System.Windows;
@@ -72,6 +73,13 @@ namespace SportHubBase
             createWindow.ShowDialog();
             // После закрытия окна создания — перезагружаем список из БД
             LoadTournamentsFromDatabase();
+        }
+
+        private void AccountButton_Click(object sender, RoutedEventArgs e)
+        {
+            var viewModel = App.Container.GetInstance<AccountViewModel>();
+            var accountWindow = new View.AccountWindow { DataContext = viewModel, Owner = this };
+            accountWindow.ShowDialog();
         }
 
         private void TournamentItem_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)

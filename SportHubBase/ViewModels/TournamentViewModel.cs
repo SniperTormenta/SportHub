@@ -50,7 +50,19 @@ namespace SportHubBase.ViewModels
         /// Сервис Excel. Инжектируется через конструктор.
         private readonly IExcelService _excelService;
 
-        public ScheduleViewModel ScheduleVM { get; }
+        private ScheduleViewModel _scheduleVM;
+        public ScheduleViewModel ScheduleVM
+        {
+            get => _scheduleVM;
+            private set
+            {
+                if (_scheduleVM != value)
+                {
+                    _scheduleVM = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         /// Фабрика стратегий кодирования изображений. Инжектируется через конструктор.
         private readonly IImageEncoderStrategyFactory _imageEncoderFactory;
@@ -646,8 +658,7 @@ namespace SportHubBase.ViewModels
                 }
             }
 
-            ScheduleVM = new ScheduleViewModel(CurrentTournament, _storage, _scheduleFactory, _matchService);
-            ScheduleVM.OnOpenMatchRequest += OpenMatchCard;
+            RecreateScheduleVM();
 
             // Загружаем сетку, если она есть
             Bracket = CurrentTournament.Bracket;
@@ -671,10 +682,7 @@ namespace SportHubBase.ViewModels
             // GenerateSchedule(); // Теперь в ScheduleVM
             GenerateResults();
 
-            ScheduleVM.Matches.CollectionChanged += OnScheduleCollectionChanged;
-            ScheduleVM.PropertyChanged += OnScheduleViewModelPropertyChanged; // Подписываемся на изменения в ScheduleVM (счётчики)
-
-            SubscribeToMatches(ScheduleVM.Matches); // Подписываемся на матчи из VM
+            // Events are already attached inside RecreateScheduleVM
 
             UpdateResultsFromMatches();
             UpdateStatistics();
@@ -768,7 +776,7 @@ namespace SportHubBase.ViewModels
                     {
                         // ВАЖНО: Обновляем ссылку на объект турнира, чтобы он не был устаревшим
                         CurrentTournament = updated;
-                        ScheduleVM.UpdateTournamentReference(updated);
+                        RecreateScheduleVM();
                         
                         Teams.Clear();
                         RegenerateBracket();
@@ -841,7 +849,7 @@ namespace SportHubBase.ViewModels
                     {
                         // ВАЖНО: Обновляем ссылку на объект турнира
                         CurrentTournament = updated;
-                        ScheduleVM.UpdateTournamentReference(updated);
+                        RecreateScheduleVM();
 
                         Teams.Clear();
                         foreach (var t in updated.Teams)
@@ -1071,7 +1079,7 @@ namespace SportHubBase.ViewModels
                 if (reloaded != null)
                 {
                     CurrentTournament = reloaded;
-                    ScheduleVM.UpdateTournamentReference(reloaded);
+                    RecreateScheduleVM();
                     OnPropertyChanged(nameof(CurrentTournament));
                     OnPropertyChanged(nameof(FormatText));
                     OnPropertyChanged(nameof(DatesText));
@@ -1177,11 +1185,15 @@ namespace SportHubBase.ViewModels
                         _storage.UpdateTournament(CurrentTournament);
                         OnPropertyChanged(nameof(TeamsCount));
                         
-                        // Обновляем ссылку в ScheduleVM, так как объект турнира (списки внутри) изменились радикально
-                        ScheduleVM.UpdateTournamentReference(CurrentTournament);
+                        // ВАЖНО: Загружаем свежий объект из базы для надёжной работы
+                        var updated = _storage.LoadTournaments().Find(t => t.Id == CurrentTournament.Id);
+                        if (updated != null)
+                        {
+                            CurrentTournament = updated;
+                        }
 
-                        // Полный сброс и генерация нового расписания
-                        ScheduleVM.LoadMatches();
+                        RecreateScheduleVM();
+                        ScheduleVM.LoadMatches(); // Обновляем через VM
                         GenerateResults();
                         UpdateStatistics();
                         
@@ -1347,6 +1359,30 @@ namespace SportHubBase.ViewModels
 
                 return null;
             }
+        }
+
+        private void RecreateScheduleVM()
+        {
+            if (ScheduleVM != null)
+            {
+                if (ScheduleVM.Matches != null)
+                    ScheduleVM.Matches.CollectionChanged -= OnScheduleCollectionChanged;
+                ScheduleVM.PropertyChanged -= OnScheduleViewModelPropertyChanged;
+                ScheduleVM.OnOpenMatchRequest -= OpenMatchCard;
+            }
+
+            ScheduleVM = new ScheduleViewModel(CurrentTournament, _storage, _scheduleFactory, _matchService);
+            ScheduleVM.OnOpenMatchRequest += OpenMatchCard;
+            ScheduleVM.PropertyChanged += OnScheduleViewModelPropertyChanged; // Подписываемся на изменения в ScheduleVM (счётчики)
+
+            if (ScheduleVM.Matches != null)
+            {
+                // Для избежания дублирования (хотя SubscribeToMatches не делает проверку)
+                // Но у нас SubscribeToMatches использует -= затем +=
+                SubscribeToMatches(ScheduleVM.Matches); // Подписываемся на матчи из VM
+            }
+
+            OnPropertyChanged(nameof(ScheduleVM));
         }
     }
 }

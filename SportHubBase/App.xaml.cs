@@ -75,6 +75,7 @@ namespace SportHubBase
 
             // ── ViewModels ──────────────────────────────────────────────────────
             Container.Register<AuthViewModel>(Lifestyle.Transient);
+            Container.Register<AccountViewModel>(Lifestyle.Transient);
 
             Container.Verify();
         }
