@@ -11,5 +11,7 @@ namespace SportHubBase.Interfaces
         /// Выполняет вход и возвращает заполненный UserAccount при успехе.
         /// </summary>
         bool LoginAndGetAccount(string username, string password, out UserAccount account, out string errorMessage);
+        bool UpdateAccountDetail(int userId, string columnName, string value);
+        UserAccount GetAccount(int userId);
     }
 }

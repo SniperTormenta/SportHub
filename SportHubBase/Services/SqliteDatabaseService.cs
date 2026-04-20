@@ -48,10 +48,20 @@ namespace SportHubBase.Services
                         Id          INTEGER PRIMARY KEY AUTOINCREMENT,
                         Username    TEXT    NOT NULL UNIQUE,
                         PasswordHash TEXT   NOT NULL,
+                        FirstName   TEXT,
+                        LastName    TEXT,
                         Email       TEXT,
+                        PhoneNumber TEXT,
+                        AvatarPath  TEXT,
                         Role        TEXT    NOT NULL DEFAULT 'User',
                         CreatedAt   TEXT    NOT NULL DEFAULT (datetime('now'))
                     );");
+
+                // Добавляем недостающие колонки в существующую таблицу
+                TryAddColumn(connection, "Accounts", "FirstName", "TEXT");
+                TryAddColumn(connection, "Accounts", "LastName", "TEXT");
+                TryAddColumn(connection, "Accounts", "PhoneNumber", "TEXT");
+                TryAddColumn(connection, "Accounts", "AvatarPath", "TEXT");
 
                 // -------------------------------------------------------
                 // Таблица пользователей (полная модель User)
@@ -189,6 +199,35 @@ namespace SportHubBase.Services
                 ExecuteNonQuery(connection, "CREATE INDEX IF NOT EXISTS IX_MatchSets_MatchId ON MatchSets(MatchId);");
                 ExecuteNonQuery(connection, "CREATE INDEX IF NOT EXISTS IX_Standings_TournamentId ON TournamentStandings(TournamentId);");
             }
+        }
+
+        private static void TryAddColumn(SqliteConnection connection, string tableName, string columnName, string columnType)
+        {
+            try
+            {
+                bool columnExists = false;
+                using (var cmd = connection.CreateCommand())
+                {
+                    cmd.CommandText = string.Format("PRAGMA table_info({0})", tableName);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (reader["name"].ToString().Equals(columnName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                columnExists = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!columnExists)
+                {
+                    ExecuteNonQuery(connection, string.Format("ALTER TABLE {0} ADD COLUMN {1} {2}", tableName, columnName, columnType));
+                }
+            }
+            catch { /* Игнорируем ошибки при проверке/добавлении колонок */ }
         }
 
         private static void ExecuteNonQuery(SqliteConnection connection, string sql)

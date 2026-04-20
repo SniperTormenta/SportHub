@@ -4,59 +4,251 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Личный кабинет" Height="450" Width="600"
+        Title="Настройки аккаунта" Height="800" Width="750"
         WindowStartupLocation="CenterOwner"
-        Background="#F8FAFC"
-        FontFamily="Segoe UI">
-    <Grid Margin="30">
+        Background="#F6F7F8"
+        FontFamily="Segoe UI, Inter, sans-serif"
+        TextElement.Foreground="#0F172A">
+    
+    <Window.Resources>
+        <!-- Primary Button Style -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#137FEC"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#0F66C2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Secondary Button Style -->
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F1F5F9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Input Field Style -->
+        <Style x:Key="InputFieldStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+
+        <!-- Danger Button Style -->
+        <Style x:Key="DangerButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#EF4444"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#DC2626"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="32">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- Tabs -->
+            <RowDefinition Height="Auto"/> <!-- Footer -->
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,30">
-            <TextBlock Text="Профиль пользователя" 
-                       FontSize="28" 
-                       FontWeight="Bold" 
-                       Foreground="#1E293B"/>
-            <Border Height="2" Background="#E2E8F0" Margin="0,10,0,0"/>
+        <!-- Header Section -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <TextBlock Text="Настройки аккаунта" FontSize="28" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+            <TextBlock Text="Управляйте своим профилем и настройками безопасности." FontSize="14" Foreground="#64748B"/>
         </StackPanel>
 
-        <Border Grid.Row="1" 
-                Background="White" 
-                CornerRadius="16" 
-                Padding="25"
-                BorderBrush="#E2E8F0"
-                BorderThickness="1">
-            <StackPanel>
-                <Grid Margin="0,0,0,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="120"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <TextBlock Text="Имя пользователя:" 
-                               Foreground="#64748B" 
-                               FontSize="16" 
-                               VerticalAlignment="Center"/>
-                    
-                    <TextBlock Grid.Column="1" 
-                               Text="{Binding Username}" 
-                               Foreground="#1E293B" 
-                               FontSize="18" 
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"/>
-                </Grid>
+        <!-- TabControl Section -->
+        <TabControl Grid.Row="1" Style="{StaticResource TailwindTabControl}">
+            <!-- Вкладка Профиль -->
+            <TabItem Header="Профиль" Style="{StaticResource TailwindTabItem}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,24,0,0">
+                    <StackPanel>
+                        <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="24">
+                            <StackPanel>
+                                <!-- Аватар и краткая инфо -->
+                                <Grid Margin="0,0,0,24">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                <!-- Другие поля можно добавить здесь -->
-            </StackPanel>
-        </Border>
+                                    <!-- Аватар (размер 100х100, на 25% больше базового 80х80) -->
+                                    <Grid Grid.Column="0" Width="100" Height="100" Margin="0,0,24,0">
+                                        <Ellipse Width="100" Height="100">
+                                            <Ellipse.Fill>
+                                                <ImageBrush ImageSource="{Binding AvatarPath, TargetNullValue='/Resources/avatar.png'}" Stretch="UniformToFill"/>
+                                            </Ellipse.Fill>
+                                        </Ellipse>
+                                        <Button Width="32" Height="32" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                                                Padding="0" BorderThickness="0" Background="Transparent" Cursor="Hand"
+                                                Command="{Binding ChangeAvatarCommand}">
+                                            <Border Background="White" CornerRadius="16" BorderBrush="#E2E8F0" BorderThickness="1" Width="32" Height="32">
+                                                <TextBlock Text="📷" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </Button>
+                                    </Grid>
 
-        <Button Grid.Row="2" 
-                Content="Закрыть" 
-                Style="{StaticResource DefaultModernButton}"
-                HorizontalAlignment="Right"
-                Click="Close_Click"/>
+                                    <!-- Имя и Роль -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                            <TextBlock Text="{Binding Username}" FontSize="22" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,12,0"/>
+                                            <Border Background="#DBEAFE" CornerRadius="10" Padding="10,3" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding RoleDisplay}" FontSize="12" FontWeight="SemiBold" Foreground="#1E40AF"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Email}" FontSize="15" Foreground="#64748B"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Border Height="1" Background="#F1F5F9" Margin="0,0,0,24"/>
+
+                                <!-- Поля данных (Readonly) -->
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="24"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,20">
+                                        <TextBlock Text="Имя" FontSize="14" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,6"/>
+                                        <Border Style="{StaticResource InputFieldStyle}" Background="#F8FAFC">
+                                            <TextBlock Text="{Binding FirstName}" Foreground="#0F172A" FontSize="14" VerticalAlignment="Center" Padding="4"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,20">
+                                        <TextBlock Text="Фамилия" FontSize="14" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,6"/>
+                                        <Border Style="{StaticResource InputFieldStyle}" Background="#F8FAFC">
+                                            <TextBlock Text="{Binding LastName}" Foreground="#0F172A" FontSize="14" VerticalAlignment="Center" Padding="4"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,20">
+                                        <TextBlock Text="Email" FontSize="14" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,6"/>
+                                        <Border Style="{StaticResource InputFieldStyle}" Background="#F8FAFC">
+                                            <TextBlock Text="{Binding Email}" Foreground="#0F172A" FontSize="14" VerticalAlignment="Center" Padding="4"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,20">
+                                        <TextBlock Text="Роль" FontSize="14" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,6"/>
+                                        <Border Style="{StaticResource InputFieldStyle}" Background="#F8FAFC">
+                                            <TextBlock Text="{Binding RoleDisplay}" Foreground="#64748B" FontSize="14" VerticalAlignment="Center" Padding="4"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
+                                        <TextBlock Text="Номер телефона" FontSize="14" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,6"/>
+                                        <Border Style="{StaticResource InputFieldStyle}" Background="#F8FAFC">
+                                            <TextBlock Text="{Binding PhoneNumber}" Foreground="#0F172A" FontSize="14" VerticalAlignment="Center" Padding="4"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Вкладка Безопасность (Сюда включено удаление) -->
+            <TabItem Header="Безопасность" Style="{StaticResource TailwindTabItem}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,24,0,0">
+                    <StackPanel>
+                        <!-- Смена пароля -->
+                        <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="24" Margin="0,0,0,24">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                    <TextBlock Text="Пароль" FontSize="16" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Используйте уникальный пароль для защиты вашего аккаунта." FontSize="14" Foreground="#64748B" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Сменить пароль" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Width="160"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Danger Zone (Удаление) -->
+                        <TextBlock Text="Опасная зона" FontSize="18" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,0,12"/>
+                        <Border Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="12" Padding="24">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                                    <TextBlock Text="Удалить аккаунт" FontSize="16" FontWeight="SemiBold" Foreground="#991B1B" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Безвозвратное удаление вашего аккаунта и контента. Это действие нельзя отменить." FontSize="14" Foreground="#DC2626" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Удалить аккаунт" Style="{StaticResource DangerButtonStyle}" VerticalAlignment="Center" Width="160"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- Footer Section -->
+        <Grid Grid.Row="2" Margin="0,24,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="1" Content="Закрыть" Click="Close_Click" Style="{StaticResource SecondaryButtonStyle}" Width="120"/>
+        </Grid>
     </Grid>
 </Window>

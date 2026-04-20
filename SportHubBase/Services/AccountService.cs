@@ -142,6 +142,12 @@ namespace SportHubBase.Services
             {
                 int foundId = 0;
                 string foundUsername = null;
+                string foundFirstName = null;
+                string foundLastName = null;
+                string foundEmail = null;
+                string foundPhone = null;
+                string foundAvatar = null;
+                string foundRole = null;
                 string storedHash = null;
 
                 using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
@@ -150,15 +156,21 @@ namespace SportHubBase.Services
 
                     using (var cmd = connection.CreateCommand())
                     {
-                        cmd.CommandText = "SELECT Id, Username, PasswordHash FROM Accounts WHERE Username = @Username";
+                        cmd.CommandText = "SELECT Id, Username, PasswordHash, FirstName, LastName, Email, PhoneNumber, AvatarPath, Role FROM Accounts WHERE Username = @Username";
                         cmd.Parameters.AddWithValue("@Username", username);
                         using (var reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())
                             {
-                                foundId       = Convert.ToInt32(reader["Id"]);
-                                foundUsername = reader["Username"]?.ToString();
-                                storedHash    = reader["PasswordHash"]?.ToString();
+                                foundId        = Convert.ToInt32(reader["Id"]);
+                                foundUsername  = reader["Username"]?.ToString();
+                                storedHash     = reader["PasswordHash"]?.ToString();
+                                foundFirstName = reader["FirstName"]?.ToString();
+                                foundLastName  = reader["LastName"]?.ToString();
+                                foundEmail     = reader["Email"]?.ToString();
+                                foundPhone     = reader["PhoneNumber"]?.ToString();
+                                foundAvatar    = reader["AvatarPath"]?.ToString();
+                                foundRole      = reader["Role"]?.ToString();
                             }
                         }
                     }
@@ -178,8 +190,14 @@ namespace SportHubBase.Services
 
                 account = new UserAccount
                 {
-                    Id           = foundId,
-                    Username     = foundUsername
+                    Id        = foundId,
+                    Username  = foundUsername,
+                    FirstName = foundFirstName,
+                    LastName  = foundLastName,
+                    Email     = foundEmail,
+                    PhoneNumber = foundPhone,
+                    AvatarPath = foundAvatar,
+                    Role      = foundRole
                 };
                 return true;
             }
@@ -188,6 +206,60 @@ namespace SportHubBase.Services
                 errorMessage = string.Format("Ошибка при входе: {0}", ex.Message);
                 return false;
             }
+        }
+        public bool UpdateAccountDetail(int userId, string columnName, string value)
+        {
+            try
+            {
+                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                {
+                    connection.Open();
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = string.Format("UPDATE Accounts SET {0} = @Value WHERE Id = @Id", columnName);
+                        cmd.Parameters.AddWithValue("@Value", (object)value ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@Id", userId);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                return true;
+            }
+            catch { return false; }
+        }
+
+        public UserAccount GetAccount(int userId)
+        {
+            try
+            {
+                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                {
+                    connection.Open();
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT Id, Username, FirstName, LastName, Email, PhoneNumber, AvatarPath, Role FROM Accounts WHERE Id = @Id";
+                        cmd.Parameters.AddWithValue("@Id", userId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new UserAccount
+                                {
+                                    Id = Convert.ToInt32(reader["Id"]),
+                                    Username = reader["Username"]?.ToString(),
+                                    FirstName = reader["FirstName"]?.ToString(),
+                                    LastName = reader["LastName"]?.ToString(),
+                                    Email = reader["Email"]?.ToString(),
+                                    PhoneNumber = reader["PhoneNumber"]?.ToString(),
+                                    AvatarPath = reader["AvatarPath"]?.ToString(),
+                                    Role = reader["Role"]?.ToString()
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
         }
     }
 }
