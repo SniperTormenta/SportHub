@@ -1,4 +1,4 @@
-﻿// Models/Player.cs
+// Models/Player.cs
 using SportHubBase.ViewModels;
 using System;
 
@@ -29,6 +29,13 @@ namespace SportHubBase.Models
         {
             get => _name;
             set { _name = value; OnPropertyChanged(); }
+        }
+
+        private string _nickname;
+        public string Nickname
+        {
+            get => _nickname;
+            set { _nickname = value; OnPropertyChanged(); }
         }
 
         public string Role

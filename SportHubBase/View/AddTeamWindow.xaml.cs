@@ -18,7 +18,8 @@ namespace SportHubBase.View // или SportHubBase, если в корне
 
             // Создание ViewModel через контейнер зависимостей
             var storage = App.Container.GetInstance<IStorage>();
-            _viewModel = new AddTeamViewModel(tournamentId, storage, team);
+            var excelService = App.Container.GetInstance<IExcelService>();
+            _viewModel = new AddTeamViewModel(tournamentId, storage, excelService, team);
             DataContext = _viewModel;
 
             _viewModel.RequestClose += result =>

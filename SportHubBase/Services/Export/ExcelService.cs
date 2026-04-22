@@ -181,5 +181,49 @@ namespace SportHubBase.Services.Export
 
             return teams;
         }
+        public void SavePlayersTemplate(string filePath)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var playersSheet = workbook.Worksheets.Add("Players");
+                playersSheet.Cell(1, 1).Value = "ФИО (например: Иванов Иван Иванович)";
+                playersSheet.Cell(1, 1).Style.Font.Bold = true;
+                playersSheet.Cell(2, 1).Value = "Иванов Иван Иванович";
+                playersSheet.Cell(3, 1).Value = "Петров Пётр";
+                playersSheet.Cell(4, 1).Value = "Смирнов";
+                playersSheet.Columns().AdjustToContents();
+                workbook.SaveAs(filePath);
+            }
+        }
+
+        public List<Player> ImportPlayers(string filePath)
+        {
+            var players = new List<Player>();
+            using (var workbook = new XLWorkbook(filePath))
+            {
+                IXLWorksheet sheet;
+                if (!workbook.TryGetWorksheet("Players", out sheet))
+                    sheet = workbook.Worksheet(1); // Fallback to first sheet
+
+                var rows = sheet.RangeUsed().RowsUsed().Skip(1);
+                foreach (var row in rows)
+                {
+                    var fullName = row.Cell(1).GetValue<string>();
+                    if (string.IsNullOrWhiteSpace(fullName)) continue;
+
+                    fullName = fullName.Trim();
+                    var parts = fullName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    string nickName = parts.Length > 0 ? parts[0] : "";
+
+                    players.Add(new Player 
+                    { 
+                        Name = fullName,
+                        Nickname = nickName
+                    });
+                }
+            }
+            return players;
+        }
     }
 }

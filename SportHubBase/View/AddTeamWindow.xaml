@@ -56,23 +56,7 @@
                                  Margin="0,8,0,0"/>
                     </StackPanel>
 
-                    <StackPanel Margin="0,0,0,24">
-                        <TextBlock Text="Выберите капитана" FontSize="13" FontWeight="Medium" Foreground="#111418"/>
-                        <ComboBox ItemsSource="{Binding Players}"
-                                  Style="{StaticResource ModernComboBox}"
-                                  SelectedItem="{Binding SelectedCaptain, UpdateSourceTrigger=PropertyChanged}"
-                                  TextSearch.TextPath="Name"
-                                  IsTextSearchEnabled="True"
-                                  Height="44" Margin="0,8,0,0" Padding="12,0">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Name}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <TextBlock Text="Капитан будет иметь права на управление составом команды."
-                                   FontSize="12" Foreground="#617589" Margin="0,4,0,0"/>
-                    </StackPanel>
+
 
                     <Border Height="1" Background="#E5E7EB" Margin="0,16"/>
 
@@ -84,18 +68,33 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Состав команды" FontWeight="Bold" FontSize="13" Foreground="#111418"/>
-                                <TextBlock Text="{Binding PlayersCount, StringFormat='Игроков: {0}'}"
+                                <TextBlock Text="{Binding PlayersCountText}"
                                            FontSize="12" Foreground="#617589"/>
                             </StackPanel>
 
-                            <Button Grid.Column="1"
-                                    Content="+ Добавить игрока"
-                                    Command="{Binding AddPlayerCommand}"
-                                    Style="{StaticResource DefaultModernButton}"
-                                    Background="Transparent"
-                                    Foreground="#137FEC"
-                                    FontWeight="Medium"
-                                    Padding="12,6"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="📥 Импорт Excel"
+                                        Command="{Binding ImportExcelCommand}"
+                                        Style="{StaticResource DefaultModernButton}"
+                                        Background="Transparent"
+                                        Foreground="#10B981"
+                                        FontWeight="Medium"
+                                        Padding="12,6" Margin="0,0,8,0"/>
+                                <Button Content="📄 Шаблон"
+                                        Command="{Binding DownloadTemplateCommand}"
+                                        Style="{StaticResource DefaultModernButton}"
+                                        Background="Transparent"
+                                        Foreground="#6B7280"
+                                        FontWeight="Medium"
+                                        Padding="12,6" Margin="0,0,8,0"/>
+                                <Button Content="+ Добавить игрока"
+                                        Command="{Binding AddPlayerCommand}"
+                                        Style="{StaticResource DefaultModernButton}"
+                                        Background="Transparent"
+                                        Foreground="#137FEC"
+                                        FontWeight="Medium"
+                                        Padding="12,6"/>
+                            </StackPanel>
                         </Grid>
 
                         <Border BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8">
@@ -113,21 +112,37 @@
                                                          Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                                                          Margin="0,0,8,0"/>
 
-                                                <TextBlock Grid.Column="0"
-                                                           Text="Капитан"
-                                                           Foreground="#137FEC" FontSize="11"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Bottom"
-                                                           Margin="0,24,0,0"
-                                                           Visibility="{Binding IsCaptain, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Command="{Binding DataContext.MakeCaptainCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent" BorderThickness="0" Padding="8,4" Margin="0,0,8,0"
+                                                            Cursor="Hand">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsCaptain}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <TextBlock Text="Сделать капитаном" FontSize="11" Foreground="#9CA3AF"/>
+                                                    </Button>
 
-                                                <Button Grid.Column="1"
-                                                        Command="{Binding DataContext.RemovePlayerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"
-                                                        Background="Transparent" Padding="8" Width="36" Height="36">
-                                                    <TextBlock Text="×" FontSize="18" Foreground="#EF4444" FontWeight="Bold"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Button>
+                                                    <Border Background="#E0F2FE" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
+                                                            Visibility="{Binding IsCaptain, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="Капитан" Foreground="#0284C7" FontSize="11" FontWeight="Bold"/>
+                                                    </Border>
+
+                                                    <Button Command="{Binding DataContext.RemovePlayerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Background="Transparent" Padding="8" Width="36" Height="36">
+                                                        <TextBlock Text="×" FontSize="18" Foreground="#EF4444" FontWeight="Bold"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Button>
+                                                </StackPanel>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>

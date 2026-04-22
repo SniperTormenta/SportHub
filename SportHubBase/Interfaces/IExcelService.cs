@@ -9,5 +9,7 @@ namespace SportHubBase.Interfaces
         void ExportTeams(IEnumerable<Team> teams, string filePath);
         void SaveTemplate(string filePath);
         List<Team> ImportTeams(string filePath);
+        void SavePlayersTemplate(string filePath);
+        List<Player> ImportPlayers(string filePath);
     }
 }

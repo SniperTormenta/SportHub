@@ -178,10 +178,19 @@
                                         <TextBlock Text="{Binding FormatText}" FontSize="18" FontWeight="Bold" Foreground="#111418"/>
                                     </StackPanel>
 
-                                    <StackPanel Margin="0,0,0,40">
+                                    <StackPanel Margin="0,0,0,24">
                                         <TextBlock Text="Даты проведения" Foreground="#617589" FontSize="13"/>
                                         <TextBlock Text="{Binding DatesText}"
                                    FontSize="18"
+                                   FontWeight="Bold"
+                                   Foreground="#111418"
+                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,0,0,40" Visibility="{Binding HasContacts, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <TextBlock Text="Контакты организатора" Foreground="#617589" FontSize="13"/>
+                                        <TextBlock Text="{Binding CurrentTournament.Contacts}"
+                                   FontSize="16"
                                    FontWeight="Bold"
                                    Foreground="#111418"
                                    TextWrapping="Wrap"/>

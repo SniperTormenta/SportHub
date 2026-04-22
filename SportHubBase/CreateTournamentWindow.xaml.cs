@@ -180,6 +180,15 @@ namespace SportHubBase
             }
 
             // Если всё OK, собираем объект
+            string contactsInfo = "";
+            if (AddContactsCheckBox.IsChecked == true && CurrentSession.CurrentUser != null)
+            {
+                var contactsList = new List<string>();
+                if (!string.IsNullOrWhiteSpace(CurrentSession.CurrentUser.Email)) contactsList.Add(CurrentSession.CurrentUser.Email);
+                if (!string.IsNullOrWhiteSpace(CurrentSession.CurrentUser.PhoneNumber)) contactsList.Add(CurrentSession.CurrentUser.PhoneNumber);
+                contactsInfo = string.Join(", ", contactsList);
+            }
+
             var tournament = new Tournament
             {
                 Name = NameTextBox.Text,
@@ -193,7 +202,7 @@ namespace SportHubBase
                 NoScore = NoScoreCheckBox.IsChecked ?? false,
                 Description = DescriptionTextBox.Text,
                 City = CityComboBox.Text,
-                Contacts = ContactsTextBox.Text,
+                Contacts = contactsInfo,
                 StartDate = StartDatePicker.SelectedDate.Value,
                 // Устанавливаем владельца из текущей сессии
                 OwnerId = CurrentSession.CurrentUser != null 

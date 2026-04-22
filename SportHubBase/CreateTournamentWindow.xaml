@@ -143,10 +143,9 @@
 
                     <!-- Контакты -->
                     <StackPanel Margin="0,0,0,20">
-                        <TextBlock Text="Контакты" FontWeight="Bold" FontSize="14"/>
-                        <TextBox x:Name="ContactsTextBox" Height="42" Margin="0,8,0,0"/>
-                        <TextBlock Text="Укажите любой удобный способ связи, данные будут видны всем"
-                                   Foreground="#6B7280" FontSize="13" Margin="0,4,0,0"/>
+                        <CheckBox x:Name="AddContactsCheckBox" Content="Добавить контактные данные" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <TextBlock Text="Ваши контактные данные (Email, Телефон) из профиля будут видны всем"
+                                   Foreground="#6B7280" FontSize="13" Margin="24,0,0,0"/>
                     </StackPanel>
 
                     <!-- Дата начала -->

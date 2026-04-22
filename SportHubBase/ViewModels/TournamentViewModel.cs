@@ -145,9 +145,9 @@ namespace SportHubBase.ViewModels
 
         // Вычисляемые свойства для UI
         
-        /// Количество команд (биндинг к TextBlock).
-        
         public int TeamsCount => Teams.Count;
+
+        public bool HasContacts => !string.IsNullOrWhiteSpace(CurrentTournament?.Contacts);
 
         
         /// Формат турнира (для заголовка).

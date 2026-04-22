@@ -397,9 +397,27 @@ namespace SportHubBase.Services
                     }
 
                     // Сохраняем команды и игроков
+                    var validTeamIds = new List<string>();
                     foreach (var team in t.Teams ?? new List<Team>())
                     {
                         UpsertTeam(conn, t.Id, team, tx);
+                        validTeamIds.Add($"'{team.Id.ToString()}'");
+                    }
+
+                    // Очистка старых/удаленных команд
+                    using (var delCmd = conn.CreateCommand())
+                    {
+                        delCmd.Transaction = tx;
+                        if (validTeamIds.Count > 0)
+                        {
+                            string idsStr = string.Join(",", validTeamIds);
+                            delCmd.CommandText = $"DELETE FROM Teams WHERE TournamentId = '{t.Id}' AND Id NOT IN ({idsStr})";
+                        }
+                        else
+                        {
+                            delCmd.CommandText = $"DELETE FROM Teams WHERE TournamentId = '{t.Id}'";
+                        }
+                        delCmd.ExecuteNonQuery();
                     }
 
                     // Сохраняем матчи
@@ -469,10 +487,28 @@ namespace SportHubBase.Services
             }
 
             // Сохраняем игроков команды
+            var validPlayerIds = new List<string>();
             foreach (var player in team.Players ?? new List<Player>())
             {
                 if (player.Id == Guid.Empty) player.Id = Guid.NewGuid();
                 UpsertPlayer(conn, team.Id, player, tx);
+                validPlayerIds.Add($"'{player.Id.ToString()}'");
+            }
+
+            // Очистка старых/удаленных игроков этой команды
+            using (var delCmd = conn.CreateCommand())
+            {
+                delCmd.Transaction = tx;
+                if (validPlayerIds.Count > 0)
+                {
+                    string idsStr = string.Join(",", validPlayerIds);
+                    delCmd.CommandText = $"DELETE FROM Players WHERE TeamId = '{team.Id}' AND Id NOT IN ({idsStr})";
+                }
+                else
+                {
+                    delCmd.CommandText = $"DELETE FROM Players WHERE TeamId = '{team.Id}'";
+                }
+                delCmd.ExecuteNonQuery();
             }
         }
 

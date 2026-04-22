@@ -94,6 +94,7 @@ namespace SportHubBase.ViewModels
             else
             {
                 ErrorMessage = error;
+                System.Windows.MessageBox.Show(error, "Ошибка авторизации", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -103,11 +104,13 @@ namespace SportHubBase.ViewModels
             if (_accountService.Register(Username, password, out string error))
             {
                 ErrorMessage = "Регистрация успешна! Теперь вы можете войти.";
+                System.Windows.MessageBox.Show("Регистрация успешна! Теперь вы можете войти.", "Успешная регистрация", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 CurrentMode = AuthMode.Login;
             }
             else
             {
                 ErrorMessage = error;
+                System.Windows.MessageBox.Show(error, "Ошибка регистрации", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
     }
