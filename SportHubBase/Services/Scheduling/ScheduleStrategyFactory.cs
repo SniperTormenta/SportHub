@@ -1,5 +1,6 @@
 // Services/Scheduling/ScheduleStrategyFactory.cs
 using SportHubBase.Interfaces;
+using SportHubBase.Services.Scheduling.Swiss;
 using System;
 
 namespace SportHubBase.Services.Scheduling
@@ -9,6 +10,15 @@ namespace SportHubBase.Services.Scheduling
     /// Для использования в IoC контейнере.
     public class ScheduleStrategyFactory : IScheduleStrategyFactory
     {
+        private readonly ITiebreakerCalculator _tiebreakerCalculator;
+        private readonly IPlayedMatchesService _playedMatchesService;
+
+        public ScheduleStrategyFactory(ITiebreakerCalculator tiebreakerCalculator, IPlayedMatchesService playedMatchesService)
+        {
+            _tiebreakerCalculator = tiebreakerCalculator;
+            _playedMatchesService = playedMatchesService;
+        }
+
         /// Возвращает стратегию по типу турнира (trim и case-insensitive).
         public IScheduleStrategy GetStrategy(string tournamentType)
         {
@@ -21,7 +31,7 @@ namespace SportHubBase.Services.Scheduling
                     return new RoundRobinBergerScheduleStrategy();
 
                 case "Швейцарский":
-                    return new SwissScheduleStrategy();
+                    return new SwissScheduleStrategy(_tiebreakerCalculator, _playedMatchesService);
 
                 case "Олимпийский":
                     return new OlympicScheduleStrategy();

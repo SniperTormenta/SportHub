@@ -1,4 +1,4 @@
-﻿// Models/Team.cs
+// Models/Team.cs
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -15,6 +15,9 @@ namespace SportHubBase.Models
 
         [JsonProperty("name")]
         public string Name { get; set; }
+
+        [JsonProperty("initialSeed")]
+        public int InitialSeed { get; set; }
 
         [JsonProperty("captain")]
         public string Captain { get; set; }

@@ -239,6 +239,13 @@
     <Compile Include="Interfaces\IMatchService.cs" />
     <Compile Include="Interfaces\IStatisticsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
+    <Compile Include="Interfaces\ISequentialScheduleStrategy.cs" />
+    <Compile Include="Services\Scheduling\Swiss\IPlayedMatchesService.cs" />
+    <Compile Include="Services\Scheduling\Swiss\ITiebreakerCalculator.cs" />
+    <Compile Include="Services\Scheduling\Swiss\PlayedMatchesService.cs" />
+    <Compile Include="Services\Scheduling\Swiss\SwissScheduleStrategy.cs" />
+    <Compile Include="Services\Scheduling\Swiss\SwissTeamProgress.cs" />
+    <Compile Include="Services\Scheduling\Swiss\TiebreakerCalculator.cs" />
     <Compile Include="Interfaces\IScoringStrategy.cs" />
     <Compile Include="Interfaces\IStorage.cs" />
     <Compile Include="Interfaces\ISportScoreStrategy.cs" />
@@ -273,6 +280,7 @@
     <Compile Include="Services\Results\Data\RoundRobinResultsData.cs" />
     <Compile Include="Services\Results\Data\OlympicBracketResultsData.cs" />
     <Compile Include="Services\Results\Data\SwissResultsData.cs" />
+    <Compile Include="Services\Results\Data\SwissResultRow.cs" />
     <Compile Include="Services\Results\Data\MultiStageResultsData.cs" />
     <Compile Include="Services\Result\IResultsProvider.cs" />
     <Compile Include="Services\Result\OlympicResultsProvider.cs" />

@@ -7,8 +7,6 @@
     <converters:ResultCellBackgroundConverter x:Key="ResultCellBackgroundConverter"/>
     <converters:ResultCellColorConverter x:Key="ResultCellColorConverter"/>
     
-    <!-- Другие конвертеры, если нужны, можно добавить здесь или использовать из App.xaml -->
-
     <!-- Шаблон для Круговой системы (Round Robin) -->
     <DataTemplate DataType="{x:Type data:RoundRobinResultsData}">
         <ScrollViewer HorizontalScrollBarVisibility="Auto"
@@ -16,11 +14,8 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <!-- Заголовок -->
                     <RowDefinition Height="*"/>
-                    <!-- Тело -->
                     <RowDefinition Height="Auto"/>
-                    <!-- Легенда -->
                 </Grid.RowDefinitions>
 
                 <!-- Заголовок таблицы -->
@@ -41,17 +36,12 @@
                             <ColumnDefinition Width="70"/> <!-- Очки -->
                         </Grid.ColumnDefinitions>
 
-                        <!-- № -->
                         <Border Grid.Column="0" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="16,14">
                             <TextBlock Text="№" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center"/>
                         </Border>
-
-                        <!-- Команда -->
                         <Border Grid.Column="1" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="16,14">
                             <TextBlock Text="Команда" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Left"/>
                         </Border>
-
-                        <!-- Номера столбцов шахматной таблицы -->
                         <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding HeaderNumbers}">
                                 <ItemsControl.ItemsPanel>
@@ -68,24 +58,18 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
-
-                        <!-- В -->
                         <Border Grid.Column="3" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
                             <TextBlock Text="В" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Выигранные матчи"/>
                         </Border>
-                        <!-- П -->
                         <Border Grid.Column="4" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
                             <TextBlock Text="П" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Проигранные матчи"/>
                         </Border>
-                        <!-- ВП -->
                         <Border Grid.Column="5" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
                             <TextBlock Text="ВП" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Выигранные сеты"/>
                         </Border>
-                        <!-- ПП -->
                         <Border Grid.Column="6" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
                             <TextBlock Text="ПП" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Проигранные сеты"/>
                         </Border>
-                        <!-- Очки -->
                         <Border Grid.Column="7" Padding="8,14">
                             <TextBlock Text="Очки" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Очки"/>
                         </Border>
@@ -122,19 +106,14 @@
                                         <ColumnDefinition Width="70"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- Место -->
                                     <Border Grid.Column="0" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
                                         <Border Width="32" Height="32" CornerRadius="6" Background="#F3F4F6" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Place}" FontSize="14" FontWeight="Bold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                         </Border>
                                     </Border>
-
-                                    <!-- Команда -->
                                     <Border Grid.Column="1" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
                                         <TextBlock Text="{Binding TeamName}" FontSize="15" FontWeight="SemiBold" Foreground="#111418" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="16,0"/>
                                     </Border>
-
-                                    <!-- Шахматная таблица (ячейки) -->
                                     <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
                                         <ItemsControl ItemsSource="{Binding Cells}">
                                             <ItemsControl.ItemsPanel>
@@ -177,24 +156,18 @@
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                     </ScrollViewer>
-
-                                    <!-- В -->
                                     <Border Grid.Column="3" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
                                         <TextBlock Text="{Binding Wins}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <!-- П -->
                                     <Border Grid.Column="4" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
                                         <TextBlock Text="{Binding Losses}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <!-- ВП -->
                                     <Border Grid.Column="5" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
                                         <TextBlock Text="{Binding SetsWon}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <!-- ПП -->
                                     <Border Grid.Column="6" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
                                         <TextBlock Text="{Binding SetsLost}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <!-- Очки -->
                                     <Border Grid.Column="7">
                                         <TextBlock Text="{Binding Points}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
@@ -203,8 +176,6 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-
-                <!-- Легенда -->
                 <Border Grid.Row="2"
                         Margin="0,16,0,16"
                         Padding="16"
@@ -237,18 +208,131 @@
         </ScrollViewer>
     </DataTemplate>
 
+    <!-- Шаблон для Швейцарской системы (турнирная таблица) -->
+    <DataTemplate DataType="{x:Type data:SwissResultsData}">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="0,0,0,24">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="#F9FAFB" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="60"/> <!-- Место -->
+                            <ColumnDefinition Width="300"/> <!-- Команда -->
+                            <ColumnDefinition Width="60"/> <!-- Игры -->
+                            <ColumnDefinition Width="60"/> <!-- В -->
+                            <ColumnDefinition Width="60"/> <!-- Н -->
+                            <ColumnDefinition Width="60"/> <!-- П -->
+                            <ColumnDefinition Width="60"/> <!-- BYE -->
+                            <ColumnDefinition Width="100"/> <!-- Buchholz -->
+                            <ColumnDefinition Width="80"/> <!-- Очки -->
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="16,14">
+                            <TextBlock Text="№" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center"/>
+                        </Border>
+                        <Border Grid.Column="1" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="16,14">
+                            <TextBlock Text="Команда" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Left"/>
+                        </Border>
+                        <Border Grid.Column="2" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                            <TextBlock Text="И" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Сыграно матчей"/>
+                        </Border>
+                        <Border Grid.Column="3" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                            <TextBlock Text="В" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Победы"/>
+                        </Border>
+                        <Border Grid.Column="4" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                            <TextBlock Text="Н" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Ничьи"/>
+                        </Border>
+                        <Border Grid.Column="5" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                            <TextBlock Text="П" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Поражения"/>
+                        </Border>
+                        <Border Grid.Column="6" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                            <TextBlock Text="Б" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Пропуск тура (BYE)"/>
+                        </Border>
+                        <Border Grid.Column="7" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                            <TextBlock Text="КБ" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Коэффициент Бухгольца (-1)"/>
+                        </Border>
+                        <Border Grid.Column="8" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                            <TextBlock Text="Очки" FontSize="11" FontWeight="Bold" Foreground="#111418" HorizontalAlignment="Center"/>
+                        </Border>
+                        <Border Grid.Column="9" Padding="8,14"/>
+                    </Grid>
+                </Border>
+
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding Rows}" Margin="0,0,0,-1">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Background="White">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="White"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#F8FAFC"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid Height="60">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="300"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="60"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <Border Width="32" Height="32" CornerRadius="6" Background="#F3F4F6" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Place}" FontSize="14" FontWeight="Bold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </Border>
+                                    <Border Grid.Column="1" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding TeamName}" FontSize="15" FontWeight="SemiBold" Foreground="#111418" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="16,0"/>
+                                    </Border>
+                                    <Border Grid.Column="2" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding MatchesPlayed}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="3" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding Wins}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="4" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding Draws}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="5" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding Losses}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="6" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding Byes}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="7" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding BuchholzCut1}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="8" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding Points}" FontSize="14" FontWeight="Bold" Foreground="#137FEC" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="9"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </ScrollViewer>
+    </DataTemplate>
+
     <!-- Шаблон для Олимпийской системы (реальная сетка) -->
     <DataTemplate DataType="{x:Type data:OlympicBracketResultsData}">
         <View:TournamentBracketControl />
-    </DataTemplate>
-
-    <!-- Шаблон для Швейцарской системы (заглушка) -->
-    <DataTemplate DataType="{x:Type data:SwissResultsData}">
-        <Grid Background="White" Margin="20">
-            <TextBlock Text="Швейцарская система - в разработке" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center" 
-                       FontSize="20" Foreground="#9CA3AF"/>
-        </Grid>
     </DataTemplate>
 
     <!-- Шаблон для Многоэтапной системы (заглушка) -->

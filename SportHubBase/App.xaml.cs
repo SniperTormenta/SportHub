@@ -60,6 +60,8 @@ namespace SportHubBase
             Container.Register<IAccountService, AccountService>(Lifestyle.Singleton);
 
             // ── Фабрики стратегий ───────────────────────────────────────────────
+            Container.Register<SportHubBase.Services.Scheduling.Swiss.IPlayedMatchesService, SportHubBase.Services.Scheduling.Swiss.PlayedMatchesService>(Lifestyle.Singleton);
+            Container.Register<SportHubBase.Services.Scheduling.Swiss.ITiebreakerCalculator, SportHubBase.Services.Scheduling.Swiss.TiebreakerCalculator>(Lifestyle.Singleton);
             Container.Register<IScheduleStrategyFactory, ScheduleStrategyFactory>(Lifestyle.Singleton);
             Container.Register<IResultsProviderFactory, ResultsProviderFactory>(Lifestyle.Singleton);
             Container.Register<IStatisticsCalculatorFactory, StatisticsCalculatorFactory>(Lifestyle.Singleton);

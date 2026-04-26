@@ -18,6 +18,50 @@ namespace SportHubBase.ViewModels
         NotPlayed
     }
 
+    public class RoundViewModel : BaseViewModel
+    {
+        private readonly ScheduleViewModel _parent;
+        public int RoundNumber { get; }
+        public string Name => $"Тур {RoundNumber}";
+        
+        public ObservableCollection<Match> Matches { get; } = new ObservableCollection<Match>();
+        public ICollectionView FilteredMatches { get; }
+
+        public bool IsGenerated => Matches.Count > 0;
+        public bool IsNotGenerated => !IsGenerated;
+
+        public ICommand GenerateRoundCommand { get; }
+
+        public RoundViewModel(int roundNumber, ScheduleViewModel parent)
+        {
+            RoundNumber = roundNumber;
+            _parent = parent;
+            GenerateRoundCommand = new RelayCommand(_ => _parent.GenerateSpecificRound(roundNumber));
+            
+            FilteredMatches = CollectionViewSource.GetDefaultView(Matches);
+            FilteredMatches.Filter = _parent.FilterMatch;
+        }
+
+        public void AddMatch(Match match)
+        {
+            Matches.Add(match);
+            OnPropertyChanged(nameof(IsGenerated));
+            OnPropertyChanged(nameof(IsNotGenerated));
+        }
+
+        public void ClearMatches()
+        {
+            Matches.Clear();
+            OnPropertyChanged(nameof(IsGenerated));
+            OnPropertyChanged(nameof(IsNotGenerated));
+        }
+
+        public void RefreshFilter()
+        {
+            FilteredMatches.Refresh();
+        }
+    }
+
     public class ScheduleViewModel : BaseViewModel
     {
         private Tournament _tournament;
@@ -33,7 +77,34 @@ namespace SportHubBase.ViewModels
         public ObservableCollection<Match> Matches { get; } = new ObservableCollection<Match>();
         public ICollectionView FilteredMatches { get; }
 
+        public ObservableCollection<RoundViewModel> Rounds { get; } = new ObservableCollection<RoundViewModel>();
+        
+        private RoundViewModel _selectedRound;
+        public RoundViewModel SelectedRound
+        {
+            get => _selectedRound;
+            set
+            {
+                if (_selectedRound != value)
+                {
+                    _selectedRound = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public bool IsGroupedView => _tournament?.Type == "Олимпийский";
+
+        public bool IsSequentialSchedule => _scheduleFactory.GetStrategy(_tournament?.Type) is ISequentialScheduleStrategy;
+        
+        public int NextRoundNumber
+        {
+            get
+            {
+                if (_tournament?.Matches == null || _tournament.Matches.Count == 0) return 1;
+                return _tournament.Matches.Max(m => m.Round) + 1;
+            }
+        }
 
         public string SearchQuery
         {
@@ -45,6 +116,7 @@ namespace SportHubBase.ViewModels
                     _searchQuery = value;
                     OnPropertyChanged();
                     FilteredMatches.Refresh();
+                    foreach(var round in Rounds) round.RefreshFilter();
                 }
             }
         }
@@ -59,6 +131,7 @@ namespace SportHubBase.ViewModels
                     _filter = value;
                     OnPropertyChanged();
                     FilteredMatches.Refresh();
+                    foreach(var round in Rounds) round.RefreshFilter();
                 }
             }
         }
@@ -87,6 +160,8 @@ namespace SportHubBase.ViewModels
 
         // Команда для обновления (если нужно)
         public ICommand RefreshCommand { get; }
+
+
         
         // Команда открытия матча (делегируется TournamentViewModel или через событие, но здесь просто ICommand для биндинга)
         // В текущей архитектуре TournamentViewModel открывает окна, поэтому здесь мы можем просто пробрасывать вызов
@@ -119,6 +194,7 @@ namespace SportHubBase.ViewModels
         public void LoadMatches()
         {
             Matches.Clear();
+            Rounds.Clear();
             ScheduleMessage = string.Empty;
 
             if (_tournament.Teams == null || _tournament.Teams.Count < 2)
@@ -126,6 +202,21 @@ namespace SportHubBase.ViewModels
                 ScheduleMessage = "Недостаточно команд для расписания.";
                 UpdateStats();
                 return;
+            }
+
+            // Инициализация туров для Швейцарской системы
+            if (IsSequentialSchedule)
+            {
+                int totalRoundsToCreate = _tournament.TotalRounds > 0 ? _tournament.TotalRounds : 7;
+                for (int i = 1; i <= totalRoundsToCreate; i++)
+                {
+                    Rounds.Add(new RoundViewModel(i, this));
+                }
+
+                if (Rounds.Any())
+                {
+                    SelectedRound = Rounds.First();
+                }
             }
 
             // Используем логику из TournamentViewModel для генерации/загрузки
@@ -152,14 +243,23 @@ namespace SportHubBase.ViewModels
             }
 
             IEnumerable<Match> generatedMatches;
-            try
+
+            if (strategy is ISequentialScheduleStrategy)
             {
-                generatedMatches = strategy.GenerateSchedule(_tournament.Teams.ToList()) ?? Enumerable.Empty<Match>();
+                // По-туровая стратегия не генерирует все раунды сразу, она просто берет историю
+                generatedMatches = Enumerable.Empty<Match>();
             }
-            catch (Exception)
+            else
             {
-                ScheduleMessage = "Произошла ошибка при генерации расписания.";
-                return;
+                try
+                {
+                    generatedMatches = strategy.GenerateSchedule(_tournament.Teams.ToList()) ?? Enumerable.Empty<Match>();
+                }
+                catch (Exception)
+                {
+                    ScheduleMessage = "Произошла ошибка при генерации расписания.";
+                    return;
+                }
             }
 
             // Мерджим с существующими матчами (сохраняем результаты)
@@ -210,9 +310,28 @@ namespace SportHubBase.ViewModels
             // Автонумерация (для новых матчей)
             _matchService.AssignAutoNumbers(_tournament.Matches);
 
-            // Заполняем ObservableCollection
-            // Заполняем ObservableCollection
-            if (IsGroupedView)
+            // Разносим по раундам для Sequential
+            if (IsSequentialSchedule)
+            {
+                foreach (var roundVM in Rounds)
+                {
+                    roundVM.ClearMatches();
+                }
+
+                foreach (var match in _tournament.Matches)
+                {
+                    var roundVM = Rounds.FirstOrDefault(r => r.RoundNumber == match.Round);
+                    if (roundVM != null)
+                    {
+                        roundVM.AddMatch(match);
+                        Matches.Add(match); // Добавляем и в общий плоский список на всякий случай
+                    }
+                }
+            }
+            else
+            {
+                // Заполняем ObservableCollection для других типов
+                if (IsGroupedView)
             {
                 _bracketMatchesMap.Clear();
                 if (_tournament.Bracket != null)
@@ -272,6 +391,7 @@ namespace SportHubBase.ViewModels
                     Matches.Add(match);
                 }
             }
+            } // Закрываем блок else для IsSequentialSchedule
 
             foreach (var match in Matches)
             {
@@ -296,11 +416,13 @@ namespace SportHubBase.ViewModels
              {
                  UpdateStats();
                  FilteredMatches.Refresh(); // Обновить фильтр, если статус изменился
+                 foreach(var r in Rounds) r.RefreshFilter();
              }
              // Если меняется номер матча - тоже обновить фильтрацию/поиск
              if (e.PropertyName == nameof(Match.MatchNumber))
              {
                  FilteredMatches.Refresh();
+                 foreach(var r in Rounds) r.RefreshFilter();
              }
              
              if (IsGroupedView && (e.PropertyName == nameof(Match.Team1QuickScore) || e.PropertyName == nameof(Match.Team2QuickScore)))
@@ -321,7 +443,7 @@ namespace SportHubBase.ViewModels
             OnPropertyChanged(nameof(TotalEncounters));
         }
 
-        private bool FilterMatch(object item)
+        public bool FilterMatch(object item)
         {
             if (!(item is Match match)) return false;
 
@@ -356,6 +478,43 @@ namespace SportHubBase.ViewModels
             _tournament = tournament ?? throw new ArgumentNullException(nameof(tournament));
             // Также обновляем matches, если они изменились в новом объекте
             // Но LoadMatches() все равно перезагрузит их
+            OnPropertyChanged(nameof(IsSequentialSchedule));
+            OnPropertyChanged(nameof(NextRoundNumber));
+        }
+
+        public void GenerateSpecificRound(int roundNumber)
+        {
+            var strategy = _scheduleFactory.GetStrategy(_tournament.Type) as ISequentialScheduleStrategy;
+            if (strategy == null) return;
+            
+            // Если мы генерируем тур N, то удаляем все ранее сгенерированные матчи для туров >= N (чтобы не было хвостов).
+            // Или просто удаляем матчи текущего генерируемого тура (позволим юзеру самому решать).
+            // Удаляем старые матчи текущего тура, если они были
+            if (_tournament.Matches != null)
+            {
+                _tournament.Matches.RemoveAll(m => m.Round == roundNumber);
+            }
+
+            var newMatches = strategy.GenerateNextRound(_tournament, roundNumber);
+            if (newMatches == null || !newMatches.Any())
+            {
+                System.Windows.MessageBox.Show($"Невозможно сгенерировать тур {roundNumber} (недостаточно команд или нет вариантов пар).", "Генерация тура", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_tournament.Matches == null)
+            {
+                _tournament.Matches = new List<Match>();
+            }
+
+            foreach (var match in newMatches)
+            {
+                _tournament.Matches.Add(match);
+            }
+            
+            _matchService.AssignAutoNumbers(_tournament.Matches);
+            _storage.UpdateTournament(_tournament);
+            LoadMatches();
         }
     }
 }

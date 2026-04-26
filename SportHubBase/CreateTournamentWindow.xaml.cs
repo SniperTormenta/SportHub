@@ -108,6 +108,11 @@ namespace SportHubBase
             if (TournamentTypeDescriptionPlaceholder == null)
                 return;
 
+            if (TotalRoundsStackPanel != null)
+            {
+                TotalRoundsStackPanel.Visibility = selectedType == "Швейцарский" ? Visibility.Visible : Visibility.Collapsed;
+            }
+
             var newBorder = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(241, 245, 249)),
@@ -179,6 +184,16 @@ namespace SportHubBase
                 return;
             }
 
+            int totalRounds = 0;
+            if (selectedType == "Швейцарский")
+            {
+                if (!int.TryParse(TotalRoundsTextBox.Text, out totalRounds) || totalRounds < 1)
+                {
+                    MessageBox.Show("Пожалуйста, введите корректное количество туров (число больше 0).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+            }
+
             // Если всё OK, собираем объект
             string contactsInfo = "";
             if (AddContactsCheckBox.IsChecked == true && CurrentSession.CurrentUser != null)
@@ -196,6 +211,7 @@ namespace SportHubBase
                 Status = ((ComboBoxItem)StatusComboBox.SelectedItem).Content.ToString(),
                 SportType = ((ComboBoxItem)SportTypeComboBox.SelectedItem).Content.ToString(),
                 Type = selectedType,
+                TotalRounds = totalRounds,
                 EditMode = ((ComboBoxItem)EditModeComboBox.SelectedItem).Content.ToString(),
                 AccessMode = ((ComboBoxItem)AccessModeComboBox.SelectedItem).Content.ToString(),
                 IsPublic = ((ComboBoxItem)AccessModeComboBox.SelectedItem).Content.ToString() != "Приватный",

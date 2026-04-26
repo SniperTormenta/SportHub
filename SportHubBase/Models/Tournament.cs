@@ -1,4 +1,4 @@
-﻿// Models/Tournament.cs
+// Models/Tournament.cs
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
@@ -37,6 +37,9 @@ namespace SportHubBase.Models
 
         [JsonProperty("type")]
         public string Type { get; set; } // Формат турнира
+
+        [JsonProperty("totalRounds")]
+        public int TotalRounds { get; set; } = 0; // Для Швейцарской системы
 
         [JsonProperty("editMode")]
         public string EditMode { get; set; }

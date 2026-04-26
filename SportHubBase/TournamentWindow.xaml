@@ -280,11 +280,13 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
+
                         <!-- Controls: Search & Filter -->
-                        <Grid Grid.Row="0" Margin="0,0,0,24">
+                        <Grid Grid.Row="1" Margin="0,0,0,24">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -323,11 +325,21 @@
                         </Grid>
 
                         <!-- Message -->
-                        <TextBlock Grid.Row="1" Text="{Binding ScheduleVM.ScheduleMessage}"
+                        <TextBlock Grid.Row="2" Text="{Binding ScheduleVM.ScheduleMessage}"
                                    FontSize="16" Foreground="#617589" Margin="0,0,0,16" TextWrapping="Wrap"/>
 
-                        <!-- Matches List -->
-                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <!-- Matches List (Flat for Round Robin / Olympic) -->
+                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer.Style>
+                                <Style TargetType="ScrollViewer">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ScheduleVM.IsSequentialSchedule}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ScrollViewer.Style>
                             <ItemsControl ItemsSource="{Binding ScheduleVM.FilteredMatches}">
                                 <ItemsControl.GroupStyle>
                                     <GroupStyle>
@@ -417,6 +429,94 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
+
+                        <!-- Matches List (Rounds for Swiss System) -->
+                        <TabControl Grid.Row="3" ItemsSource="{Binding ScheduleVM.Rounds}" SelectedItem="{Binding ScheduleVM.SelectedRound}"
+                                    Background="Transparent" BorderThickness="0" Margin="0,4,0,0"
+                                    Visibility="{Binding ScheduleVM.IsSequentialSchedule, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TabControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" Padding="12,8" />
+                                </DataTemplate>
+                            </TabControl.ItemTemplate>
+                            <TabControl.ContentTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,16,0,0">
+                                        <!-- Список матчей для раунда -->
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding IsGenerated, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <ItemsControl ItemsSource="{Binding FilteredMatches}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Margin="0,0,0,12" Padding="16" Background="White" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1">
+                                                            <Border.Triggers>
+                                                                <EventTrigger RoutedEvent="MouseEnter">
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <ThicknessAnimation Storyboard.TargetProperty="BorderThickness" To="2" Duration="0:0:0.2"/>
+                                                                            <ColorAnimation Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#137FEC" Duration="0:0:0.2"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </EventTrigger>
+                                                                <EventTrigger RoutedEvent="MouseLeave">
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <ThicknessAnimation Storyboard.TargetProperty="BorderThickness" To="1" Duration="0:0:0.2"/>
+                                                                            <ColorAnimation Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" To="#E5E7EB" Duration="0:0:0.2"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </EventTrigger>
+                                                            </Border.Triggers>
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="60"/>
+                                                                    <ColumnDefinition Width="100"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <Border Grid.Column="0" Background="#F3F4F6" CornerRadius="6" Width="40" Height="40" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding MatchNumber, TargetNullValue='#'}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#6B7280"/>
+                                                                </Border>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Status}" FontSize="12" FontWeight="SemiBold" Foreground="#617589" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                                <Grid Grid.Column="2" HorizontalAlignment="Stretch">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Team1}" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="0,0,24,0" FontSize="15" TextTrimming="CharacterEllipsis" Foreground="Black"/>
+                                                                    <Border Grid.Column="1" Background="#F9FAFB" CornerRadius="8" Padding="12,4" MinWidth="100">
+                                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                                            <TextBlock Text="{Binding Team1QuickScore}" FontWeight="Bold" FontSize="18" MinWidth="20" TextAlignment="Center" Foreground="Black"/>
+                                                                            <TextBlock Text=" : " FontWeight="Bold" FontSize="18" Foreground="#9CA3AF" Margin="4,0"/>
+                                                                            <TextBlock Text="{Binding Team2QuickScore}" FontWeight="Bold" FontSize="18" MinWidth="20" TextAlignment="Center" Foreground="Black"/>
+                                                                        </StackPanel>
+                                                                    </Border>
+                                                                    <TextBlock Grid.Column="2" Text="{Binding Team2}" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="24,0,0,0" FontSize="15" TextTrimming="CharacterEllipsis" Foreground="Black"/>
+                                                                </Grid>
+                                                                <Button Grid.Column="3" Content="Подробнее" 
+                                                                        Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                                        CommandParameter="{Binding}" 
+                                                                        Style="{StaticResource AddTeamButtonStyle}" 
+                                                                        Padding="16,8" Margin="24,0,0,0"
+                                                                        Background="#E0F2FE" Foreground="#137FEC"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+
+                                        <!-- Заглушка, если тур пуст -->
+                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,40"
+                                                    Visibility="{Binding IsNotGenerated, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <TextBlock Text="Матчи для этого тура еще не сгенерированы" Foreground="#9CA3AF" FontSize="16" Margin="0,0,0,24" HorizontalAlignment="Center"/>
+                                            <Button Content="Сгенерировать пары" Command="{Binding GenerateRoundCommand}" Style="{StaticResource AddTeamButtonStyle}" Background="#10B981" Foreground="White" BorderThickness="0" Padding="32,16" FontSize="16" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </TabControl.ContentTemplate>
+                        </TabControl>
                     </Grid>
 
                     <!-- Sidebar -->

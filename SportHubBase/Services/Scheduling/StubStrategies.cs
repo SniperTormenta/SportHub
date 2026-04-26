@@ -39,11 +39,7 @@ namespace SportHubBase.Services.Scheduling
         }
     }
 
-    /// Заглушка для швейцарской системы (парование по рейтингу после каждого тура).
-    public class SwissScheduleStrategy : BaseStubScheduleStrategy
-    {
-        public SwissScheduleStrategy() : base("Швейцарский") { }
-    }
+
 
     /// Заглушка для поэтапного турнира (группы + плей-офф).
     public class StagedScheduleStrategy : BaseStubScheduleStrategy

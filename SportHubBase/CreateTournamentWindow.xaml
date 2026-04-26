@@ -77,6 +77,13 @@
 
                         <!-- Динамическое описание -->
                         <ContentControl x:Name="TournamentTypeDescriptionPlaceholder"/>
+
+                        <!-- Количество туров (только для Швейцарской) -->
+                        <StackPanel x:Name="TotalRoundsStackPanel" Margin="0,12,0,0" Visibility="Collapsed">
+                            <TextBlock Text="Количество туров *" FontWeight="Bold" FontSize="14"/>
+                            <TextBox x:Name="TotalRoundsTextBox" Height="36" Margin="0,8,0,0" Text="7" Width="100" HorizontalAlignment="Left" />
+                            <TextBlock Text="По умолчанию 7 туров. Для 24-32 команд рекомендуется 8-9 туров." Foreground="#6B7280" FontSize="12" Margin="0,4,0,0"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- Режимы -->

@@ -25,6 +25,9 @@ namespace SportHubBase.Models
         private string _referee;
         private string _location;
         private string _mvp;
+        private bool _isBye;
+        private string _team1Color;
+        private string _team2Color;
 
         public Guid Id { get; set; } = Guid.NewGuid();
 
@@ -145,6 +148,33 @@ namespace SportHubBase.Models
         {
             get => _mvp;
             set => SetField(ref _mvp, value);
+        }
+
+        /// <summary>
+        /// Указывает, пропускает ли команда тур (технический Bye).
+        /// </summary>
+        public bool IsBye
+        {
+            get => _isBye;
+            set => SetField(ref _isBye, value);
+        }
+
+        /// <summary>
+        /// Цвет (сторона) первой команды (White / Black / Home / Away).
+        /// </summary>
+        public string Team1Color
+        {
+            get => _team1Color;
+            set => SetField(ref _team1Color, value);
+        }
+
+        /// <summary>
+        /// Цвет (сторона) второй команды.
+        /// </summary>
+        public string Team2Color
+        {
+            get => _team2Color;
+            set => SetField(ref _team2Color, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

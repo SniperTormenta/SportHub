@@ -3,12 +3,22 @@ using SportHubBase.Interfaces;
 using SportHubBase.Models;
 using SportHubBase.Services.Result;
 using SportHubBase.Services.Results.Data;
+using SportHubBase.Services.Scheduling.Swiss;
 using System.Collections.ObjectModel;
 
 namespace SportHubBase.Services.Results
 {
     public class ResultsProviderFactory : IResultsProviderFactory
     {
+        private readonly ITiebreakerCalculator _tiebreakerCalculator;
+        private readonly IPlayedMatchesService _playedMatchesService;
+
+        public ResultsProviderFactory(ITiebreakerCalculator tiebreakerCalculator, IPlayedMatchesService playedMatchesService)
+        {
+            _tiebreakerCalculator = tiebreakerCalculator;
+            _playedMatchesService = playedMatchesService;
+        }
+
         public IResultsProvider GetProvider(Tournament tournament)
         {
             if (tournament == null)
@@ -20,10 +30,10 @@ namespace SportHubBase.Services.Results
                 return new RoundRobinResultsProvider();
 
             if (typeLower.Contains("олимп") || typeLower.Contains("плей-офф"))
-                return new OlympicResultsProvider();   // ← новый класс, ниже
+                return new OlympicResultsProvider();   
 
-            //if (typeLower.Contains("Швейцарский"))
-            //    return new SwissResultsProvider();     // Не реализовано
+            if (typeLower.Contains("швейцарск") || typeLower == "швейцарская система")
+                return new SwissResultsProvider(_tiebreakerCalculator, _playedMatchesService);
 
             return new StubResultsProvider(tournament.Type);
         }

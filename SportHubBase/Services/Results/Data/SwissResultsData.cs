@@ -1,8 +1,9 @@
-// Services/Results/Data/SwissResultsData.cs
+using System.Collections.ObjectModel;
+
 namespace SportHubBase.Services.Results.Data
 {
     public class SwissResultsData : ResultsData
     {
-        // Пока пусто, будет швейцарская система
+        public ObservableCollection<SwissResultRow> Rows { get; set; } = new ObservableCollection<SwissResultRow>();
     }
 }
