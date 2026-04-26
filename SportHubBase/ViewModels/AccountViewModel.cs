@@ -12,14 +12,35 @@ namespace SportHubBase.ViewModels
         private readonly IAccountService _accountService;
         private UserAccount _user;
 
+        // 1. Создаем локальные переменные для нашего "черновика"
+        private string _firstName;
+        private string _lastName;
+        private string _email;
+        private string _phoneNumber;
+
         public AccountViewModel(IAccountService accountService)
         {
             _accountService = accountService;
+
+            // Берем текущего пользователя из сессии
             User = CurrentSession.CurrentUser;
+
+            // 2. При открытии окна заполняем черновик реальными данными из БД/сессии
+            FirstName = User?.FirstName ?? "";
+            LastName = User?.LastName ?? "";
+            Email = User?.Email ?? "";
+            PhoneNumber = User?.PhoneNumber ?? "";
+
             ChangeAvatarCommand = new RelayCommand(ChangeAvatar);
+            SaveProfileCommand = new RelayCommand(SaveProfile);
+            ChangePasswordCommand = new RelayCommand(ChangePassword);
+            DeleteAccountCommand = new RelayCommand(DeleteAccount);
         }
 
         public RelayCommand ChangeAvatarCommand { get; }
+        public RelayCommand SaveProfileCommand { get; }
+        public RelayCommand ChangePasswordCommand { get; }
+        public RelayCommand DeleteAccountCommand { get; }
 
         public UserAccount User
         {
@@ -31,10 +52,6 @@ namespace SportHubBase.ViewModels
                     _user = value;
                     OnPropertyChanged(nameof(User));
                     OnPropertyChanged(nameof(Username));
-                    OnPropertyChanged(nameof(FirstName));
-                    OnPropertyChanged(nameof(LastName));
-                    OnPropertyChanged(nameof(Email));
-                    OnPropertyChanged(nameof(PhoneNumber));
                     OnPropertyChanged(nameof(AvatarPath));
                     OnPropertyChanged(nameof(RoleDisplay));
                 }
@@ -42,12 +59,61 @@ namespace SportHubBase.ViewModels
         }
 
         public string Username => User?.Username ?? "Гость";
-        public string FirstName => User?.FirstName ?? "Не указано";
-        public string LastName => User?.LastName ?? "Не указано";
-        public string Email => User?.Email ?? "Не указано";
-        public string PhoneNumber => User?.PhoneNumber ?? "Не указано";
         public string AvatarPath => string.IsNullOrEmpty(User?.AvatarPath) ? "/Resources/avatar.png" : User.AvatarPath;
-        
+
+        // 3. Теперь свойства привязаны к локальным переменным, а не напрямую к User
+        public string FirstName
+        {
+            get => _firstName;
+            set
+            {
+                if (_firstName != value)
+                {
+                    _firstName = value;
+                    OnPropertyChanged(nameof(FirstName));
+                }
+            }
+        }
+
+        public string LastName
+        {
+            get => _lastName;
+            set
+            {
+                if (_lastName != value)
+                {
+                    _lastName = value;
+                    OnPropertyChanged(nameof(LastName));
+                }
+            }
+        }
+
+        public string Email
+        {
+            get => _email;
+            set
+            {
+                if (_email != value)
+                {
+                    _email = value;
+                    OnPropertyChanged(nameof(Email));
+                }
+            }
+        }
+
+        public string PhoneNumber
+        {
+            get => _phoneNumber;
+            set
+            {
+                if (_phoneNumber != value)
+                {
+                    _phoneNumber = value;
+                    OnPropertyChanged(nameof(PhoneNumber));
+                }
+            }
+        }
+
         public string RoleDisplay
         {
             get
@@ -76,7 +142,7 @@ namespace SportHubBase.ViewModels
                     string sourceFile = openFileDialog.FileName;
                     string extension = Path.GetExtension(sourceFile);
                     string fileName = string.Format("avatar_{0}_{1}{2}", User.Id, DateTime.Now.Ticks, extension);
-                    
+
                     string baseDir = AppDomain.CurrentDomain.BaseDirectory;
                     string avatarsDir = Path.Combine(baseDir, "Resources", "Avatars");
 
@@ -88,8 +154,6 @@ namespace SportHubBase.ViewModels
                     string targetPath = Path.Combine(avatarsDir, fileName);
                     File.Copy(sourceFile, targetPath, true);
 
-                    // Сохраняем в БД (путь должен быть относительным или абсолютным, но лучше абсолютным для Uri или относительным для ресурсов)
-                    // Для WPF лучше использовать полный путь для локальных файлов на диске
                     if (_accountService.UpdateAccountDetail(User.Id, "AvatarPath", targetPath))
                     {
                         User.AvatarPath = targetPath;
@@ -100,6 +164,91 @@ namespace SportHubBase.ViewModels
                 catch (Exception ex)
                 {
                     MessageBox.Show("Ошибка при загрузке аватара: " + ex.Message);
+                }
+            }
+        }
+
+        private void SaveProfile(object parameter)
+        {
+            if (User == null) return;
+
+            try
+            {
+                // 4. Отправляем в базу данных значения из нашего черновика
+                _accountService.UpdateAccountDetail(User.Id, "FirstName", FirstName);
+                _accountService.UpdateAccountDetail(User.Id, "LastName", LastName);
+                _accountService.UpdateAccountDetail(User.Id, "Email", Email);
+                _accountService.UpdateAccountDetail(User.Id, "PhoneNumber", PhoneNumber);
+
+                // 5. И только после успешного сохранения обновляем глобальную сессию
+                CurrentSession.CurrentUser.FirstName = FirstName;
+                CurrentSession.CurrentUser.LastName = LastName;
+                CurrentSession.CurrentUser.Email = Email;
+                CurrentSession.CurrentUser.PhoneNumber = PhoneNumber;
+
+                // На всякий случай обновляем локальный объект User
+                User.FirstName = FirstName;
+                User.LastName = LastName;
+                User.Email = Email;
+                User.PhoneNumber = PhoneNumber;
+
+                MessageBox.Show("Профиль успешно обновлен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка при сохранении профиля: " + ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ChangePassword(object parameter)
+        {
+            if (User == null) return;
+
+            var window = new SportHubBase.View.ChangePasswordWindow();
+            if (window.ShowDialog() == true)
+            {
+                if (_accountService.ChangePassword(User.Id, window.OldPassword, window.NewPassword, out string errorMessage))
+                {
+                    MessageBox.Show("Пароль успешно изменен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show(errorMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DeleteAccount(object parameter)
+        {
+            if (User == null) return;
+
+            // System dialog confirmation first
+            var result = MessageBox.Show(
+                "Вы уверены, что хотите начать процедуру удаления аккаунта?\n\nВаши данные будут безвозвратно утеряны.",
+                "Подтверждение", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                // Second phase string match confirmation
+                var confirmWindow = new SportHubBase.View.DeleteAccountConfirmWindow();
+                if (confirmWindow.ShowDialog() == true)
+                {
+                    if (_accountService.DeleteAccount(User.Id, out string errorMessage))
+                    {
+                        MessageBox.Show("Ваш аккаунт был успешно удален. Приложение будет перезапущено.", "Аккаунт удален", MessageBoxButton.OK, MessageBoxImage.Information);
+                        
+                        CurrentSession.Clear();
+                        
+                        // Restart the application
+                        System.Diagnostics.Process.Start(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                        Application.Current.Shutdown();
+                    }
+                    else
+                    {
+                        MessageBox.Show(errorMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
         }

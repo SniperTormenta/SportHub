@@ -13,5 +13,7 @@ namespace SportHubBase.Interfaces
         bool LoginAndGetAccount(string username, string password, out UserAccount account, out string errorMessage);
         bool UpdateAccountDetail(int userId, string columnName, string value);
         UserAccount GetAccount(int userId);
+        bool ChangePassword(int userId, string oldPassword, string newPassword, out string errorMessage);
+        bool DeleteAccount(int userId, out string errorMessage);
     }
 }

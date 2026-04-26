@@ -261,5 +261,97 @@ namespace SportHubBase.Services
             catch { }
             return null;
         }
+
+        public bool ChangePassword(int userId, string oldPassword, string newPassword, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword))
+            {
+                errorMessage = "Пароли не могут быть пустыми.";
+                return false;
+            }
+
+            try
+            {
+                string storedHash = null;
+
+                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                {
+                    connection.Open();
+
+                    // Verify old password
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT PasswordHash FROM Accounts WHERE Id = @Id";
+                        cmd.Parameters.AddWithValue("@Id", userId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                storedHash = reader["PasswordHash"]?.ToString();
+                            }
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(storedHash) || !PasswordHasher.VerifyPassword(oldPassword, storedHash))
+                    {
+                        errorMessage = "Неверный текущий пароль.";
+                        return false;
+                    }
+
+                    // Update with new password
+                    string newHash = PasswordHasher.HashPassword(newPassword);
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = "UPDATE Accounts SET PasswordHash = @PasswordHash WHERE Id = @Id";
+                        cmd.Parameters.AddWithValue("@PasswordHash", newHash);
+                        cmd.Parameters.AddWithValue("@Id", userId);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = string.Format("Ошибка при смене пароля: {0}", ex.Message);
+                return false;
+            }
+        }
+
+        public bool DeleteAccount(int userId, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            try
+            {
+                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                {
+                    connection.Open();
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = "DELETE FROM Accounts WHERE Id = @Id";
+                        cmd.Parameters.AddWithValue("@Id", userId);
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        
+                        if (rowsAffected > 0)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            errorMessage = "Пользователь не найден.";
+                            return false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = string.Format("Ошибка при удалении аккаунта: {0}", ex.Message);
+                return false;
+            }
+        }
     }
 }

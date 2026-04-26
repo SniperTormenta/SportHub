@@ -333,6 +333,12 @@
     <Compile Include="View\AccountWindow.xaml.cs">
       <DependentUpon>AccountWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\ChangePasswordWindow.xaml.cs">
+      <DependentUpon>ChangePasswordWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\DeleteAccountConfirmWindow.xaml.cs">
+      <DependentUpon>DeleteAccountConfirmWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="CreateTournamentWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -381,6 +387,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\AccountWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ChangePasswordWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\DeleteAccountConfirmWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

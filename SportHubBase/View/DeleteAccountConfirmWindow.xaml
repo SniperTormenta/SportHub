@@ -1,0 +1,100 @@
+<Window x:Class="SportHubBase.View.DeleteAccountConfirmWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Удаление аккаунта" Height="340" Width="450"
+        WindowStartupLocation="CenterOwner"
+        Background="#F6F7F8"
+        FontFamily="Segoe UI, Inter, sans-serif"
+        TextElement.Foreground="#0F172A">
+
+    <Window.Resources>
+        <Style x:Key="DangerButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#EF4444"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#DC2626"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#FCA5A5"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F1F5F9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="InputFieldStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Height" Value="40"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Подтверждение удаления" FontSize="20" FontWeight="Bold" Margin="0,0,0,12" Foreground="#991B1B"/>
+        
+        <TextBlock Grid.Row="1" Text="Вы действительно хотите навсегда удалить свой аккаунт? Для подтверждения введите следующую фразу (без кавычек):" FontSize="14" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,8"/>
+        
+        <TextBlock Grid.Row="2" Text="Я точно хочу удалить свой аккаунт" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,16" HorizontalAlignment="Center"/>
+
+        <Border Grid.Row="3" Style="{StaticResource InputFieldStyle}" VerticalAlignment="Top" Height="54">
+            <TextBox x:Name="ConfirmationTextBox" Background="Transparent" BorderThickness="0" FontSize="14" VerticalContentAlignment="Center" TextChanged="ConfirmationTextBox_TextChanged"/>
+        </Border>
+
+        <Grid Grid.Row="4" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="1" Content="Отмена" Click="Cancel_Click" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,12,0" Width="100"/>
+            <Button x:Name="ConfirmButton" Grid.Column="2" Content="Удалить" Click="Confirm_Click" Style="{StaticResource DangerButtonStyle}" Width="120" IsEnabled="False"/>
+        </Grid>
+    </Grid>
+</Window>
