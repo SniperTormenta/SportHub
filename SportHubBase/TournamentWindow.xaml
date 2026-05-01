@@ -838,6 +838,26 @@
                                           FontSize="14" Padding="10" Margin="0,0,0,12" 
                                           BorderBrush="#D1D5DB" BorderThickness="1"/>
 
+                                <StackPanel Visibility="{Binding IsSwiss, Converter={StaticResource BoolToVisibilityConverter}}" Margin="0,4,0,16">
+                                    <TextBlock Text="Количество туров" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding TotalRounds, UpdateSourceTrigger=PropertyChanged}" 
+                                                 FontSize="14" Padding="10" 
+                                                 BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                        <Button Grid.Column="1" Content="Рекомендуемое значение" 
+                                                Command="{Binding ApplyRecommendedRoundsCommand}"
+                                                Style="{StaticResource AddTeamButtonStyle}"
+                                                Margin="12,0,0,0" Padding="16,0"/>
+                                    </Grid>
+                                    <TextBlock Text="{Binding RecommendedRoundsHint}" 
+                                               FontSize="12" Foreground="#137FEC" 
+                                               Margin="0,4,0,0" FontStyle="Italic" TextWrapping="Wrap"/>
+                                </StackPanel>
+
                                 <Border Background="#F0F9FF" CornerRadius="8" Padding="16" BorderBrush="#BAE6FD" BorderThickness="1" Margin="0,0,0,16">
                                     <StackPanel>
                                         <TextBlock Text="Описание правил:" FontSize="12" FontWeight="Bold" Foreground="#0369A1" Margin="0,0,0,4"/>

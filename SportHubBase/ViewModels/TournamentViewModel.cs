@@ -143,6 +143,82 @@ namespace SportHubBase.ViewModels
             }
         }
 
+        /// <summary>
+        /// Флаг, является ли турнир швейцарским.
+        /// </summary>
+        public bool IsSwiss => CurrentTournament?.Type == "Швейцарский";
+
+        /// <summary>
+        /// Флаг, сгенерирован ли первый тур (начался ли турнир).
+        /// </summary>
+        public bool IsFirstRoundGenerated => CurrentTournament?.Matches != null && CurrentTournament.Matches.Any(m => m.Round == 1);
+
+        public int TotalRounds
+        {
+            get => CurrentTournament?.TotalRounds ?? 0;
+            set
+            {
+                if (CurrentTournament != null && CurrentTournament.TotalRounds != value)
+                {
+                    // Проверка на уменьшение после начала
+                    if (IsFirstRoundGenerated && value < CurrentTournament.TotalRounds)
+                    {
+                        MessageBox.Show("Нельзя уменьшать количество туров после начала турнира.", "Предупреждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        OnPropertyChanged(); // Возвращаем старое значение в UI
+                        return;
+                    }
+
+                    // Проверка на лимит увеличения после начала (+1 или +2)
+                    if (IsFirstRoundGenerated)
+                    {
+                        // Здесь нужна логика: сколько было изначально?
+                        // Но если мы разрешаем только увеличивать, то CurrentTournament.TotalRounds 
+                        // всегда будет расти. Пользователь просил "добавить еще 1-2 тура максимум".
+                        // Будем считать от текущего значения при загрузке? 
+                        // Для простоты: не даем прыгать больше чем на 2 за раз.
+                        if (value > CurrentTournament.TotalRounds + 2)
+                        {
+                            MessageBox.Show("За один раз можно добавить не более 2 туров.", "Ограничение", MessageBoxButton.OK, MessageBoxImage.Information);
+                            OnPropertyChanged();
+                            return;
+                        }
+                    }
+
+                    CurrentTournament.TotalRounds = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(RecommendedRoundsHint));
+                }
+            }
+        }
+
+        public string RecommendedRoundsHint
+        {
+            get
+            {
+                if (!IsSwiss) return null;
+                var (min, max, rec, _) = GetSwissRoundsLimits(TeamsCount);
+                return $"Рекомендуется {rec} туров для {TeamsCount} команд.\nМинимум: {min} | Максимум: {max}";
+            }
+        }
+
+        public ICommand ApplyRecommendedRoundsCommand { get; private set; }
+
+        private (int min, int max, int recMin, int recMax) GetSwissRoundsLimits(int teamCount)
+        {
+            int min;
+            if (teamCount <= 6) min = 4;
+            else if (teamCount <= 10) min = 5;
+            else if (teamCount <= 16) min = 6;
+            else if (teamCount <= 24) min = 7;
+            else if (teamCount <= 32) min = 8;
+            else min = (int)Math.Ceiling(Math.Log(teamCount, 2)) + 3; // Экстраполяция
+
+            int rec = min + 1;
+            int max = min + 2;
+
+            return (min, max, rec, rec);
+        }
+
         // Вычисляемые свойства для UI
         
         public int TeamsCount => Teams.Count;
@@ -678,6 +754,11 @@ namespace SportHubBase.ViewModels
             ImportTeamsExcelCommand = new RelayCommand(ImportTeamsExcel);
             ExportTeamsExcelCommand = new RelayCommand(ExportTeamsExcel);
             DownloadTemplateCommand = new RelayCommand(DownloadTemplate);
+            ApplyRecommendedRoundsCommand = new RelayCommand(_ => 
+            {
+                var limits = GetSwissRoundsLimits(TeamsCount);
+                TotalRounds = limits.recMin; // Берем нижнюю границу рекомендации
+            });
 
             // GenerateSchedule(); // Теперь в ScheduleVM
             GenerateResults();
@@ -895,6 +976,12 @@ namespace SportHubBase.ViewModels
             if (CurrentTournament == null)
             {
                 CurrentResults = new RoundRobinResultsData { StatusMessage = "Турнир не найден." };
+                return;
+            }
+
+            if (CurrentTournament.SportType == "Баскетбол" || CurrentTournament.SportType == "Футбол")
+            {
+                CurrentResults = new RoundRobinResultsData { StatusMessage = $"Подсчет результатов для вида спорта \"{CurrentTournament.SportType}\" в разработке." };
                 return;
             }
 

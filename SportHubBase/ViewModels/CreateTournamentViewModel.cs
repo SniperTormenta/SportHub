@@ -57,6 +57,44 @@ namespace SportHubBase.ViewModels
         /// Описание турнира (MultiLine TextBox).
         public string Description { get; set; }
 
+        private int _totalRounds = 7;
+        public int TotalRounds
+        {
+            get => _totalRounds;
+            set
+            {
+                if (_totalRounds != value)
+                {
+                    _totalRounds = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private int _expectedTeams = 16;
+        public int ExpectedTeams
+        {
+            get => _expectedTeams;
+            set
+            {
+                if (_expectedTeams != value)
+                {
+                    _expectedTeams = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(RecommendedRoundsHint));
+                }
+            }
+        }
+
+        public string RecommendedRoundsHint
+        {
+            get
+            {
+                var (min, max, rec, _) = GetSwissRoundsLimits(ExpectedTeams);
+                return $"Рекомендуется {rec} туров для {ExpectedTeams} команд.\nМинимум: {min} | Максимум: {max}";
+            }
+        }
+
         /// Город проведения.
         private string _city;
         public string City
@@ -102,8 +140,31 @@ namespace SportHubBase.ViewModels
             _citiesService = new CitiesService();
 
             CreateCommand = new RelayCommand(CreateTournament);
+            ApplyRecommendedRoundsCommand = new RelayCommand(_ => 
+            {
+                var limits = GetSwissRoundsLimits(ExpectedTeams);
+                TotalRounds = limits.recMin;
+            });
 
             LoadCities();
+        }
+
+        public ICommand ApplyRecommendedRoundsCommand { get; private set; }
+
+        private (int min, int max, int recMin, int recMax) GetSwissRoundsLimits(int teamCount)
+        {
+            int min;
+            if (teamCount <= 6) min = 4;
+            else if (teamCount <= 10) min = 5;
+            else if (teamCount <= 16) min = 6;
+            else if (teamCount <= 24) min = 7;
+            else if (teamCount <= 32) min = 8;
+            else min = (int)Math.Ceiling(Math.Log(teamCount, 2)) + 3; // Экстраполяция
+
+            int rec = min + 1;
+            int max = min + 2;
+
+            return (min, max, rec, rec);
         }
 
         /// Метод выполнения команды: создаёт объект Tournament из свойств VM, сохраняет через сервис.

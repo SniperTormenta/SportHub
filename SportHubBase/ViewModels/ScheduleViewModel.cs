@@ -204,6 +204,13 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
+            if (_tournament.SportType == "Баскетбол" || _tournament.SportType == "Футбол")
+            {
+                ScheduleMessage = $"Расписание для вида спорта \"{_tournament.SportType}\" в разработке.";
+                UpdateStats();
+                return;
+            }
+
             // Инициализация туров для Швейцарской системы
             if (IsSequentialSchedule)
             {
@@ -244,10 +251,41 @@ namespace SportHubBase.ViewModels
 
             IEnumerable<Match> generatedMatches;
 
-            if (strategy is ISequentialScheduleStrategy)
+            if (strategy is ISequentialScheduleStrategy seqStrategy)
             {
                 // По-туровая стратегия не генерирует все раунды сразу, она просто берет историю
                 generatedMatches = Enumerable.Empty<Match>();
+                
+                // Автоматическая генерация первого тура, если матчей еще нет
+                if (_tournament.Matches == null || _tournament.Matches.Count == 0)
+                {
+                    try
+                    {
+                        var firstRoundMatches = seqStrategy.GenerateNextRound(_tournament, 1);
+                        if (firstRoundMatches != null && firstRoundMatches.Any())
+                        {
+                            if (_tournament.Matches == null)
+                                _tournament.Matches = new List<Match>();
+                            
+                            foreach (var match in firstRoundMatches)
+                            {
+                                _tournament.Matches.Add(match);
+                            }
+                            
+                            _matchService.AssignAutoNumbers(_tournament.Matches);
+                            _storage.UpdateTournament(_tournament);
+                            
+                            // Мы не вызываем LoadMatches рекурсивно, просто устанавливаем generatedMatches, 
+                            // чтобы нижний код обработал их как сгенерированные
+                            // Но поскольку SequentialScheduleStrategy распределяет по Rounds,
+                            // нам достаточно добавить их в _tournament.Matches, и нижний код их подхватит.
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ScheduleMessage = $"Ошибка при автогенерации 1-го тура: {ex.Message}";
+                    }
+                }
             }
             else
             {
@@ -484,37 +522,41 @@ namespace SportHubBase.ViewModels
 
         public void GenerateSpecificRound(int roundNumber)
         {
-            var strategy = _scheduleFactory.GetStrategy(_tournament.Type) as ISequentialScheduleStrategy;
-            if (strategy == null) return;
-            
-            // Если мы генерируем тур N, то удаляем все ранее сгенерированные матчи для туров >= N (чтобы не было хвостов).
-            // Или просто удаляем матчи текущего генерируемого тура (позволим юзеру самому решать).
-            // Удаляем старые матчи текущего тура, если они были
-            if (_tournament.Matches != null)
+            try
             {
-                _tournament.Matches.RemoveAll(m => m.Round == roundNumber);
-            }
+                var strategy = _scheduleFactory.GetStrategy(_tournament.Type) as ISequentialScheduleStrategy;
+                if (strategy == null) return;
+                
+                if (_tournament.Matches != null)
+                {
+                    _tournament.Matches.RemoveAll(m => m.Round == roundNumber);
+                }
 
-            var newMatches = strategy.GenerateNextRound(_tournament, roundNumber);
-            if (newMatches == null || !newMatches.Any())
-            {
-                System.Windows.MessageBox.Show($"Невозможно сгенерировать тур {roundNumber} (недостаточно команд или нет вариантов пар).", "Генерация тура", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                return;
-            }
+                var newMatches = strategy.GenerateNextRound(_tournament, roundNumber);
+                if (newMatches == null || !newMatches.Any())
+                {
+                    System.Windows.MessageBox.Show($"Невозможно сгенерировать тур {roundNumber} (недостаточно команд или нет вариантов пар).", "Генерация тура", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
 
-            if (_tournament.Matches == null)
-            {
-                _tournament.Matches = new List<Match>();
-            }
+                if (_tournament.Matches == null)
+                {
+                    _tournament.Matches = new List<Match>();
+                }
 
-            foreach (var match in newMatches)
-            {
-                _tournament.Matches.Add(match);
+                foreach (var match in newMatches)
+                {
+                    _tournament.Matches.Add(match);
+                }
+                
+                _matchService.AssignAutoNumbers(_tournament.Matches);
+                _storage.UpdateTournament(_tournament);
+                LoadMatches();
             }
-            
-            _matchService.AssignAutoNumbers(_tournament.Matches);
-            _storage.UpdateTournament(_tournament);
-            LoadMatches();
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Ошибка при генерации тура: {ex.Message}\n{ex.StackTrace}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
         }
     }
 }

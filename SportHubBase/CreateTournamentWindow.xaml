@@ -61,6 +61,8 @@
                             <ComboBox x:Name="SportTypeComboBox" Height="36" Margin="0,8,0,0" Style="{StaticResource ModernComboBox}">
                                 <ComboBoxItem>Другое</ComboBoxItem>
                                 <ComboBoxItem>Волейбол</ComboBoxItem>
+                                <ComboBoxItem>Баскетбол</ComboBoxItem>
+                                <ComboBoxItem>Футбол</ComboBoxItem>
                             </ComboBox>
                         </StackPanel>
                     </Grid>
@@ -81,8 +83,25 @@
                         <!-- Количество туров (только для Швейцарской) -->
                         <StackPanel x:Name="TotalRoundsStackPanel" Margin="0,12,0,0" Visibility="Collapsed">
                             <TextBlock Text="Количество туров *" FontWeight="Bold" FontSize="14"/>
-                            <TextBox x:Name="TotalRoundsTextBox" Height="36" Margin="0,8,0,0" Text="7" Width="100" HorizontalAlignment="Left" />
-                            <TextBlock Text="По умолчанию 7 туров. Для 24-32 команд рекомендуется 8-9 туров." Foreground="#6B7280" FontSize="12" Margin="0,4,0,0"/>
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TotalRoundsTextBox" Height="36" Text="{Binding TotalRounds, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"/>
+                                <Button Grid.Column="1" Content="Рекомендуемое значение" 
+                                        Command="{Binding ApplyRecommendedRoundsCommand}"
+                                        Style="{StaticResource DefaultModernButton}"
+                                        Margin="12,0,0,0" Padding="16,0" Height="36"/>
+                                
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="Для " VerticalAlignment="Center" Foreground="#6B7280"/>
+                                    <TextBox Text="{Binding ExpectedTeams, UpdateSourceTrigger=PropertyChanged}" Width="40" Height="24" Margin="4,0" TextAlignment="Center"/>
+                                    <TextBlock Text=" команд" VerticalAlignment="Center" Foreground="#6B7280"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="{Binding RecommendedRoundsHint}" Foreground="#137FEC" FontSize="12" Margin="0,4,0,0" FontStyle="Italic"/>
                         </StackPanel>
                     </StackPanel>
 
