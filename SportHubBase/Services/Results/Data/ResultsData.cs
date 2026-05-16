@@ -11,6 +11,7 @@ namespace SportHubBase.Services.Results.Data
     public abstract class ResultsData
     {
         public string StatusMessage { get; set; }
+        public string SportType { get; set; }
         public DateTime LastUpdate { get; set; } = DateTime.Now;
 
         /// <summary>

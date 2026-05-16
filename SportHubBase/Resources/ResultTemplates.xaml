@@ -6,6 +6,8 @@
     <!-- Конвертеры для ячеек -->
     <converters:ResultCellBackgroundConverter x:Key="ResultCellBackgroundConverter"/>
     <converters:ResultCellColorConverter x:Key="ResultCellColorConverter"/>
+    <converters:SportTypeToHeaderConverter x:Key="SportTypeToHeaderConverter"/>
+    <converters:SportTypeToTooltipConverter x:Key="SportTypeToTooltipConverter"/>
     
     <!-- Шаблон для Круговой системы (Round Robin) -->
     <DataTemplate DataType="{x:Type data:RoundRobinResultsData}">
@@ -65,10 +67,14 @@
                             <TextBlock Text="П" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Проигранные матчи"/>
                         </Border>
                         <Border Grid.Column="5" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
-                            <TextBlock Text="ВП" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Выигранные сеты"/>
+                            <TextBlock Text="{Binding SportType, Converter={StaticResource SportTypeToHeaderConverter}, ConverterParameter=Won}" 
+                                       FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" 
+                                       ToolTip="{Binding SportType, Converter={StaticResource SportTypeToTooltipConverter}, ConverterParameter=Won}"/>
                         </Border>
                         <Border Grid.Column="6" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
-                            <TextBlock Text="ПП" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Проигранные сеты"/>
+                            <TextBlock Text="{Binding SportType, Converter={StaticResource SportTypeToHeaderConverter}, ConverterParameter=Lost}" 
+                                       FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" 
+                                       ToolTip="{Binding SportType, Converter={StaticResource SportTypeToTooltipConverter}, ConverterParameter=Lost}"/>
                         </Border>
                         <Border Grid.Column="7" Padding="8,14">
                             <TextBlock Text="Очки" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Очки"/>

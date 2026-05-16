@@ -233,6 +233,7 @@
     <Compile Include="Converters\ResultCellBackgroundConverter.cs" />
     <Compile Include="Converters\IsSelfCellConverter.cs" />
     <Compile Include="Converters\ProgressConverter.cs" />
+    <Compile Include="Converters\SportTypeToHeaderConverter.cs" />
     <Compile Include="Interfaces\IExcelService.cs" />
     <Compile Include="Interfaces\IImageEncoderStrategy.cs" />
     <Compile Include="Interfaces\IImageEncoderStrategyFactory.cs" />
@@ -288,6 +289,8 @@
     <Compile Include="Services\Result\RoundRobinResultsProvider.cs" />
     <Compile Include="Services\Result\ScoringStrategyFactory.cs" />
     <Compile Include="Services\Result\Scoring\CustomScoringStrategy.cs" />
+    <Compile Include="Services\Result\Scoring\FootballScoringStrategy.cs" />
+    <Compile Include="Services\Result\Scoring\BasketballScoringStrategy.cs" />
     <Compile Include="Services\Result\Scoring\FivbScoringStrategy.cs" />
     <Compile Include="Services\Result\Scoring\ItalianScoringStrategy.cs" />
     <Compile Include="Services\Scoring\DefaultScoreStrategy.cs" />

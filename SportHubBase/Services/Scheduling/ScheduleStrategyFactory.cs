@@ -19,29 +19,35 @@ namespace SportHubBase.Services.Scheduling
             _playedMatchesService = playedMatchesService;
         }
 
-        /// Возвращает стратегию по типу турнира (trim и case-insensitive).
+        public static readonly string RoundRobin = "Круговой";
+        public static readonly string Olympic = "Олимпийский";
+        public static readonly string Swiss = "Швейцарский";
+        public static readonly string Staged = "Многоэтапный";
+
         public IScheduleStrategy GetStrategy(string tournamentType)
         {
             if (string.IsNullOrWhiteSpace(tournamentType))
                 return null;
 
-            switch (tournamentType.Trim())
-            {
-                case "Круговой":
-                    return new RoundRobinBergerScheduleStrategy();
+            string type = tournamentType.Trim();
 
-                case "Швейцарский":
-                    return new SwissScheduleStrategy(_tiebreakerCalculator, _playedMatchesService);
+            if (type.Equals("Круговой", StringComparison.OrdinalIgnoreCase))
+                return new RoundRobinBergerScheduleStrategy();
 
-                case "Олимпийский":
-                    return new OlympicScheduleStrategy();
+            if (type.Equals("Олимпийский", StringComparison.OrdinalIgnoreCase) || 
+                type.Equals("Плей-офф", StringComparison.OrdinalIgnoreCase))
+                return new OlympicScheduleStrategy();
 
-                case "Поэтапный":
-                    return new StagedScheduleStrategy();
+            if (type.Equals("Швейцарский", StringComparison.OrdinalIgnoreCase) || 
+                type.Equals("Швейцарка", StringComparison.OrdinalIgnoreCase))
+                return new SwissScheduleStrategy(_tiebreakerCalculator, _playedMatchesService);
 
-                default:
-                    return null;
-            }
+            if (type.Equals("Многоэтапный", StringComparison.OrdinalIgnoreCase) || 
+                type.Equals("Группы + плей-офф", StringComparison.OrdinalIgnoreCase) ||
+                type.Equals("Поэтапный", StringComparison.OrdinalIgnoreCase))
+                return new StagedScheduleStrategy();
+
+            return null;
         }
     }
 }

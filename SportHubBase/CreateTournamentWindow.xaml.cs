@@ -204,12 +204,18 @@ namespace SportHubBase
                 contactsInfo = string.Join(", ", contactsList);
             }
 
+            string sportType = ((ComboBoxItem)SportTypeComboBox.SelectedItem).Content.ToString();
+            string defaultScoring = "Итальянская";
+            if (sportType == "Футбол") defaultScoring = "Футбол";
+            else if (sportType == "Баскетбол") defaultScoring = "Баскетбол";
+
             var tournament = new Tournament
             {
                 Name = NameTextBox.Text,
                 LogoUrl = "", // Если есть поле для логотипа
                 Status = ((ComboBoxItem)StatusComboBox.SelectedItem).Content.ToString(),
-                SportType = ((ComboBoxItem)SportTypeComboBox.SelectedItem).Content.ToString(),
+                SportType = sportType,
+                ScoringSystem = defaultScoring,
                 Type = selectedType,
                 TotalRounds = totalRounds,
                 EditMode = ((ComboBoxItem)EditModeComboBox.SelectedItem).Content.ToString(),

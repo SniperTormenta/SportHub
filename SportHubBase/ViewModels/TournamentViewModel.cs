@@ -578,8 +578,25 @@ namespace SportHubBase.ViewModels
         
         public List<string> AvailableSportTypes { get; } = new List<string> { "Волейбол", "Футбол", "Баскетбол" };
         
-        /// Доступные системы начисления очков.
-        public List<string> AvailableScoringSystems { get; } = new List<string> { "Итальянская", "FIVB", "Пользовательская" };
+        public List<string> AvailableScoringSystems
+        {
+            get
+            {
+                if (CurrentTournament == null) return new List<string>();
+
+                if (string.Equals(CurrentTournament.SportType, "Футбол", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new List<string> { "Футбол", "Пользовательская" };
+                }
+                if (string.Equals(CurrentTournament.SportType, "Баскетбол", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new List<string> { "Баскетбол", "Пользовательская" };
+                }
+                
+                // Волейбол или другое
+                return new List<string> { "Итальянская", "FIVB", "Пользовательская" };
+            }
+        }
 
         private string _scoringDescription;
         public string ScoringDescription
@@ -647,6 +664,22 @@ namespace SportHubBase.ViewModels
                 {
                     CurrentTournament.CustomDrawPoints = value;
                     OnPropertyChanged();
+                }
+            }
+        }
+
+        public List<string> AvailableTieBreakerRules { get; } = new List<string> { "Стандарт", "Футбол", "Баскетбол" };
+
+        public string SelectedTieBreakerRule
+        {
+            get => CurrentTournament?.TieBreakerRule ?? "Стандарт";
+            set
+            {
+                if (CurrentTournament != null && CurrentTournament.TieBreakerRule != value)
+                {
+                    CurrentTournament.TieBreakerRule = value;
+                    OnPropertyChanged();
+                    UpdateScoringDescription();
                 }
             }
         }
@@ -857,6 +890,10 @@ namespace SportHubBase.ViewModels
                     {
                         // ВАЖНО: Обновляем ссылку на объект турнира, чтобы он не был устаревшим
                         CurrentTournament = updated;
+                        OnPropertyChanged(nameof(CurrentTournament));
+                        OnPropertyChanged(nameof(IsOlympic));
+                        OnPropertyChanged(nameof(IsSwiss));
+                        
                         RecreateScheduleVM();
                         
                         Teams.Clear();
@@ -873,7 +910,6 @@ namespace SportHubBase.ViewModels
                     ScheduleVM.LoadMatches(); // Обновляем через VM
                     GenerateResults();
                     UpdateStatistics();
-
                 }
             }
         }
@@ -930,6 +966,10 @@ namespace SportHubBase.ViewModels
                     {
                         // ВАЖНО: Обновляем ссылку на объект турнира
                         CurrentTournament = updated;
+                        OnPropertyChanged(nameof(CurrentTournament));
+                        OnPropertyChanged(nameof(IsOlympic));
+                        OnPropertyChanged(nameof(IsSwiss));
+
                         RecreateScheduleVM();
 
                         Teams.Clear();
@@ -979,11 +1019,7 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
-            if (CurrentTournament.SportType == "Баскетбол" || CurrentTournament.SportType == "Футбол")
-            {
-                CurrentResults = new RoundRobinResultsData { StatusMessage = $"Подсчет результатов для вида спорта \"{CurrentTournament.SportType}\" в разработке." };
-                return;
-            }
+
 
             // Получаем провайдера через фабрику
             var provider = _resultsFactory.GetProvider(CurrentTournament);
@@ -1260,6 +1296,9 @@ namespace SportHubBase.ViewModels
                         if (CurrentTournament.Matches != null)
                             CurrentTournament.Matches.Clear();
                         
+                        CurrentTournament.Bracket = null;
+                        Bracket = null;
+                        
                         Teams.Clear();
 
                         // Применение новых данных
@@ -1279,7 +1318,17 @@ namespace SportHubBase.ViewModels
                             CurrentTournament = updated;
                         }
 
+                        OnPropertyChanged(nameof(CurrentTournament));
+                        OnPropertyChanged(nameof(IsOlympic));
+                        OnPropertyChanged(nameof(IsSwiss));
+
                         RecreateScheduleVM();
+                        
+                        if (IsOlympic)
+                        {
+                            RegenerateBracket();
+                        }
+
                         ScheduleVM.LoadMatches(); // Обновляем через VM
                         GenerateResults();
                         UpdateStatistics();
@@ -1467,6 +1516,7 @@ namespace SportHubBase.ViewModels
                 // Для избежания дублирования (хотя SubscribeToMatches не делает проверку)
                 // Но у нас SubscribeToMatches использует -= затем +=
                 SubscribeToMatches(ScheduleVM.Matches); // Подписываемся на матчи из VM
+                ScheduleVM.Matches.CollectionChanged += OnScheduleCollectionChanged;
             }
 
             OnPropertyChanged(nameof(ScheduleVM));

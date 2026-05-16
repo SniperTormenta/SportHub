@@ -1,4 +1,4 @@
-﻿// Services/Results/RoundRobinResultsProvider.cs
+// Services/Results/RoundRobinResultsProvider.cs
 using SportHubBase.Models;
 using SportHubBase.Interfaces;
 using SportHubBase.Services.Results.Data;
@@ -28,6 +28,8 @@ namespace SportHubBase.Services.Results
                 data.StatusMessage = "Турнир не найден.";
                 return data;
             }
+
+            data.SportType = tournament.SportType;
 
             // Инициализируем стратегию подсчёта очков (она нужна для Compare и CalculatePoints)
             // Фабрика сама разберётся по tournament.ScoringSystem / SportType

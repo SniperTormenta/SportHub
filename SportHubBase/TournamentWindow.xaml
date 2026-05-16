@@ -887,6 +887,13 @@
                                             <TextBox Text="{Binding LossPoints}" FontSize="14" Padding="10" Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Grid>
+
+                                    <TextBlock Text="Правило при равенстве очков" FontSize="13" Foreground="#6B7280" Margin="0,0,0,6"/>
+                                    <ComboBox ItemsSource="{Binding AvailableTieBreakerRules}" 
+                                              SelectedItem="{Binding SelectedTieBreakerRule}" 
+                                              Style="{DynamicResource ModernComboBox}"
+                                              FontSize="14" Padding="10" Margin="0,0,0,12" 
+                                              BorderBrush="#D1D5DB" BorderThickness="1"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>

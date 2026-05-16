@@ -86,6 +86,9 @@ namespace SportHubBase.Models
         [JsonProperty("customLossPoints")]
         public int CustomLossPoints { get; set; }
 
+        [JsonProperty("tieBreakerRule")]
+        public string TieBreakerRule { get; set; } // "Standard", "GoalDiff", "HeadToHead", etc.
+
         // Live — только если сейчас между началом и концом (или конец не указан)
         [JsonIgnore]
         public bool IsLive => DateTime.Now >= StartDate && (EndDate == null || DateTime.Now <= EndDate.Value);

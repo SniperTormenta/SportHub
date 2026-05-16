@@ -204,13 +204,6 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
-            if (_tournament.SportType == "Баскетбол" || _tournament.SportType == "Футбол")
-            {
-                ScheduleMessage = $"Расписание для вида спорта \"{_tournament.SportType}\" в разработке.";
-                UpdateStats();
-                return;
-            }
-
             // Инициализация туров для Швейцарской системы
             if (IsSequentialSchedule)
             {
