@@ -27,6 +27,12 @@ namespace SportHubBase.Services.Result
             if (tournament == null || tournament.Teams == null || !tournament.Teams.Any())
                 return data;
 
+            int totalRounds = tournament.TotalRounds > 0 ? tournament.TotalRounds : 7;
+            for (int i = 1; i <= totalRounds; i++)
+            {
+                data.HeaderNumbers.Add(i);
+            }
+
             // Используем калькулятор для получения ранжированного списка
             var matchesList = schedule?.ToList() ?? new System.Collections.Generic.List<Match>();
             var playedGraph = _playedMatchesService.BuildPlayedOpponentsGraph(tournament.Teams, matchesList);
@@ -61,6 +67,43 @@ namespace SportHubBase.Services.Result
                     Points = progress.Points,
                     BuchholzCut1 = progress.BuchholzCut1
                 };
+
+                // Заполняем итоги по турам
+                for (int r = 1; r <= totalRounds; r++)
+                {
+                    var roundMatch = matchesList.FirstOrDefault(m => m.Round == r && (m.Team1 == progress.Team.Name || m.Team2 == progress.Team.Name));
+                    if (roundMatch == null)
+                    {
+                        row.RoundResults.Add("-");
+                    }
+                    else if (roundMatch.IsBye)
+                    {
+                        row.RoundResults.Add("BYE");
+                    }
+                    else if (roundMatch.Status != "Сыгран" && roundMatch.Status != "Техническое поражение")
+                    {
+                        row.RoundResults.Add("-");
+                    }
+                    else
+                    {
+                        var score = ParsePair(roundMatch.SetsScore) ?? ParsePair(roundMatch.Team1QuickScore, roundMatch.Team2QuickScore);
+                        if (!score.HasValue)
+                        {
+                            row.RoundResults.Add("-");
+                        }
+                        else
+                        {
+                            bool isTeam1 = roundMatch.Team1 == progress.Team.Name;
+                            int myScore = isTeam1 ? score.Value.left : score.Value.right;
+                            int oppScore = isTeam1 ? score.Value.right : score.Value.left;
+
+                            if (myScore > oppScore) row.RoundResults.Add("1");
+                            else if (myScore < oppScore) row.RoundResults.Add("0");
+                            else row.RoundResults.Add("0.5");
+                        }
+                    }
+                }
+
                 data.Rows.Add(row);
             }
 

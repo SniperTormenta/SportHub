@@ -38,12 +38,21 @@ namespace SportHubBase.Services.Scheduling.Swiss
         {
             var result = new List<Match>();
             var teams = tournament.Teams.Where(t => !t.IsBye).ToList();
-            if (teams.Count < 2) return result;
+            
+            Console.WriteLine($"[Swiss] Generating round {roundNumber} for {teams.Count} teams.");
+
+            if (teams.Count < 2)
+            {
+                Console.WriteLine("[Swiss] Not enough teams to pair.");
+                return result;
+            }
 
             // Используем только матчи, сыгранные до генерируемого тура
             var history = (tournament.Matches ?? new List<Match>())
                 .Where(m => m.Round < roundNumber)
                 .ToList();
+
+            Console.WriteLine($"[Swiss] History size: {history.Count} matches.");
 
             // 1. Собираем историю игр и Bye
             var playedGraph = _playedMatchesService.BuildPlayedOpponentsGraph(teams, history);
@@ -68,6 +77,8 @@ namespace SportHubBase.Services.Scheduling.Swiss
                 // Если у всех уже был Bye (уникальный случай), даем самому слабому
                 if (byeTeam == null) byeTeam = sortedForBye.Last();
 
+                Console.WriteLine($"[Swiss] Bye assigned to: {byeTeam.Team.Name}");
+
                 result.Add(new Match
                 {
                     Round = roundNumber,
@@ -88,6 +99,7 @@ namespace SportHubBase.Services.Scheduling.Swiss
             // 3. Жеребьевка
             if (roundNumber == 1)
             {
+                Console.WriteLine("[Swiss] Round 1 pairing (Initial Seed).");
                 // Первый тур: по InitialSeed (1-2, 3-4...), либо рандом при (Seeds == 0)
                 if (teamsToPair.All(t => t.InitialSeed == 0))
                 {
@@ -101,14 +113,16 @@ namespace SportHubBase.Services.Scheduling.Swiss
                     teamsToPair = teamsToPair.OrderBy(t => t.InitialSeed > 0 ? t.InitialSeed : int.MaxValue).ToList();
                 }
 
-                for (int i = 0; i < teamsToPair.Count; i += 2)
+                for (int i = 0; i < teamsToPair.Count / 2; i++)
                 {
+                    var t1 = teamsToPair[i];
+                    var t2 = teamsToPair[i + teamsToPair.Count / 2];
                     result.Add(new Match
                     {
                         Round = roundNumber,
                         RoundName = $"Тур {roundNumber}",
-                        Team1 = teamsToPair[i].Name,
-                        Team2 = teamsToPair[i + 1].Name,
+                        Team1 = t1.Name,
+                        Team2 = t2.Name,
                         Team1Color = "White",
                         Team2Color = "Black"
                     });
@@ -116,6 +130,7 @@ namespace SportHubBase.Services.Scheduling.Swiss
             }
             else
             {
+                Console.WriteLine($"[Swiss] Round {roundNumber} pairing (Points).");
                 // Последующие туры: жадное парование по Score Groups
                 var sortedProgress = _tiebreakerCalculator.CalculateAndSort(tournament, teamsToPair, playedGraph, byeList);
                 var pairedTeams = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -194,6 +209,7 @@ namespace SportHubBase.Services.Scheduling.Swiss
                 // Force pairing for any remainders (extreme fallback to prevent infinity)
                 if (floatedProgression.Count > 0)
                 {
+                    Console.WriteLine($"[Swiss] Floating teams: {floatedProgression.Count}");
                     while (floatedProgression.Count > 1)
                     {
                         // Fallback: даже если играли, паруем (нарушение, но избавляет от краша). Ищем первого.
@@ -218,6 +234,7 @@ namespace SportHubBase.Services.Scheduling.Swiss
                         if (!paired)
                         {
                             var opp = floatedProgression[1];
+                            Console.WriteLine($"[Swiss] Force pairing repeat: {team1.Name} vs {opp.Name}");
                             result.Add(CreateMatch(roundNumber, team1, opp)); // Компромисс: допускаем повторную встречу
                             floatedProgression.Remove(team1);
                             floatedProgression.Remove(opp);
@@ -226,6 +243,7 @@ namespace SportHubBase.Services.Scheduling.Swiss
                 }
             }
 
+            Console.WriteLine($"[Swiss] Round {roundNumber} generated: {result.Count} matches.");
             return result;
         }
 

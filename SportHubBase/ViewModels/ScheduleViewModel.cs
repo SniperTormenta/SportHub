@@ -207,6 +207,7 @@ namespace SportHubBase.ViewModels
             // Инициализация туров для Швейцарской системы
             if (IsSequentialSchedule)
             {
+                // Используем TotalRounds из турнира. Если не задано (0), по умолчанию 7.
                 int totalRoundsToCreate = _tournament.TotalRounds > 0 ? _tournament.TotalRounds : 7;
                 for (int i = 1; i <= totalRoundsToCreate; i++)
                 {
@@ -519,16 +520,37 @@ namespace SportHubBase.ViewModels
             {
                 var strategy = _scheduleFactory.GetStrategy(_tournament.Type) as ISequentialScheduleStrategy;
                 if (strategy == null) return;
+
+                // 1. Проверка: завершен ли предыдущий тур (если это не первый тур)
+                if (roundNumber > 1)
+                {
+                    var previousRoundMatches = _tournament.Matches?.Where(m => m.Round == roundNumber - 1).ToList();
+                    if (previousRoundMatches != null && previousRoundMatches.Any(m => m.Status != "Сыгран" && m.Status != "Техническое поражение"))
+                    {
+                        System.Windows.MessageBox.Show(
+                            $"Невозможно сгенерировать тур {roundNumber}, пока не завершены все матчи тура {roundNumber - 1}.",
+                            "Генерация пар",
+                            System.Windows.MessageBoxButton.OK,
+                            System.Windows.MessageBoxImage.Warning);
+                        return;
+                    }
+                }
                 
+                // 2. Очистка старых матчей этого тура, если они были (перегенерация)
                 if (_tournament.Matches != null)
                 {
                     _tournament.Matches.RemoveAll(m => m.Round == roundNumber);
                 }
 
+                // 3. Генерация
                 var newMatches = strategy.GenerateNextRound(_tournament, roundNumber);
                 if (newMatches == null || !newMatches.Any())
                 {
-                    System.Windows.MessageBox.Show($"Невозможно сгенерировать тур {roundNumber} (недостаточно команд или нет вариантов пар).", "Генерация тура", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    System.Windows.MessageBox.Show(
+                        $"Невозможно сгенерировать тур {roundNumber}. Проверьте количество команд и историю встреч.",
+                        "Генерация тура",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                     return;
                 }
 
@@ -545,10 +567,16 @@ namespace SportHubBase.ViewModels
                 _matchService.AssignAutoNumbers(_tournament.Matches);
                 _storage.UpdateTournament(_tournament);
                 LoadMatches();
+
+                System.Windows.MessageBox.Show(
+                    $"Тур {roundNumber} успешно сформирован. Пары созданы.",
+                    "Успех",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Ошибка при генерации тура: {ex.Message}\n{ex.StackTrace}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Windows.MessageBox.Show($"Ошибка при генерации тура: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
     }

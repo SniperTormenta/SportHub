@@ -11,5 +11,8 @@ namespace SportHubBase.Services.Results.Data
         public int Byes { get; set; }
         public double Points { get; set; }
         public double BuchholzCut1 { get; set; }
+        
+        // Список результатов по турам (например, "1", "0.5", "0", "BYE")
+        public ObservableCollection<string> RoundResults { get; set; } = new ObservableCollection<string>();
     }
 }

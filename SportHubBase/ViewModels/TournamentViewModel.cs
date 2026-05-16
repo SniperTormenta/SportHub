@@ -897,12 +897,11 @@ namespace SportHubBase.ViewModels
                         RecreateScheduleVM();
                         
                         Teams.Clear();
-                        RegenerateBracket();
                         foreach (var team in updated.Teams)
                         {
                             Teams.Add(team);
-                            RegenerateBracket();
                         }
+                        RegenerateBracket();
                     }
                     OnPropertyChanged(nameof(TeamsCount));
  
@@ -1176,6 +1175,7 @@ namespace SportHubBase.ViewModels
                 // Принудительный пересчёт
                 UpdateResultsFromMatches();
                 UpdateStatistics();
+                RecreateScheduleVM();
 
                 MessageBox.Show("Настройки успешно сохранены и результаты обновлены.", "Сохранение", MessageBoxButton.OK, MessageBoxImage.Information);
 
@@ -1184,6 +1184,8 @@ namespace SportHubBase.ViewModels
                 OnPropertyChanged(nameof(FormatText));
                 OnPropertyChanged(nameof(DatesText));
                 OnPropertyChanged(nameof(TournamentStatusText));
+                OnPropertyChanged(nameof(IsSwiss));
+                OnPropertyChanged(nameof(IsOlympic));
             }
             catch (Exception ex)
             {
@@ -1467,6 +1469,8 @@ namespace SportHubBase.ViewModels
 
         private void RegenerateBracket()
         {
+            if (CurrentTournament == null || CurrentTournament.Type != "Олимпийский") return;
+            
             var strategy = _scheduleFactory.GetStrategy(CurrentTournament.Type);
             if (strategy == null) return;
 

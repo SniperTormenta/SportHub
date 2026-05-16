@@ -227,15 +227,15 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="60"/> <!-- Место -->
-                            <ColumnDefinition Width="300"/> <!-- Команда -->
-                            <ColumnDefinition Width="60"/> <!-- Игры -->
-                            <ColumnDefinition Width="60"/> <!-- В -->
-                            <ColumnDefinition Width="60"/> <!-- Н -->
-                            <ColumnDefinition Width="60"/> <!-- П -->
-                            <ColumnDefinition Width="60"/> <!-- BYE -->
-                            <ColumnDefinition Width="100"/> <!-- Buchholz -->
+                            <ColumnDefinition Width="220"/> <!-- Команда -->
+                            <ColumnDefinition Width="*"/> <!-- Туры -->
+                            <ColumnDefinition Width="50"/> <!-- Игры -->
+                            <ColumnDefinition Width="50"/> <!-- В -->
+                            <ColumnDefinition Width="50"/> <!-- Н -->
+                            <ColumnDefinition Width="50"/> <!-- П -->
+                            <ColumnDefinition Width="50"/> <!-- BYE -->
+                            <ColumnDefinition Width="80"/> <!-- Buchholz -->
                             <ColumnDefinition Width="80"/> <!-- Очки -->
-                            <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
                         <Border Grid.Column="0" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="16,14">
@@ -244,28 +244,46 @@
                         <Border Grid.Column="1" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="16,14">
                             <TextBlock Text="Команда" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Left"/>
                         </Border>
-                        <Border Grid.Column="2" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+
+                        <!-- Колонки туров в шапке -->
+                        <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding HeaderNumbers}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="40" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="4,14">
+                                            <TextBlock Text="{Binding, StringFormat='T{0}'}" FontSize="10" FontWeight="Bold" Foreground="#617589" HorizontalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <Border Grid.Column="3" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="4,14">
                             <TextBlock Text="И" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Сыграно матчей"/>
                         </Border>
-                        <Border Grid.Column="3" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                        <Border Grid.Column="4" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="4,14">
                             <TextBlock Text="В" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Победы"/>
                         </Border>
-                        <Border Grid.Column="4" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                        <Border Grid.Column="5" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="4,14">
                             <TextBlock Text="Н" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Ничьи"/>
                         </Border>
-                        <Border Grid.Column="5" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                        <Border Grid.Column="6" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="4,14">
                             <TextBlock Text="П" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Поражения"/>
                         </Border>
-                        <Border Grid.Column="6" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                        <Border Grid.Column="7" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="4,14">
                             <TextBlock Text="Б" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Пропуск тура (BYE)"/>
                         </Border>
-                        <Border Grid.Column="7" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                        <Border Grid.Column="8" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="4,14">
                             <TextBlock Text="КБ" FontSize="11" FontWeight="SemiBold" Foreground="#617589" HorizontalAlignment="Center" ToolTip="Коэффициент Бухгольца (-1)"/>
                         </Border>
-                        <Border Grid.Column="8" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="8,14">
+                        <Border Grid.Column="9" Padding="4,14">
                             <TextBlock Text="Очки" FontSize="11" FontWeight="Bold" Foreground="#111418" HorizontalAlignment="Center"/>
                         </Border>
-                        <Border Grid.Column="9" Padding="8,14"/>
                     </Grid>
                 </Border>
 
@@ -286,15 +304,15 @@
                                 <Grid Height="60">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="60"/>
-                                        <ColumnDefinition Width="300"/>
-                                        <ColumnDefinition Width="60"/>
-                                        <ColumnDefinition Width="60"/>
-                                        <ColumnDefinition Width="60"/>
-                                        <ColumnDefinition Width="60"/>
-                                        <ColumnDefinition Width="60"/>
-                                        <ColumnDefinition Width="100"/>
-                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="220"/>
                                         <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Column="0" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
@@ -303,30 +321,48 @@
                                         </Border>
                                     </Border>
                                     <Border Grid.Column="1" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
-                                        <TextBlock Text="{Binding TeamName}" FontSize="15" FontWeight="SemiBold" Foreground="#111418" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="16,0"/>
+                                        <TextBlock Text="{Binding TeamName}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="12,0"/>
                                     </Border>
-                                    <Border Grid.Column="2" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
-                                        <TextBlock Text="{Binding MatchesPlayed}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
+
+                                    <!-- Результаты по турам в теле таблицы -->
+                                    <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding RoundResults}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Width="40" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                                        <TextBlock Text="{Binding}" FontSize="13" FontWeight="Medium" Foreground="#4B5563" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+
                                     <Border Grid.Column="3" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
-                                        <TextBlock Text="{Binding Wins}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding MatchesPlayed}" FontSize="13" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <Border Grid.Column="4" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
-                                        <TextBlock Text="{Binding Draws}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Wins}" FontSize="13" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <Border Grid.Column="5" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
-                                        <TextBlock Text="{Binding Losses}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Draws}" FontSize="13" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <Border Grid.Column="6" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
-                                        <TextBlock Text="{Binding Byes}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Losses}" FontSize="13" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <Border Grid.Column="7" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
-                                        <TextBlock Text="{Binding BuchholzCut1}" FontSize="14" FontWeight="SemiBold" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Byes}" FontSize="13" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <Border Grid.Column="8" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
+                                        <TextBlock Text="{Binding BuchholzCut1}" FontSize="13" Foreground="#111418" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <Border Grid.Column="9">
                                         <TextBlock Text="{Binding Points}" FontSize="14" FontWeight="Bold" Foreground="#137FEC" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <Border Grid.Column="9"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>
