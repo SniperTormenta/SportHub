@@ -15,19 +15,13 @@ namespace SportHubBase.Services
             _dbService = dbService ?? throw new ArgumentNullException(nameof(dbService));
         }
 
-        public bool Register(string username, string password, out string errorMessage)
+        public bool Register(string username, string password, string email, string firstName, string phoneNumber, string city, out string errorMessage)
         {
             errorMessage = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(username))
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
-                errorMessage = "Имя пользователя не может быть пустым.";
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(password))
-            {
-                errorMessage = "Пароль не может быть пустым.";
+                errorMessage = "Имя пользователя и пароль обязательны.";
                 return false;
             }
 
@@ -54,9 +48,13 @@ namespace SportHubBase.Services
                     string hash = PasswordHasher.HashPassword(password);
                     using (var insertCmd = connection.CreateCommand())
                     {
-                        insertCmd.CommandText = "INSERT INTO Accounts (Username, PasswordHash) VALUES (@Username, @PasswordHash)";
+                        insertCmd.CommandText = "INSERT INTO Accounts (Username, PasswordHash, Email, FirstName, PhoneNumber, City) VALUES (@Username, @PasswordHash, @Email, @FirstName, @PhoneNumber, @City)";
                         insertCmd.Parameters.AddWithValue("@Username", username);
                         insertCmd.Parameters.AddWithValue("@PasswordHash", hash);
+                        insertCmd.Parameters.AddWithValue("@Email", (object)email?.ToLower() ?? DBNull.Value);
+                        insertCmd.Parameters.AddWithValue("@FirstName", (object)firstName ?? DBNull.Value);
+                        insertCmd.Parameters.AddWithValue("@PhoneNumber", (object)phoneNumber ?? DBNull.Value);
+                        insertCmd.Parameters.AddWithValue("@City", (object)city ?? DBNull.Value);
                         insertCmd.ExecuteNonQuery();
                     }
                 }
@@ -148,6 +146,7 @@ namespace SportHubBase.Services
                 string foundPhone = null;
                 string foundAvatar = null;
                 string foundRole = null;
+                string foundCity = null;
                 string storedHash = null;
 
                 using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
@@ -156,7 +155,7 @@ namespace SportHubBase.Services
 
                     using (var cmd = connection.CreateCommand())
                     {
-                        cmd.CommandText = "SELECT Id, Username, PasswordHash, FirstName, LastName, Email, PhoneNumber, AvatarPath, Role FROM Accounts WHERE Username = @Username";
+                        cmd.CommandText = "SELECT Id, Username, PasswordHash, FirstName, LastName, Email, PhoneNumber, AvatarPath, Role, City FROM Accounts WHERE Username = @Username";
                         cmd.Parameters.AddWithValue("@Username", username);
                         using (var reader = cmd.ExecuteReader())
                         {
@@ -171,6 +170,7 @@ namespace SportHubBase.Services
                                 foundPhone     = reader["PhoneNumber"]?.ToString();
                                 foundAvatar    = reader["AvatarPath"]?.ToString();
                                 foundRole      = reader["Role"]?.ToString();
+                                foundCity      = reader["City"]?.ToString();
                             }
                         }
                     }
@@ -196,6 +196,7 @@ namespace SportHubBase.Services
                     LastName  = foundLastName,
                     Email     = foundEmail,
                     PhoneNumber = foundPhone,
+                    City      = foundCity,
                     AvatarPath = foundAvatar,
                     Role      = foundRole
                 };
@@ -236,7 +237,7 @@ namespace SportHubBase.Services
                     connection.Open();
                     using (var cmd = connection.CreateCommand())
                     {
-                        cmd.CommandText = "SELECT Id, Username, FirstName, LastName, Email, PhoneNumber, AvatarPath, Role FROM Accounts WHERE Id = @Id";
+                        cmd.CommandText = "SELECT Id, Username, FirstName, LastName, Email, PhoneNumber, AvatarPath, Role, City FROM Accounts WHERE Id = @Id";
                         cmd.Parameters.AddWithValue("@Id", userId);
                         using (var reader = cmd.ExecuteReader())
                         {
@@ -250,6 +251,7 @@ namespace SportHubBase.Services
                                     LastName = reader["LastName"]?.ToString(),
                                     Email = reader["Email"]?.ToString(),
                                     PhoneNumber = reader["PhoneNumber"]?.ToString(),
+                                    City = reader["City"]?.ToString(),
                                     AvatarPath = reader["AvatarPath"]?.ToString(),
                                     Role = reader["Role"]?.ToString()
                                 };

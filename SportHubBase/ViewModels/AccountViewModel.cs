@@ -61,6 +61,22 @@ namespace SportHubBase.ViewModels
         public string Username => User?.Username ?? "Гость";
         public string AvatarPath => string.IsNullOrEmpty(User?.AvatarPath) ? "/Resources/avatar.png" : User.AvatarPath;
 
+        public string DisplayName
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName))
+                    return Username;
+
+                if (!string.IsNullOrWhiteSpace(FirstName) && !string.IsNullOrWhiteSpace(LastName))
+                    return string.Format("{0} {1}", FirstName, LastName);
+
+                return string.IsNullOrWhiteSpace(FirstName) ? LastName : FirstName;
+            }
+        }
+
+        public bool IsAdmin => User?.Role?.Equals("admin", StringComparison.OrdinalIgnoreCase) == true;
+
         // 3. Теперь свойства привязаны к локальным переменным, а не напрямую к User
         public string FirstName
         {
@@ -71,6 +87,7 @@ namespace SportHubBase.ViewModels
                 {
                     _firstName = value;
                     OnPropertyChanged(nameof(FirstName));
+                    OnPropertyChanged(nameof(DisplayName));
                 }
             }
         }
@@ -84,6 +101,7 @@ namespace SportHubBase.ViewModels
                 {
                     _lastName = value;
                     OnPropertyChanged(nameof(LastName));
+                    OnPropertyChanged(nameof(DisplayName));
                 }
             }
         }

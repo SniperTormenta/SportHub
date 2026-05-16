@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using SportHubBase.ViewModels;
 
@@ -25,6 +25,9 @@ namespace SportHubBase.View
                 }
                 else
                 {
+                    // Для регистрации также передаем подтверждение пароля
+                    viewModel.ConfirmPassword = ConfirmPasswordInput.Password;
+
                     if (viewModel.RegisterCommand.CanExecute(PasswordInput.Password))
                     {
                         viewModel.RegisterCommand.Execute(PasswordInput.Password);

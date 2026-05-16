@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Настройки аккаунта" Height="800" Width="750"
+        WindowState="Maximized"
         WindowStartupLocation="CenterOwner"
         Background="#F6F7F8"
         FontFamily="Segoe UI, Inter, sans-serif"
@@ -99,7 +100,7 @@
             <TextBlock Text="Управляйте своим профилем и настройками безопасности." FontSize="14" Foreground="#64748B"/>
         </StackPanel>
 
-        <TabControl Grid.Row="1">
+        <TabControl Grid.Row="1" Style="{StaticResource TailwindTabControl}">
 
             <TabItem Header="Профиль"  Style="{StaticResource TailwindTabItem}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,24,0,0">
@@ -113,7 +114,7 @@
                                     </Grid.ColumnDefinitions>
 
                                     <Grid Grid.Column="0" Width="100" Height="100" Margin="0,0,24,0">
-                                        <Ellipse Width="100" Height="100">
+                                        <Ellipse Width="100" Height="100" Stroke="#137FEC" StrokeThickness="2">
                                             <Ellipse.Fill>
                                                 <ImageBrush ImageSource="{Binding AvatarPath, TargetNullValue='/Resources/avatar.png'}" Stretch="UniformToFill"/>
                                             </Ellipse.Fill>
@@ -128,12 +129,7 @@
                                     </Grid>
 
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                            <TextBlock Text="{Binding Username}" FontSize="22" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,12,0"/>
-                                            <Border Background="#DBEAFE" CornerRadius="10" Padding="10,3" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding RoleDisplay}" FontSize="12" FontWeight="SemiBold" Foreground="#1E40AF"/>
-                                            </Border>
-                                        </StackPanel>
+                                        <TextBlock Text="{Binding DisplayName}" FontSize="22" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
                                         <TextBlock Text="{Binding Email}" FontSize="15" Foreground="#64748B"/>
                                     </StackPanel>
                                 </Grid>
@@ -168,7 +164,7 @@
                                         </Border>
                                     </StackPanel>
 
-                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,20">
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,0,0,20">
                                         <TextBlock Text="Email" FontSize="14" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,6"/>
                                         <Border Style="{StaticResource InputFieldStyle}" Background="#F8FAFC">
                                             <TextBox Text="{Binding Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
@@ -176,14 +172,7 @@
                                         </Border>
                                     </StackPanel>
 
-                                    <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,20">
-                                        <TextBlock Text="Роль" FontSize="14" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,6"/>
-                                        <Border Style="{StaticResource InputFieldStyle}" Background="#F1F5F9">
-                                            <TextBlock Text="{Binding RoleDisplay}" Foreground="#64748B" FontSize="14" VerticalAlignment="Center" Padding="4,0,0,0"/>
-                                        </Border>
-                                    </StackPanel>
-
-                                    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
+                                    <StackPanel Grid.Row="2" Grid.Column="0">
                                         <TextBlock Text="Номер телефона" FontSize="14" FontWeight="Medium" Foreground="#334155" Margin="0,0,0,6"/>
                                         <Border Style="{StaticResource InputFieldStyle}" Background="#F8FAFC">
                                             <TextBox Text="{Binding PhoneNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
@@ -230,6 +219,13 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Панель администратора" Style="{StaticResource TailwindTabItem}" 
+                     Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid Margin="0,24,0,0">
+                    <TextBlock Text="Панель администратора в разработке" Foreground="#64748B" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0"/>
+                </Grid>
             </TabItem>
         </TabControl>
 

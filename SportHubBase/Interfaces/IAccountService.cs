@@ -4,7 +4,7 @@ namespace SportHubBase.Interfaces
 {
     public interface IAccountService
     {
-        bool Register(string username, string password, out string errorMessage);
+        bool Register(string username, string password, string email, string firstName, string phoneNumber, string city, out string errorMessage);
         bool Login(string username, string password, out string errorMessage);
 
         /// <summary>

@@ -53,6 +53,7 @@ namespace SportHubBase.Services
                         Email       TEXT,
                         PhoneNumber TEXT,
                         AvatarPath  TEXT,
+                        City        TEXT,
                         Role        TEXT    NOT NULL DEFAULT 'User',
                         CreatedAt   TEXT    NOT NULL DEFAULT (datetime('now'))
                     );");
@@ -62,6 +63,7 @@ namespace SportHubBase.Services
                 TryAddColumn(connection, "Accounts", "LastName", "TEXT");
                 TryAddColumn(connection, "Accounts", "PhoneNumber", "TEXT");
                 TryAddColumn(connection, "Accounts", "AvatarPath", "TEXT");
+                TryAddColumn(connection, "Accounts", "City", "TEXT");
 
                 // -------------------------------------------------------
                 // Таблица пользователей (полная модель User)
