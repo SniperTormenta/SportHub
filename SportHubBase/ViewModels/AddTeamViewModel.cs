@@ -155,73 +155,75 @@ namespace SportHubBase.ViewModels
 
         private void SaveTeam()
         {
-            // Уникальность имён игроков. Проверяем дубли среди введенных
+            // 1. Проверка дублей игроков (твой текущий код)
             var groups = Players.Where(p => !string.IsNullOrWhiteSpace(p.Name))
                                 .GroupBy(p => p.Name.Trim(), StringComparer.OrdinalIgnoreCase)
                                 .Where(g => g.Count() > 1);
-            
+
             foreach (var group in groups)
             {
                 var name = group.Key;
                 var res = MessageBox.Show(
-                    $"Игрок с именем \"{name}\" уже есть в команде. Добавить дубликат или отменить?", 
-                    "Проверка уникальности", 
-                    MessageBoxButton.OKCancel, 
+                    $"Игрок с именем \"{name}\" уже есть в команде. Добавить дубликат или отменить?",
+                    "Проверка уникальности",
+                    MessageBoxButton.OKCancel,
                     MessageBoxImage.Warning);
-                    
-                if (res != MessageBoxResult.OK)
-                {
-                    return; // Отмена сохранения
-                }
+
+                if (res != MessageBoxResult.OK) return;
             }
 
-            var tournaments = _storage.LoadTournaments();
-            var tournament = tournaments.Find(t => t.Id == _tournamentId);
-            if (tournament != null)
+            try
             {
+                var tournaments = _storage.LoadTournaments();
+                var tournament = tournaments.Find(t => t.Id == _tournamentId);
+                if (tournament == null) return;
+
+                // 2. НОВАЯ ПРОВЕРКА: Уникальность названия команды
+                string newTeamName = TeamName.Trim();
+                bool isDuplicateTeam = tournament.Teams.Any(t =>
+                    string.Equals(t.Name, newTeamName, StringComparison.OrdinalIgnoreCase) &&
+                    (_existingTeam == null || t.Id != _existingTeam.Id)); // Игнорируем саму себя при редактировании
+
+                if (isDuplicateTeam)
+                {
+                    MessageBox.Show($"Команда с названием \"{newTeamName}\" уже существует в этом турнире.",
+                        "Ошибка сохранения", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 if (_existingTeam == null)
                 {
-                    // Создание новой команды
                     var newTeam = new Team
                     {
                         Id = Guid.NewGuid(),
-                        Name = TeamName,
-                        Captain = SelectedCaptain?.Name ?? "Капитан не выбран"
+                        Name = newTeamName,
+                        Captain = SelectedCaptain?.Name ?? "Капитан не выбран",
+                        Players = Players.ToList()
                     };
-
-                    // Сохраняем состав игроков
-                    newTeam.Players = Players.ToList();
-
                     tournament.Teams.Add(newTeam);
                 }
                 else
                 {
-                    // Обновление существующей команды
-                    // Ищем по ID, так как он уникален
-                    var teamToUpdate = tournament.Teams
-                        .FirstOrDefault(t => t.Id == _existingTeam.Id);
-
-                    // Fallback для старых данных без ID (хотя после импорта/создания они должны быть)
-                    if (teamToUpdate == null && _existingTeam.Id == Guid.Empty)
-                    {
-                         teamToUpdate = tournament.Teams
-                            .FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
-                    }
+                    var teamToUpdate = tournament.Teams.FirstOrDefault(t => t.Id == _existingTeam.Id)
+                                    ?? tournament.Teams.FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
 
                     if (teamToUpdate != null)
                     {
-                        teamToUpdate.Name = TeamName;
+                        teamToUpdate.Name = newTeamName;
                         teamToUpdate.Captain = SelectedCaptain?.Name ?? "Капитан не выбран";
-
-                        // Обновляем состав игроков
                         teamToUpdate.Players = Players.ToList();
                     }
                 }
 
                 _storage.UpdateTournament(tournament);
+                RequestClose?.Invoke(true);
             }
-
-            RequestClose?.Invoke(true);
+            catch (Exception ex)
+            {
+                // Перехватываем ошибки SQLite (например, блокировка файла)
+                MessageBox.Show($"Произошла ошибка при сохранении команды в базу данных:\n{ex.Message}",
+                    "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void DeleteTeam()

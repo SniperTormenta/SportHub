@@ -256,7 +256,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border Width="40" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Padding="4,14">
-                                            <TextBlock Text="{Binding, StringFormat='T{0}'}" FontSize="10" FontWeight="Bold" Foreground="#617589" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding StringFormat='T{0}'}" FontSize="10" FontWeight="Bold" Foreground="#617589" HorizontalAlignment="Center"/>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

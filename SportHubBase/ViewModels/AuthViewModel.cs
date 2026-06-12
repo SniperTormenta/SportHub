@@ -18,12 +18,16 @@ namespace SportHubBase.ViewModels
         private AuthMode _currentMode = AuthMode.Login;
         private string _errorMessage;
 
+        // Списки ограничений безопасности
+        private static readonly string[] BannedDomains = { ".su", ".ua", "mailinator.com", "guerrillamail.com", "yopmail.com", "tempmail.com", "10minutemail.com" };
+        private static readonly string[] BannedPrefixes = { "admin@", "support@", "info@", "root@", "noreply@", "security@", "webmaster@" };
+
         public event Action LoginSuccess;
 
         public AuthViewModel(IAccountService accountService)
         {
             _accountService = accountService ?? throw new ArgumentNullException(nameof(accountService));
-            
+
             LoginCommand = new RelayCommand(ExecuteLogin, CanExecuteAuth);
             RegisterCommand = new RelayCommand(ExecuteRegister, CanExecuteAuth);
             ToggleModeCommand = new RelayCommand(_ => CurrentMode = IsLoginMode ? AuthMode.Register : AuthMode.Login);
@@ -156,8 +160,20 @@ namespace SportHubBase.ViewModels
         private void ExecuteLogin(object parameter)
         {
             string password = parameter?.ToString();
+
+            // Проверка обязательных полей для входа
+            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(password))
+            {
+                ErrorMessage = "Пожалуйста, введите логин и пароль.";
+                System.Windows.MessageBox.Show(ErrorMessage, "Ошибка ввода", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            // Убираем случайные пробелы по краям
+            string cleanUsername = Username.Trim();
+
             UserAccount account;
-            if (_accountService.LoginAndGetAccount(Username, password, out account, out string error))
+            if (_accountService.LoginAndGetAccount(cleanUsername, password, out account, out string error))
             {
                 CurrentSession.CurrentUser = account;
                 LoginSuccess?.Invoke();
@@ -172,17 +188,26 @@ namespace SportHubBase.ViewModels
         private void ExecuteRegister(object parameter)
         {
             string password = parameter?.ToString();
-            
+
+            // Валидация
             if (!ValidateRegistration(password, out string validationError))
             {
                 ErrorMessage = validationError;
+                System.Windows.MessageBox.Show(validationError, "Ошибка заполнения данных", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
-            if (_accountService.Register(Username, password, Email, FirstName, PhoneNumber, City, out string error))
+            // Очистка данных от случайных начальных/конечных пробелов перед отправкой в БД
+            string cleanUsername = Username.Trim();
+            string cleanEmail = Email.Trim();
+            string cleanFirstName = FirstName.Trim();
+            string cleanCity = string.IsNullOrWhiteSpace(City) ? null : City.Trim();
+            string cleanPhone = string.IsNullOrWhiteSpace(PhoneNumber) ? null : PhoneNumber.Trim();
+
+            if (_accountService.Register(cleanUsername, password, cleanEmail, cleanFirstName, cleanPhone, cleanCity, out string error))
             {
-                ErrorMessage = "Регистрация успешна! Теперь вы можете войти.";
-                System.Windows.MessageBox.Show("Регистрация успешна! Теперь вы можете войти.", "Успешная регистрация", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                ErrorMessage = "Регистрация прошла успешно";
+                System.Windows.MessageBox.Show(ErrorMessage, "Успешная регистрация", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 CurrentMode = AuthMode.Login;
             }
             else
@@ -196,8 +221,19 @@ namespace SportHubBase.ViewModels
         {
             error = string.Empty;
 
-            // 1. Логин
-            if (string.IsNullOrWhiteSpace(Username) || Username.Length < 4 || Username.Length > 32)
+            // 1. Глобальная проверка на пустоту обязательных полей
+            if (string.IsNullOrWhiteSpace(Username) ||
+                string.IsNullOrWhiteSpace(Email) ||
+                string.IsNullOrWhiteSpace(FirstName) ||
+                string.IsNullOrEmpty(password) ||
+                string.IsNullOrEmpty(ConfirmPassword))
+            {
+                error = "Пожалуйста, заполните все обязательные поля (отмечены звездочкой *).";
+                return false;
+            }
+
+            // 2. Логин
+            if (Username.Length < 4 || Username.Length > 32)
             {
                 error = "Логин должен быть от 4 до 32 символов.";
                 return false;
@@ -208,10 +244,10 @@ namespace SportHubBase.ViewModels
                 return false;
             }
 
-            // 2. Email
-            if (string.IsNullOrWhiteSpace(Email) || Email.Length > 254)
+            // 3. Email
+            if (Email.Length > 254)
             {
-                error = "Email обязателен и не может превышать 254 символа.";
+                error = "Email не может превышать 254 символа.";
                 return false;
             }
             if (!Regex.IsMatch(Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
@@ -220,15 +256,54 @@ namespace SportHubBase.ViewModels
                 return false;
             }
 
-            // 3. Имя
-            if (string.IsNullOrWhiteSpace(FirstName) || FirstName.Length < 2 || FirstName.Length > 100)
+            string emailLower = Email.ToLower();
+
+            // 3.1. Проверка Email на системные префиксы
+            foreach (var prefix in BannedPrefixes)
+            {
+                if (emailLower.StartsWith(prefix))
+                {
+                    error = "Регистрация на корпоративные и системные адреса запрещена.";
+                    return false;
+                }
+            }
+
+            // 3.2. Проверка Email на запрещенные домены и зоны
+            string domain = emailLower.Substring(emailLower.IndexOf('@') + 1);
+            foreach (var banned in BannedDomains)
+            {
+                if (banned.StartsWith("."))
+                {
+                    if (domain.EndsWith(banned))
+                    {
+                        error = $"Регистрация в доменной зоне '{banned}' запрещена политикой сервиса.";
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (domain == banned || domain.EndsWith("." + banned))
+                    {
+                        error = "Использование одноразовых почтовых сервисов запрещено.";
+                        return false;
+                    }
+                }
+            }
+
+            // 4. Имя
+            if (FirstName.Length < 2 || FirstName.Length > 100)
             {
                 error = "Имя должно быть от 2 до 100 символов.";
                 return false;
             }
+            if (!Regex.IsMatch(FirstName, @"^[а-яА-Яa-zA-Z\s\-]+$"))
+            {
+                error = "Имя может содержать только буквы, пробелы и дефис.";
+                return false;
+            }
 
-            // 4. Пароль
-            if (string.IsNullOrEmpty(password) || password.Length < 8 || password.Length > 128)
+            // 5. Пароль
+            if (password.Length < 8 || password.Length > 128)
             {
                 error = "Пароль должен быть от 8 до 128 символов.";
                 return false;
@@ -244,7 +319,7 @@ namespace SportHubBase.ViewModels
                 return false;
             }
 
-            // 5. Город (необязательно)
+            // 6. Город (необязательно)
             if (!string.IsNullOrWhiteSpace(City))
             {
                 if (City.Length < 2 || City.Length > 80)
@@ -254,12 +329,16 @@ namespace SportHubBase.ViewModels
                 }
             }
 
-            // 6. Телефон (необязательно)
+            // 7. Телефон (необязательно)
             if (!string.IsNullOrWhiteSpace(PhoneNumber))
             {
-                if (!Regex.IsMatch(PhoneNumber, @"^\+?[0-9\s\-\(\)]+$"))
+                // Очищаем строку от пробелов, скобок и тире для проверки
+                string cleanPhone = PhoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
+
+                // Проверяем, что номер начинается с +7 или 8 и содержит ровно 11 цифр (формат РФ)
+                if (!Regex.IsMatch(cleanPhone, @"^(?:\+7|8)\d{10}$"))
                 {
-                    error = "Некорректный формат номера телефона.";
+                    error = "Сервис работает только с номерами РФ. Введите корректный номер в формате +7 (XXX) XXX-XX-XX.";
                     return false;
                 }
             }

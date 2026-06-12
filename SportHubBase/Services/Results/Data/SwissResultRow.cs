@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace SportHubBase.Services.Results.Data
 {
     public class SwissResultRow

@@ -220,7 +220,10 @@
                         <ComboBox ItemsSource="{Binding DataContext.PlayersList, RelativeSource={RelativeSource AncestorType=Window}}"
                                   Style="{StaticResource ModernComboBox}"
                                   SelectedItem="{Binding Mvp, UpdateSourceTrigger=PropertyChanged}"
-                                  Height="48" Padding="12" IsEditable="True"/>
+                                  Height="48" 
+                                  Padding="12,0" 
+                                  VerticalContentAlignment="Center"
+                                  IsEditable="True"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Margin="16,0,0,0">
                         <TextBlock Text="Судья" FontWeight="Bold" Foreground="#617589" Margin="0,0,0,8"/>

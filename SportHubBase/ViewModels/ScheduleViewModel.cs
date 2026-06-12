@@ -13,9 +13,9 @@ namespace SportHubBase.ViewModels
 {
     public enum MatchFilterType
     {
-        All,
-        Played,
-        NotPlayed
+        Все,
+        Сыгранные,
+        Не_сыгранные
     }
 
     public class RoundViewModel : BaseViewModel
@@ -483,10 +483,10 @@ namespace SportHubBase.ViewModels
             bool typeMatch = true;
             switch (_filter)
             {
-                case MatchFilterType.Played:
+                case MatchFilterType.Сыгранные:
                     typeMatch = match.Status == "Сыгран" || match.Status == "Техническое поражение";
                     break;
-                case MatchFilterType.NotPlayed:
+                case MatchFilterType.Не_сыгранные:
                     typeMatch = match.Status != "Сыгран" && match.Status != "Техническое поражение";
                     break;
             }
