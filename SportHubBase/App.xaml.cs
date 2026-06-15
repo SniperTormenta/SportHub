@@ -47,15 +47,30 @@ namespace SportHubBase
         {
             Container = new Container();
 
-            // ── Инфраструктура БД ───────────────────────────────────────────────
-            // SqliteDatabaseService создаёт схему БД при первом запуске
-            Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
+            // ── ВЫБОР ИНФРАСТРУКТУРЫ БД ─────────────────────────────────────────
+            // В будущем ты можешь читать этот флаг и строку подключения из файла настроек
+            // или даже сделать окно выбора перед запуском приложения.
+            bool useSqlServer = false;
+            string sqlConnectionString = "Server=ТВОЙ_IP_АДРЕС;Database=ТВОЯ_БД;User Id=ЛОГИН;Password=ПАРОЛЬ;TrustServerCertificate=True;";
 
-            // ── Хранилище данных ────────────────────────────────────────────────
-            // SqliteStorageService — основное хранилище (заменяет JsonStorageService)
-            Container.Register<IStorage, SqliteStorageService>(Lifestyle.Singleton);
+            if (useSqlServer)
+            {
+                // Регистрируем MS SQL Server
+                // Используем делегат, потому что конструктор требует строку подключения
+                Container.Register(() => new SqlServerDatabaseService(sqlConnectionString), Lifestyle.Singleton);
+                Container.Register<IStorage, SqlServerStorageService>(Lifestyle.Singleton);
+            }
+            else
+            {
+                // Регистрируем старую добрую локальную SQLite
+                Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
+                Container.Register<IStorage, SqliteStorageService>(Lifestyle.Singleton);
+            }
+            // ────────────────────────────────────────────────────────────────────
 
             // ── Прочие сервисы ──────────────────────────────────────────────────
+            // Обрати внимание: этим сервисам ВООБЩЕ без разницы, что мы выбрали выше. 
+            // Они просят IStorage, и контейнер даст им то, что активно!
             Container.Register<IMatchService, MatchService>(Lifestyle.Singleton);
             Container.Register<IAccountService, AccountService>(Lifestyle.Singleton);
 
