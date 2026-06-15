@@ -1,25 +1,27 @@
 ﻿// Services/SqlServerDatabaseService.cs
-using System;
+using SportHubBase.Models;
 
 namespace SportHubBase.Services
 {
-    /// Сервис для работы с подключением к существующей внешней базе данных MS SQL Server.
     public class SqlServerDatabaseService
     {
-        private readonly string _connectionString;
-
-        public SqlServerDatabaseService(string connectionString)
-        {
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new ArgumentException("Строка подключения к MS SQL Server не может быть пустой", nameof(connectionString));
-
-            _connectionString = connectionString;
-        }
-
-        /// Возвращает строку подключения к внешней базе данных.
         public string GetConnectionString()
         {
-            return _connectionString;
+            // Берем то, что пользователь ввел в поле "Адрес сервера"
+            string serverAddress = DatabaseConfig.SqlConnectionString;
+
+            // Защита от дурака: если поле пустое, по умолчанию стучимся в localhost
+            if (string.IsNullOrWhiteSpace(serverAddress))
+            {
+                serverAddress = "localhost";
+            }
+
+            // Формируем правильную строку подключения для .NET
+            // Используем Integrated Security (Windows-авторизацию). 
+            // Если у твоего сервера логин/пароль (sa), строку нужно будет изменить на:
+            // return $"Server={serverAddress};Database=SportHub;User Id=ТВОЙ_ЛОГИН;Password=ТВОЙ_ПАРОЛЬ;TrustServerCertificate=True;";
+
+            return $"Server={serverAddress};Database=SportHub;Integrated Security=True;TrustServerCertificate=True;";
         }
     }
 }

@@ -265,6 +265,9 @@
     <Compile Include="Interfaces\IStatisticsCalculatorFactory.cs" />
     <Compile Include="Interfaces\IScheduleStrategyFactory.cs" />
     <Compile Include="Interfaces\ISequentialScheduleStrategy.cs" />
+    <Compile Include="Models\DatabaseConfig.cs" />
+    <Compile Include="Services\DynamicAccountService.cs" />
+    <Compile Include="Services\DynamicStorageService.cs" />
     <Compile Include="Services\Scheduling\Swiss\IPlayedMatchesService.cs" />
     <Compile Include="Services\Scheduling\Swiss\ITiebreakerCalculator.cs" />
     <Compile Include="Services\Scheduling\Swiss\PlayedMatchesService.cs" />

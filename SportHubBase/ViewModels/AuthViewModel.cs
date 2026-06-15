@@ -345,5 +345,25 @@ namespace SportHubBase.ViewModels
 
             return true;
         }
+
+        public bool UseSqlServer
+        {
+            get => DatabaseConfig.UseSqlServer;
+            set
+            {
+                DatabaseConfig.UseSqlServer = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string SqlConnectionString
+        {
+            get => DatabaseConfig.SqlConnectionString;
+            set
+            {
+                DatabaseConfig.SqlConnectionString = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

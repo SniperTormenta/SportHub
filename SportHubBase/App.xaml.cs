@@ -47,35 +47,30 @@ namespace SportHubBase
         {
             Container = new Container();
 
-            // ── ВЫБОР ИНФРАСТРУКТУРЫ БД ─────────────────────────────────────────
-            // В будущем ты можешь читать этот флаг и строку подключения из файла настроек
-            // или даже сделать окно выбора перед запуском приложения.
-            bool useSqlServer = true;
-            string sqlConnectionString = "Server=localhost;Database=SportHub;Integrated Security=True;TrustServerCertificate=True;";
+            // ── БАЗЫ ДАННЫХ И ХРАНИЛИЩА (ДИНАМИЧЕСКИЙ ВЫБОР) ─────────────────────
 
-            if (useSqlServer)
-            {
-                // Регистрируем MS SQL Server
-                // Используем делегат, потому что конструктор требует строку подключения
-                Container.Register(() => new SqlServerDatabaseService(sqlConnectionString), Lifestyle.Singleton);
-                Container.Register<IStorage, SqlServerStorageService>(Lifestyle.Singleton);
+            // 1. Регистрируем обе СУБД (конкретные классы)
+            // (SqlServerDatabaseService теперь берет строку из DatabaseConfig, поэтому конструктор без параметров)
+            Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
+            Container.Register<SqlServerDatabaseService>(Lifestyle.Singleton);
 
-                Container.Register<IAccountService, SqlServerAccountService>(Lifestyle.Singleton);
-            }
-            else
-            {
-                // Регистрируем старую добрую локальную SQLite
-                Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
-                Container.Register<IStorage, SqliteStorageService>(Lifestyle.Singleton);
+            // 2. Регистрируем обе реализации хранилища данных
+            Container.Register<SqliteStorageService>(Lifestyle.Singleton);
+            Container.Register<SqlServerStorageService>(Lifestyle.Singleton);
 
-                // РЕГИСТРИРУЕМ СТАРЫЙ АККАУНТ СЕРВИС
-                Container.Register<IAccountService, SqliteAccountService>(Lifestyle.Singleton);
-            }
+            // 3. Регистрируем обе реализации сервисов аккаунтов
+            Container.Register<SqliteAccountService>(Lifestyle.Singleton);
+            Container.Register<SqlServerAccountService>(Lifestyle.Singleton);
+
+            // 4. ВАЖНО: Привязываем интерфейсы к Роутерам!
+            // Именно эти классы будут на лету решать, к какой базе обращаться,
+            // опираясь на галочку DatabaseConfig.UseSqlServer
+            Container.Register<IStorage, DynamicStorageService>(Lifestyle.Singleton);
+            Container.Register<IAccountService, DynamicAccountService>(Lifestyle.Singleton);
+
             // ────────────────────────────────────────────────────────────────────
 
             // ── Прочие сервисы ──────────────────────────────────────────────────
-            // Обрати внимание: этим сервисам ВООБЩЕ без разницы, что мы выбрали выше. 
-            // Они просят IStorage, и контейнер даст им то, что активно!
             Container.Register<IMatchService, MatchService>(Lifestyle.Singleton);
 
             // ── Фабрики стратегий ───────────────────────────────────────────────
@@ -89,9 +84,9 @@ namespace SportHubBase
 
             Container.Collection.Register<ISportScoreStrategy>(new[]
             {
-                typeof(DefaultScoreStrategy),
-                typeof(VolleyballScoreStrategy)
-            }, Lifestyle.Singleton);
+        typeof(DefaultScoreStrategy),
+        typeof(VolleyballScoreStrategy)
+    }, Lifestyle.Singleton);
             Container.Register<ISportScoreStrategyFactory, SportScoreStrategyFactory>(Lifestyle.Singleton);
 
             // ── ViewModels ──────────────────────────────────────────────────────
