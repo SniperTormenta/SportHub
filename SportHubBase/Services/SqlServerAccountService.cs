@@ -1,16 +1,15 @@
-using System;
-using Microsoft.Data.Sqlite;
+﻿using System;
+using Microsoft.Data.SqlClient; // <-- Важное отличие
 using SportHubBase.Interfaces;
 using SportHubBase.Models;
 
-
 namespace SportHubBase.Services
 {
-    public class AccountService : IAccountService
+    public class SqlServerAccountService : IAccountService
     {
-        private readonly SqliteDatabaseService _dbService;
+        private readonly SqlServerDatabaseService _dbService;
 
-        public AccountService(SqliteDatabaseService dbService)
+        public SqlServerAccountService(SqlServerDatabaseService dbService)
         {
             _dbService = dbService ?? throw new ArgumentNullException(nameof(dbService));
         }
@@ -27,16 +26,15 @@ namespace SportHubBase.Services
 
             try
             {
-                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                using (var connection = new SqlConnection(_dbService.GetConnectionString()))
                 {
                     connection.Open();
 
-                    // Проверяем, существует ли пользователь
                     using (var checkCmd = connection.CreateCommand())
                     {
                         checkCmd.CommandText = "SELECT COUNT(1) FROM Accounts WHERE Username = @Username";
                         checkCmd.Parameters.AddWithValue("@Username", username);
-                        long count = (long)checkCmd.ExecuteScalar();
+                        int count = Convert.ToInt32(checkCmd.ExecuteScalar());
                         if (count > 0)
                         {
                             errorMessage = "Пользователь с таким именем уже существует.";
@@ -44,7 +42,6 @@ namespace SportHubBase.Services
                         }
                     }
 
-                    // Вставляем нового пользователя
                     string hash = PasswordHasher.HashPassword(password);
                     using (var insertCmd = connection.CreateCommand())
                     {
@@ -82,32 +79,21 @@ namespace SportHubBase.Services
             {
                 string storedHash = null;
 
-                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                using (var connection = new SqlConnection(_dbService.GetConnectionString()))
                 {
                     connection.Open();
-
                     using (var cmd = connection.CreateCommand())
                     {
                         cmd.CommandText = "SELECT PasswordHash FROM Accounts WHERE Username = @Username";
                         cmd.Parameters.AddWithValue("@Username", username);
                         using (var reader = cmd.ExecuteReader())
                         {
-                            if (reader.Read())
-                            {
-                                storedHash = reader["PasswordHash"]?.ToString();
-                            }
+                            if (reader.Read()) storedHash = reader["PasswordHash"]?.ToString();
                         }
                     }
                 }
 
-                if (string.IsNullOrEmpty(storedHash))
-                {
-                    errorMessage = "Неверное имя пользователя или пароль.";
-                    return false;
-                }
-
-                bool isMatch = PasswordHasher.VerifyPassword(password, storedHash);
-                if (!isMatch)
+                if (string.IsNullOrEmpty(storedHash) || !PasswordHasher.VerifyPassword(password, storedHash))
                 {
                     errorMessage = "Неверное имя пользователя или пароль.";
                     return false;
@@ -122,9 +108,6 @@ namespace SportHubBase.Services
             }
         }
 
-        /// <summary>
-        /// Выполняет вход и при успехе возвращает заполненный UserAccount.
-        /// </summary>
         public bool LoginAndGetAccount(string username, string password, out UserAccount account, out string errorMessage)
         {
             account = null;
@@ -139,20 +122,13 @@ namespace SportHubBase.Services
             try
             {
                 int foundId = 0;
-                string foundUsername = null;
-                string foundFirstName = null;
-                string foundLastName = null;
-                string foundEmail = null;
-                string foundPhone = null;
-                string foundAvatar = null;
-                string foundRole = null;
-                string foundCity = null;
-                string storedHash = null;
+                string foundUsername = null, foundFirstName = null, foundLastName = null;
+                string foundEmail = null, foundPhone = null, foundAvatar = null;
+                string foundRole = null, foundCity = null, storedHash = null;
 
-                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                using (var connection = new SqlConnection(_dbService.GetConnectionString()))
                 {
                     connection.Open();
-
                     using (var cmd = connection.CreateCommand())
                     {
                         cmd.CommandText = "SELECT Id, Username, PasswordHash, FirstName, LastName, Email, PhoneNumber, AvatarPath, Role, City FROM Accounts WHERE Username = @Username";
@@ -161,28 +137,22 @@ namespace SportHubBase.Services
                         {
                             if (reader.Read())
                             {
-                                foundId        = Convert.ToInt32(reader["Id"]);
-                                foundUsername  = reader["Username"]?.ToString();
-                                storedHash     = reader["PasswordHash"]?.ToString();
+                                foundId = Convert.ToInt32(reader["Id"]);
+                                foundUsername = reader["Username"]?.ToString();
+                                storedHash = reader["PasswordHash"]?.ToString();
                                 foundFirstName = reader["FirstName"]?.ToString();
-                                foundLastName  = reader["LastName"]?.ToString();
-                                foundEmail     = reader["Email"]?.ToString();
-                                foundPhone     = reader["PhoneNumber"]?.ToString();
-                                foundAvatar    = reader["AvatarPath"]?.ToString();
-                                foundRole      = reader["Role"]?.ToString();
-                                foundCity      = reader["City"]?.ToString();
+                                foundLastName = reader["LastName"]?.ToString();
+                                foundEmail = reader["Email"]?.ToString();
+                                foundPhone = reader["PhoneNumber"]?.ToString();
+                                foundAvatar = reader["AvatarPath"]?.ToString();
+                                foundRole = reader["Role"]?.ToString();
+                                foundCity = reader["City"]?.ToString();
                             }
                         }
                     }
                 }
 
-                if (string.IsNullOrEmpty(storedHash))
-                {
-                    errorMessage = "Неверное имя пользователя или пароль.";
-                    return false;
-                }
-
-                if (!PasswordHasher.VerifyPassword(password, storedHash))
+                if (string.IsNullOrEmpty(storedHash) || !PasswordHasher.VerifyPassword(password, storedHash))
                 {
                     errorMessage = "Неверное имя пользователя или пароль.";
                     return false;
@@ -190,15 +160,15 @@ namespace SportHubBase.Services
 
                 account = new UserAccount
                 {
-                    Id        = foundId,
-                    Username  = foundUsername,
+                    Id = foundId,
+                    Username = foundUsername,
                     FirstName = foundFirstName,
-                    LastName  = foundLastName,
-                    Email     = foundEmail,
+                    LastName = foundLastName,
+                    Email = foundEmail,
                     PhoneNumber = foundPhone,
-                    City      = foundCity,
+                    City = foundCity,
                     AvatarPath = foundAvatar,
-                    Role      = foundRole
+                    Role = foundRole
                 };
                 return true;
             }
@@ -208,11 +178,12 @@ namespace SportHubBase.Services
                 return false;
             }
         }
+
         public bool UpdateAccountDetail(int userId, string columnName, string value)
         {
             try
             {
-                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                using (var connection = new SqlConnection(_dbService.GetConnectionString()))
                 {
                     connection.Open();
                     using (var cmd = connection.CreateCommand())
@@ -232,7 +203,7 @@ namespace SportHubBase.Services
         {
             try
             {
-                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                using (var connection = new SqlConnection(_dbService.GetConnectionString()))
                 {
                     connection.Open();
                     using (var cmd = connection.CreateCommand())
@@ -278,21 +249,16 @@ namespace SportHubBase.Services
             {
                 string storedHash = null;
 
-                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                using (var connection = new SqlConnection(_dbService.GetConnectionString()))
                 {
                     connection.Open();
-
-                    // Verify old password
                     using (var cmd = connection.CreateCommand())
                     {
                         cmd.CommandText = "SELECT PasswordHash FROM Accounts WHERE Id = @Id";
                         cmd.Parameters.AddWithValue("@Id", userId);
                         using (var reader = cmd.ExecuteReader())
                         {
-                            if (reader.Read())
-                            {
-                                storedHash = reader["PasswordHash"]?.ToString();
-                            }
+                            if (reader.Read()) storedHash = reader["PasswordHash"]?.ToString();
                         }
                     }
 
@@ -302,7 +268,6 @@ namespace SportHubBase.Services
                         return false;
                     }
 
-                    // Update with new password
                     string newHash = PasswordHasher.HashPassword(newPassword);
                     using (var cmd = connection.CreateCommand())
                     {
@@ -328,7 +293,7 @@ namespace SportHubBase.Services
 
             try
             {
-                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                using (var connection = new SqlConnection(_dbService.GetConnectionString()))
                 {
                     connection.Open();
                     using (var cmd = connection.CreateCommand())
@@ -336,16 +301,11 @@ namespace SportHubBase.Services
                         cmd.CommandText = "DELETE FROM Accounts WHERE Id = @Id";
                         cmd.Parameters.AddWithValue("@Id", userId);
                         int rowsAffected = cmd.ExecuteNonQuery();
-                        
-                        if (rowsAffected > 0)
-                        {
-                            return true;
-                        }
-                        else
-                        {
-                            errorMessage = "Пользователь не найден.";
-                            return false;
-                        }
+
+                        if (rowsAffected > 0) return true;
+
+                        errorMessage = "Пользователь не найден.";
+                        return false;
                     }
                 }
             }

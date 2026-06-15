@@ -50,8 +50,8 @@ namespace SportHubBase
             // ── ВЫБОР ИНФРАСТРУКТУРЫ БД ─────────────────────────────────────────
             // В будущем ты можешь читать этот флаг и строку подключения из файла настроек
             // или даже сделать окно выбора перед запуском приложения.
-            bool useSqlServer = false;
-            string sqlConnectionString = "Server=ТВОЙ_IP_АДРЕС;Database=ТВОЯ_БД;User Id=ЛОГИН;Password=ПАРОЛЬ;TrustServerCertificate=True;";
+            bool useSqlServer = true;
+            string sqlConnectionString = "Server=localhost;Database=SportHub;Integrated Security=True;TrustServerCertificate=True;";
 
             if (useSqlServer)
             {
@@ -59,12 +59,17 @@ namespace SportHubBase
                 // Используем делегат, потому что конструктор требует строку подключения
                 Container.Register(() => new SqlServerDatabaseService(sqlConnectionString), Lifestyle.Singleton);
                 Container.Register<IStorage, SqlServerStorageService>(Lifestyle.Singleton);
+
+                Container.Register<IAccountService, SqlServerAccountService>(Lifestyle.Singleton);
             }
             else
             {
                 // Регистрируем старую добрую локальную SQLite
                 Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
                 Container.Register<IStorage, SqliteStorageService>(Lifestyle.Singleton);
+
+                // РЕГИСТРИРУЕМ СТАРЫЙ АККАУНТ СЕРВИС
+                Container.Register<IAccountService, SqliteAccountService>(Lifestyle.Singleton);
             }
             // ────────────────────────────────────────────────────────────────────
 
@@ -72,7 +77,6 @@ namespace SportHubBase
             // Обрати внимание: этим сервисам ВООБЩЕ без разницы, что мы выбрали выше. 
             // Они просят IStorage, и контейнер даст им то, что активно!
             Container.Register<IMatchService, MatchService>(Lifestyle.Singleton);
-            Container.Register<IAccountService, AccountService>(Lifestyle.Singleton);
 
             // ── Фабрики стратегий ───────────────────────────────────────────────
             Container.Register<SportHubBase.Services.Scheduling.Swiss.IPlayedMatchesService, SportHubBase.Services.Scheduling.Swiss.PlayedMatchesService>(Lifestyle.Singleton);
