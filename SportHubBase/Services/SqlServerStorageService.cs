@@ -40,15 +40,16 @@ namespace SportHubBase.Services
 
                     // Используем оператор "+" для конкатенации строк в T-SQL вместо "||" в SQLite
                     cmd.CommandText = @"
-                        SELECT * FROM Tournaments 
-                        WHERE IsPublic = 1 
-                           OR OwnerId = @CurrentUserId
-                           OR (AllowedUserIds IS NOT NULL AND 
-                               (AllowedUserIds = @CurrentUserId 
-                                OR AllowedUserIds LIKE @CurrentUserId + ',%' 
-                                OR AllowedUserIds LIKE '%,' + @CurrentUserId + ',%' 
-                                OR AllowedUserIds LIKE '%,' + @CurrentUserId))
-                        ORDER BY StartDate DESC";
+                    SELECT * FROM Tournaments 
+                    WHERE IsDeleted = 0 AND 
+                         (IsPublic = 1 
+                          OR OwnerId = @CurrentUserId
+                          OR (AllowedUserIds IS NOT NULL AND 
+                              (AllowedUserIds = @CurrentUserId 
+                               OR AllowedUserIds LIKE @CurrentUserId + ',%' 
+                               OR AllowedUserIds LIKE '%,' + @CurrentUserId + ',%' 
+                               OR AllowedUserIds LIKE '%,' + @CurrentUserId)))
+                    ORDER BY StartDate DESC";
 
                     cmd.Parameters.AddWithValue("@CurrentUserId", (object)currentUserId ?? DBNull.Value);
 
@@ -119,7 +120,7 @@ namespace SportHubBase.Services
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "DELETE FROM Tournaments WHERE Id = @Id";
+                cmd.CommandText = "UPDATE Tournaments SET IsDeleted = 1 WHERE Id = @Id";
                 cmd.Parameters.AddWithValue("@Id", tournamentId.ToString());
                 cmd.ExecuteNonQuery();
             }
@@ -147,7 +148,7 @@ namespace SportHubBase.Services
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "DELETE FROM Teams WHERE Id = @Id AND TournamentId = @TournamentId";
+                cmd.CommandText = "UPDATE Teams SET IsDeleted = 1 WHERE Id = @Id AND TournamentId = @TournamentId";
                 cmd.Parameters.AddWithValue("@Id", teamId.ToString());
                 cmd.Parameters.AddWithValue("@TournamentId", tournamentId.ToString());
                 cmd.ExecuteNonQuery();
@@ -176,7 +177,7 @@ namespace SportHubBase.Services
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "DELETE FROM Players WHERE Id = @Id AND TeamId = @TeamId";
+                cmd.CommandText = "UPDATE Players SET IsDeleted = 1 WHERE Id = @Id AND TeamId = @TeamId";
                 cmd.Parameters.AddWithValue("@Id", playerId.ToString());
                 cmd.Parameters.AddWithValue("@TeamId", teamId.ToString());
                 cmd.ExecuteNonQuery();
@@ -199,7 +200,7 @@ namespace SportHubBase.Services
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "DELETE FROM Matches WHERE Id = @Id";
+                cmd.CommandText = "UPDATE Matches SET IsDeleted = 1 WHERE Id = @Id";
                 cmd.Parameters.AddWithValue("@Id", matchId.ToString());
                 cmd.ExecuteNonQuery();
             }
@@ -540,8 +541,7 @@ namespace SportHubBase.Services
             var teams = new List<Team>();
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "SELECT * FROM Teams WHERE TournamentId = @TId ORDER BY Name";
-                cmd.Parameters.AddWithValue("@TId", tournamentId.ToString());
+                cmd.CommandText = "SELECT * FROM Teams WHERE TournamentId = @TId AND IsDeleted = 0 ORDER BY Name"; cmd.Parameters.AddWithValue("@TId", tournamentId.ToString());
                 using (var r = cmd.ExecuteReader())
                 {
                     while (r.Read())
@@ -574,8 +574,7 @@ namespace SportHubBase.Services
             var players = new List<Player>();
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "SELECT * FROM Players WHERE TeamId = @TId ORDER BY Name";
-                cmd.Parameters.AddWithValue("@TId", teamId.ToString());
+                cmd.CommandText = "SELECT * FROM Players WHERE TeamId = @TId AND IsDeleted = 0 ORDER BY Name"; cmd.Parameters.AddWithValue("@TId", teamId.ToString());
                 using (var r = cmd.ExecuteReader())
                 {
                     while (r.Read())
@@ -601,8 +600,7 @@ namespace SportHubBase.Services
             var matches = new List<Match>();
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "SELECT * FROM Matches WHERE TournamentId = @TId ORDER BY Round, MatchNumber";
-                cmd.Parameters.AddWithValue("@TId", tournamentId.ToString());
+                cmd.CommandText = "SELECT * FROM Matches WHERE TournamentId = @TId AND IsDeleted = 0 ORDER BY Round, MatchNumber"; cmd.Parameters.AddWithValue("@TId", tournamentId.ToString());
                 using (var r = cmd.ExecuteReader())
                 {
                     while (r.Read())

@@ -55,7 +55,8 @@ namespace SportHubBase.Services
                         AvatarPath  TEXT,
                         City        TEXT,
                         Role        TEXT    NOT NULL DEFAULT 'User',
-                        CreatedAt   TEXT    NOT NULL DEFAULT (datetime('now'))
+                        CreatedAt   TEXT    NOT NULL DEFAULT (datetime('now')),
+                        IsDeleted   INTEGER NOT NULL DEFAULT 0
                     );");
 
                 // Добавляем недостающие колонки в существующую таблицу
@@ -64,6 +65,7 @@ namespace SportHubBase.Services
                 TryAddColumn(connection, "Accounts", "PhoneNumber", "TEXT");
                 TryAddColumn(connection, "Accounts", "AvatarPath", "TEXT");
                 TryAddColumn(connection, "Accounts", "City", "TEXT");
+                TryAddColumn(connection, "Accounts", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
 
                 // -------------------------------------------------------
                 // Таблица пользователей (полная модель User)
@@ -105,8 +107,12 @@ namespace SportHubBase.Services
                         CustomWinPoints  INTEGER NOT NULL DEFAULT 3,
                         CustomDrawPoints INTEGER NOT NULL DEFAULT 1,
                         CustomLossPoints INTEGER NOT NULL DEFAULT 0,
-                        BracketJson     TEXT
+                        BracketJson     TEXT,
+                        IsDeleted       INTEGER NOT NULL DEFAULT 0
                     );");
+
+                // Автоматическое обновление существующей БД для работы с Архивом
+                TryAddColumn(connection, "Tournaments", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
 
                 // -------------------------------------------------------
                 // Таблица команд
@@ -120,8 +126,11 @@ namespace SportHubBase.Services
                         City            TEXT,
                         LogoUrl         TEXT,
                         OwnerUserId     TEXT,
-                        MemberUserIds   TEXT
+                        MemberUserIds   TEXT,
+                        IsDeleted       INTEGER NOT NULL DEFAULT 0
                     );");
+
+                TryAddColumn(connection, "Teams", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
 
                 // -------------------------------------------------------
                 // Таблица игроков
@@ -133,8 +142,11 @@ namespace SportHubBase.Services
                         Name        TEXT    NOT NULL,
                         Role        TEXT    NOT NULL DEFAULT 'Обычный игрок',
                         IsCaptain   INTEGER NOT NULL DEFAULT 0,
-                        UserId      TEXT
+                        UserId      TEXT,
+                        IsDeleted   INTEGER NOT NULL DEFAULT 0
                     );");
+
+                TryAddColumn(connection, "Players", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
 
                 // -------------------------------------------------------
                 // Таблица матчей
@@ -159,8 +171,11 @@ namespace SportHubBase.Services
                         Location            TEXT,
                         Mvp                 TEXT,
                         WinnerId            TEXT,
-                        CreatedByUserId     TEXT
+                        CreatedByUserId     TEXT,
+                        IsDeleted           INTEGER NOT NULL DEFAULT 0
                     );");
+
+                TryAddColumn(connection, "Matches", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
 
                 // -------------------------------------------------------
                 // Таблица сетов матча (детальный счёт по партиям)

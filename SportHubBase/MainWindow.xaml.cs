@@ -87,6 +87,15 @@ namespace SportHubBase
             if (sender is FrameworkElement element && element.Tag is Guid tournamentId)
             {
                 var tournamentWindow = new TournamentWindow(tournamentId);
+
+                // ДОБАВЛЯЕМ ПОДПИСКУ НА ЗАКРЫТИЕ ОКНА
+                tournamentWindow.Closed += (s, args) =>
+                {
+                    // Как только окно турнира закроется (например, после удаления), 
+                    // мы заставляем Главное окно подтянуть свежие данные из БД
+                    LoadTournamentsFromDatabase();
+                };
+
                 tournamentWindow.Show();
             }
         }

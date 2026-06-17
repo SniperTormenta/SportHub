@@ -43,18 +43,19 @@ namespace SportHubBase.Services
                 using (var cmd = conn.CreateCommand())
                 {
                     string currentUserId = CurrentSession.CurrentUser?.Id.ToString();
-                    
+
                     cmd.CommandText = @"
                         SELECT * FROM Tournaments 
-                        WHERE IsPublic = 1 
-                           OR OwnerId = @CurrentUserId
-                           OR (AllowedUserIds IS NOT NULL AND 
-                               (AllowedUserIds = @CurrentUserId 
-                                OR AllowedUserIds LIKE @CurrentUserId || ',%' 
-                                OR AllowedUserIds LIKE '%,' || @CurrentUserId || ',%' 
-                                OR AllowedUserIds LIKE '%,' || @CurrentUserId))
+                        WHERE IsDeleted = 0 AND 
+                             (IsPublic = 1 
+                              OR OwnerId = @CurrentUserId
+                              OR (AllowedUserIds IS NOT NULL AND 
+                                  (AllowedUserIds = @CurrentUserId 
+                                   OR AllowedUserIds LIKE @CurrentUserId + ',%' 
+                                   OR AllowedUserIds LIKE '%,' + @CurrentUserId + ',%' 
+                                   OR AllowedUserIds LIKE '%,' + @CurrentUserId)))
                         ORDER BY StartDate DESC";
-                    
+
                     cmd.Parameters.AddWithValue("@CurrentUserId", currentUserId ?? string.Empty);
 
                     using (var reader = cmd.ExecuteReader())
@@ -141,8 +142,7 @@ namespace SportHubBase.Services
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                // Cascade удалит команды, игроков, матчи, стендинги
-                cmd.CommandText = "DELETE FROM Tournaments WHERE Id = @Id";
+                cmd.CommandText = "UPDATE Tournaments SET IsDeleted = 1 WHERE Id = @Id";
                 cmd.Parameters.AddWithValue("@Id", tournamentId.ToString());
                 cmd.ExecuteNonQuery();
             }
@@ -178,8 +178,7 @@ namespace SportHubBase.Services
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                // Cascade удалит игроков и стендинги команды
-                cmd.CommandText = "DELETE FROM Teams WHERE Id = @Id AND TournamentId = @TournamentId";
+                cmd.CommandText = "UPDATE Teams SET IsDeleted = 1 WHERE Id = @Id AND TournamentId = @TournamentId";
                 cmd.Parameters.AddWithValue("@Id", teamId.ToString());
                 cmd.Parameters.AddWithValue("@TournamentId", tournamentId.ToString());
                 cmd.ExecuteNonQuery();
@@ -216,7 +215,7 @@ namespace SportHubBase.Services
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "DELETE FROM Players WHERE Id = @Id AND TeamId = @TeamId";
+                cmd.CommandText = "UPDATE Players SET IsDeleted = 1 WHERE Id = @Id AND TeamId = @TeamId";
                 cmd.Parameters.AddWithValue("@Id", playerId.ToString());
                 cmd.Parameters.AddWithValue("@TeamId", teamId.ToString());
                 cmd.ExecuteNonQuery();
@@ -243,8 +242,7 @@ namespace SportHubBase.Services
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                // Cascade удалит MatchSets
-                cmd.CommandText = "DELETE FROM Matches WHERE Id = @Id";
+                cmd.CommandText = "UPDATE Matches SET IsDeleted = 1 WHERE Id = @Id";
                 cmd.Parameters.AddWithValue("@Id", matchId.ToString());
                 cmd.ExecuteNonQuery();
             }
@@ -719,7 +717,7 @@ namespace SportHubBase.Services
 
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "SELECT * FROM Players WHERE TeamId = @TId ORDER BY Name";
+                cmd.CommandText = "SELECT * FROM Players WHERE TeamId = @TId AND IsDeleted = 0 ORDER BY Name";
                 cmd.Parameters.AddWithValue("@TId", teamId.ToString());
                 using (var r = cmd.ExecuteReader())
                 {
@@ -751,8 +749,7 @@ namespace SportHubBase.Services
 
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "SELECT * FROM Matches WHERE TournamentId = @TId ORDER BY Round, MatchNumber";
-                cmd.Parameters.AddWithValue("@TId", tournamentId.ToString());
+                cmd.CommandText = "SELECT * FROM Matches WHERE TournamentId = @TId AND IsDeleted = 0 ORDER BY Round, MatchNumber"; cmd.Parameters.AddWithValue("@TId", tournamentId.ToString());
                 using (var r = cmd.ExecuteReader())
                 {
                     while (r.Read())

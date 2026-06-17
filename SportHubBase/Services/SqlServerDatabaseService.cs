@@ -1,4 +1,4 @@
-﻿// Services/SqlServerDatabaseService.cs
+﻿using System;
 using SportHubBase.Models;
 
 namespace SportHubBase.Services
@@ -7,21 +7,36 @@ namespace SportHubBase.Services
     {
         public string GetConnectionString()
         {
-            // Берем то, что пользователь ввел в поле "Адрес сервера"
-            string serverAddress = DatabaseConfig.SqlConnectionString;
+            string input = DatabaseConfig.SqlConnectionString?.Trim();
 
-            // Защита от дурака: если поле пустое, по умолчанию стучимся в localhost
-            if (string.IsNullOrWhiteSpace(serverAddress))
+            // СЦЕНАРИЙ 1: Поле пустое -> Локальный сервер по умолчанию (Windows Auth)
+            if (string.IsNullOrWhiteSpace(input))
             {
-                serverAddress = "localhost";
+                return "Server=localhost;Database=SportHub;Integrated Security=True;TrustServerCertificate=True;";
             }
 
-            // Формируем правильную строку подключения для .NET
-            // Используем Integrated Security (Windows-авторизацию). 
-            // Если у твоего сервера логин/пароль (sa), строку нужно будет изменить на:
-            // return $"Server={serverAddress};Database=SportHub;User Id=ТВОЙ_ЛОГИН;Password=ТВОЙ_ПАРОЛЬ;TrustServerCertificate=True;";
+            // СЦЕНАРИЙ 2: Пользователь ввёл полную техническую строку подключения целиком
+            if (input.Contains("Server=") || input.Contains("Data Source="))
+            {
+                return input;
+            }
 
-            return $"Server={serverAddress};Database=SportHub;Integrated Security=True;TrustServerCertificate=True;";
+            // СЦЕНАРИЙ 3: Пользователь ввёл локальный адрес вручную
+            // (localhost, 127.0.0.1, точку, имя своего ПК или экземпляр типа .\SQLEXPRESS)
+            // Для таких подключений мы автоматически используем Windows-авторизацию (Integrated Security)
+            if (input.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                input.Equals("127.0.0.1") ||
+                input.Equals(".") ||
+                input.Contains("\\") || // Ловит конструкции вида .\SQLEXPRESS или ИМЯ_ПК\SQLEXPRESS
+                input.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Format("Server={0};Database=SportHub;Integrated Security=True;TrustServerCertificate=True;", input);
+            }
+
+            // СЦЕНАРИЙ 4: Введён внешний IP-адрес или удаленный домен соревнований
+            // Здесь автоматически применяется серверная SQL-авторизация (логин/пароль)
+            // Замени sa и ТВОЙ_ПАРОЛЬ на реальные данные твоего внешнего сервера!
+            return string.Format("Server={0};Database=SportHub;User Id=sa;Password=ТВОЙ_ПАРОЛЬ;TrustServerCertificate=True;", input);
         }
     }
 }
