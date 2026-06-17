@@ -1,4 +1,4 @@
 /* Visual Studio Settings File */
 {
-  "sourceControl.gitSettings.enablePushForce": true
+  "sourceControl.gitSettings.enablePushForce": false
 }
