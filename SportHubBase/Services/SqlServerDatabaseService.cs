@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 using SportHubBase.Models;
 
 namespace SportHubBase.Services
@@ -7,37 +8,47 @@ namespace SportHubBase.Services
     {
         public string GetConnectionString()
         {
-            string input = DatabaseConfig.SqlConnectionString?.Trim();
-
-            // СЦЕНАРИЙ 1: Поле пустое -> Локальный сервер по умолчанию (Windows Auth)
-            if (string.IsNullOrWhiteSpace(input))
+            try
             {
-                return "Server=localhost;Database=SportHub;Integrated Security=True;TrustServerCertificate=True;";
-            }
+                string input = DatabaseConfig.SqlConnectionString?.Trim();
 
-            // СЦЕНАРИЙ 2: Введена полная готовая строка
-            if (input.Contains("Server=") || input.Contains("Data Source="))
+                // 1. ПРОВЕРКА НА ПУСТОТУ: Если ничего не ввели — ругаемся и прерываем метод
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    MessageBox.Show("Пожалуйста, введите адрес сервера.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return null; // <-- КРИТИЧЕСКИ ВАЖНО: останавливаем выполнение!
+                }
+
+                // --- Дальше мы уверены, что input не пустой, можно безопасно с ним работать ---
+
+                // 2. СЦЕНАРИЙ: Введена полная готовая строка
+                if (input.Contains("Server=") || input.Contains("Data Source="))
+                {
+                    return input;
+                }
+
+                // 3. СЦЕНАРИЙ: Строго локальный ПК (беспарольная Windows-авторизация)
+                if (input.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+                    input.Equals("127.0.0.1") ||
+                    input.Equals(".") ||
+                    input.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
+                    (input.Contains("\\") && !input.StartsWith("tcp:", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return string.Format("Server={0};Database=SportHub;Integrated Security=True;TrustServerCertificate=True;", input);
+                }
+
+                // 4. СЦЕНАРИЙ: Любой другой адрес (внешний IP, домен, tcp:)
+                string dbUser = "Seek";
+                string dbPass = "SSSzxcgoule";
+
+                return string.Format("Server={0};Database=SportHub;User Id={1};Password={2};TrustServerCertificate=True;", input, dbUser, dbPass);
+            }
+            catch (Exception ex)
             {
-                return input;
+                // Глобальный перехват любых технических сбоев (чтобы приложение не вылетало)
+                MessageBox.Show($"Произошла ошибка при обработке адреса сервера:\n{ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
             }
-
-            // СЦЕНАРИЙ 3: Строго локальный ПК 
-            // Только для себя используем беспарольную Windows-авторизацию
-            if (input.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-                input.Equals("127.0.0.1") ||
-                input.Equals(".") ||
-                input.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
-                (input.Contains("\\") && !input.StartsWith("tcp:", StringComparison.OrdinalIgnoreCase))) // Ловит .\SQLEXPRESS, но пропускает tcp:...
-            {
-                return string.Format("Server={0};Database=SportHub;Integrated Security=True;TrustServerCertificate=True;", input);
-            }
-
-            // СЦЕНАРИЙ 4: Любой другой адрес (192.168.0.12, tcp:201-SRV и т.д.)
-            // Сюда прописывай свои учетные данные от сервера!
-            string dbUser = "Seek"; // например, "sa" или твой личный логин
-            string dbPass = "SSSzxcgoule";
-
-            return string.Format("Server={0};Database=SportHub;User Id={1};Password={2};TrustServerCertificate=True;", input, dbUser, dbPass);
         }
     }
 }
