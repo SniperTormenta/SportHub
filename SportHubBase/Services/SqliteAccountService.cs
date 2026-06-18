@@ -135,6 +135,16 @@ namespace SportHubBase.Services
                 return false;
             }
 
+            // 1. Получаем строку подключения
+            string connectionString = _dbService.GetConnectionString();
+
+            // 2. Если строка пустая (пользователю уже показан MessageBox), прерываем выполнение
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                errorMessage = "Адрес БД не указан.";
+                return false;
+            }
+
             try
             {
                 int foundId = 0;
@@ -148,7 +158,8 @@ namespace SportHubBase.Services
                 string foundCity = null;
                 string storedHash = null;
 
-                using (var connection = new SqliteConnection(_dbService.GetConnectionString()))
+                // 3. Используем уже проверенную строку подключения
+                using (var connection = new SqliteConnection(connectionString))
                 {
                     connection.Open();
 
@@ -160,16 +171,16 @@ namespace SportHubBase.Services
                         {
                             if (reader.Read())
                             {
-                                foundId        = Convert.ToInt32(reader["Id"]);
-                                foundUsername  = reader["Username"]?.ToString();
-                                storedHash     = reader["PasswordHash"]?.ToString();
+                                foundId = Convert.ToInt32(reader["Id"]);
+                                foundUsername = reader["Username"]?.ToString();
+                                storedHash = reader["PasswordHash"]?.ToString();
                                 foundFirstName = reader["FirstName"]?.ToString();
-                                foundLastName  = reader["LastName"]?.ToString();
-                                foundEmail     = reader["Email"]?.ToString();
-                                foundPhone     = reader["PhoneNumber"]?.ToString();
-                                foundAvatar    = reader["AvatarPath"]?.ToString();
-                                foundRole      = reader["Role"]?.ToString();
-                                foundCity      = reader["City"]?.ToString();
+                                foundLastName = reader["LastName"]?.ToString();
+                                foundEmail = reader["Email"]?.ToString();
+                                foundPhone = reader["PhoneNumber"]?.ToString();
+                                foundAvatar = reader["AvatarPath"]?.ToString();
+                                foundRole = reader["Role"]?.ToString();
+                                foundCity = reader["City"]?.ToString();
                             }
                         }
                     }
@@ -189,15 +200,15 @@ namespace SportHubBase.Services
 
                 account = new UserAccount
                 {
-                    Id        = foundId,
-                    Username  = foundUsername,
+                    Id = foundId,
+                    Username = foundUsername,
                     FirstName = foundFirstName,
-                    LastName  = foundLastName,
-                    Email     = foundEmail,
+                    LastName = foundLastName,
+                    Email = foundEmail,
                     PhoneNumber = foundPhone,
-                    City      = foundCity,
+                    City = foundCity,
                     AvatarPath = foundAvatar,
-                    Role      = foundRole
+                    Role = foundRole
                 };
                 return true;
             }

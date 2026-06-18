@@ -119,6 +119,15 @@ namespace SportHubBase.Services
                 return false;
             }
 
+            // 1. ПОЛУЧАЕМ И ПРОВЕРЯЕМ СТРОКУ ПОДКЛЮЧЕНИЯ
+            string connectionString = _dbService.GetConnectionString();
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                // Метод GetConnectionString уже вывел MessageBox, поэтому просто прерываем работу
+                errorMessage = "Адрес сервера не указан.";
+                return false;
+            }
+
             try
             {
                 int foundId = 0;
@@ -126,7 +135,8 @@ namespace SportHubBase.Services
                 string foundEmail = null, foundPhone = null, foundAvatar = null;
                 string foundRole = null, foundCity = null, storedHash = null;
 
-                using (var connection = new SqlConnection(_dbService.GetConnectionString()))
+                // 2. ИСПОЛЬЗУЕМ ПРОВЕРЕННУЮ СТРОКУ ПОДКЛЮЧЕНИЯ
+                using (var connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
                     using (var cmd = connection.CreateCommand())
