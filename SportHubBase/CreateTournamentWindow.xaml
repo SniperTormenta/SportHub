@@ -73,8 +73,8 @@
                         <WrapPanel x:Name="TournamentTypeRadioPanel" Margin="0,12,0,12" >
                             <RadioButton Content="Круговой"     IsChecked="True"  GroupName="TournamentType" Margin="0,0,32,8" Checked="RadioButton_Checked"/>
                             <RadioButton Content="Олимпийский"                   GroupName="TournamentType" Margin="0,0,32,8" Checked="RadioButton_Checked"/>
-                            <RadioButton Content="Швейцарский"                   GroupName="TournamentType" Margin="0,0,32,8" Checked="RadioButton_Checked"/>
-                            <RadioButton Content="Многоэтапный"                  GroupName="TournamentType" Checked="RadioButton_Checked"/>
+                            <RadioButton Content="Швейцарский"                   GroupName="TournamentType" Margin="0,0,32,8" Checked="RadioButton_Checked" Visibility="Hidden"/>
+                            <RadioButton Content="Многоэтапный"                  GroupName="TournamentType" Checked="RadioButton_Checked" Visibility="Hidden"/>
                         </WrapPanel>
 
                         <!-- Динамическое описание -->
@@ -129,8 +129,8 @@
                     </Grid>
 
                     <!-- Без счёта -->
-                    <StackPanel Margin="0,0,0,20">
-                        <CheckBox x:Name="NoScoreCheckBox" Content="Без счета" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <StackPanel Margin="0,0,0,20" Visibility="Hidden">
+                        <CheckBox x:Name="NoScoreCheckBox" Content="Без счета" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8" />
                         <TextBlock Text="Для турниров, где важен только факт победы или поражения"
                                    Foreground="#6B7280" FontSize="13" Margin="24,0,0,0"/>
                     </StackPanel>

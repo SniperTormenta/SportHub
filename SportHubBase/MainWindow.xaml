@@ -96,12 +96,14 @@
                 <!-- Переключатель вида (список / карточки) -->
                 <StackPanel Grid.Column="3"
                             Orientation="Horizontal"
-                            VerticalAlignment="Center">
+                            VerticalAlignment="Center"
+                            Visibility="Hidden">
 
                     <!-- Список (по умолчанию включён) -->
                     <RadioButton x:Name="ListViewRadio"
                                  GroupName="ViewMode"
-                                 IsChecked="True">
+                                 IsChecked="True"
+                                 Visibility="Hidden">
                         <RadioButton.Template>
                             <ControlTemplate TargetType="RadioButton">
                                 <Border x:Name="border"
@@ -128,7 +130,8 @@
                     <!-- Карточки -->
                     <RadioButton x:Name="GridViewRadio"
                                  GroupName="ViewMode"
-                                 Margin="8,0,0,0">
+                                 Margin="8,0,0,0"
+                                 Visibility="Hidden">
                         <RadioButton.Template>
                             <ControlTemplate TargetType="RadioButton">
                                 <Border x:Name="border"
@@ -218,7 +221,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="test.ru" Foreground="#94A3B8"/>
+                <TextBlock Text="test.ru" Foreground="#94A3B8" Visibility="Hidden"/>
                 <TextBlock Grid.Column="1" Text="support@test.ru" Foreground="#94A3B8"/>
             </Grid>
         </Border>
