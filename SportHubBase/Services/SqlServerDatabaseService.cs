@@ -15,28 +15,29 @@ namespace SportHubBase.Services
                 return "Server=localhost;Database=SportHub;Integrated Security=True;TrustServerCertificate=True;";
             }
 
-            // СЦЕНАРИЙ 2: Пользователь ввёл полную техническую строку подключения целиком
+            // СЦЕНАРИЙ 2: Введена полная готовая строка
             if (input.Contains("Server=") || input.Contains("Data Source="))
             {
                 return input;
             }
 
-            // СЦЕНАРИЙ 3: Пользователь ввёл локальный адрес вручную
-            // (localhost, 127.0.0.1, точку, имя своего ПК или экземпляр типа .\SQLEXPRESS)
-            // Для таких подключений мы автоматически используем Windows-авторизацию (Integrated Security)
+            // СЦЕНАРИЙ 3: Строго локальный ПК 
+            // Только для себя используем беспарольную Windows-авторизацию
             if (input.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
                 input.Equals("127.0.0.1") ||
                 input.Equals(".") ||
-                input.Contains("\\") || // Ловит конструкции вида .\SQLEXPRESS или ИМЯ_ПК\SQLEXPRESS
-                input.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase))
+                input.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
+                (input.Contains("\\") && !input.StartsWith("tcp:", StringComparison.OrdinalIgnoreCase))) // Ловит .\SQLEXPRESS, но пропускает tcp:...
             {
                 return string.Format("Server={0};Database=SportHub;Integrated Security=True;TrustServerCertificate=True;", input);
             }
 
-            // СЦЕНАРИЙ 4: Введён внешний IP-адрес или удаленный домен соревнований
-            // Здесь автоматически применяется серверная SQL-авторизация (логин/пароль)
-            // Замени sa и ТВОЙ_ПАРОЛЬ на реальные данные твоего внешнего сервера!
-            return string.Format("Server={0};Database=SportHub;User Id=sa;Password=ТВОЙ_ПАРОЛЬ;TrustServerCertificate=True;", input);
+            // СЦЕНАРИЙ 4: Любой другой адрес (192.168.0.12, tcp:201-SRV и т.д.)
+            // Сюда прописывай свои учетные данные от сервера!
+            string dbUser = "Seek"; // например, "sa" или твой личный логин
+            string dbPass = "SSSzxcgoule";
+
+            return string.Format("Server={0};Database=SportHub;User Id={1};Password={2};TrustServerCertificate=True;", input, dbUser, dbPass);
         }
     }
 }
