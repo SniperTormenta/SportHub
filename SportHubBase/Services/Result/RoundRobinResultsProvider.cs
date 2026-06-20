@@ -48,7 +48,7 @@ namespace SportHubBase.Services.Results
             }
 
             // 1. Создаём структуру таблицы (Rows)
-            var sortedTeams = tournament.Teams.OrderBy(t => t.Name).ToList();
+            var sortedTeams = tournament.Teams.ToList();
             int teamCount = sortedTeams.Count;
 
             // Заполняем HeaderNumbers (1..N)
@@ -173,6 +173,10 @@ namespace SportHubBase.Services.Results
                 row.SetsRatio = stats.SetsRatio;
                 row.PointsRatio = stats.PointsRatio;
 
+            }
+
+            foreach (var row in rows)
+            {
                 data.Rows.Add(row);
             }
 

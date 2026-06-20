@@ -771,12 +771,20 @@ namespace SportHubBase.ViewModels
 
             // Загружаем сетку, если она есть
             Bracket = CurrentTournament.Bracket;
-            if (Bracket == null && CurrentTournament.Type == "Олимпийский" && Teams.Count >= 2)
+            if (CurrentTournament.Type == "Олимпийский")
             {
-                RegenerateBracket();
-                Bracket.ReconnectReferences();
-                SubscribeToBracket(Bracket);
-    
+                if (Bracket == null && Teams.Count >= 2)
+                {
+                    RegenerateBracket();
+                }
+                else if (Bracket != null)
+                {
+                    Bracket.ReconnectReferences();
+                    SubscribeToBracket(Bracket);
+                    _storage.UpdateTournament(CurrentTournament);
+                }
+
+                ScheduleVM.LoadMatches();
             }
 
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
@@ -1445,11 +1453,15 @@ namespace SportHubBase.ViewModels
             {
                 foreach (var match in round.Matches)
                 {
+                    match.PropertyChanged -= OnBracketMatchPropertyChanged;
                     match.PropertyChanged += OnBracketMatchPropertyChanged;
                 }
             }
             if (bracket.BronzeMatch != null)
+            {
+                bracket.BronzeMatch.PropertyChanged -= OnBracketMatchPropertyChanged;
                 bracket.BronzeMatch.PropertyChanged += OnBracketMatchPropertyChanged;
+            }
         }
 
         private void OnBracketMatchPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -1461,6 +1473,9 @@ namespace SportHubBase.ViewModels
                 if (match != null)
                 {
                     match.TryAdvance();
+                    CurrentTournament.Bracket?.AutoAdvanceByes();
+                    ScheduleVM.LoadMatches();
+                    GenerateResults();
                     _storage.UpdateTournament(CurrentTournament);
                     UpdateStatistics();
                 }
