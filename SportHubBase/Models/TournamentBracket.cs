@@ -31,6 +31,8 @@ namespace SportHubBase.Models
         /// </summary>
         public void ReconnectReferences()
         {
+            RestoreStructuralReferences();
+
             // Собираем все матчи в плоский словарь для быстрого поиска
             var allMatches = Rounds
                 .SelectMany(r => r.Matches)
@@ -49,6 +51,51 @@ namespace SportHubBase.Models
                 if (match.BronzeLoserTargetId.HasValue && allMatches.TryGetValue(match.BronzeLoserTargetId.Value, out var bronze))
                 {
                     match.BronzeLoserTarget = bronze;
+                }
+            }
+
+            AutoAdvanceByes();
+            ReplayCompletedMatches();
+        }
+
+        public void AutoAdvanceByes()
+        {
+            foreach (var match in Rounds.SelectMany(r => r.Matches).Where(m => m.IsBye))
+            {
+                match.TryAdvance();
+            }
+        }
+
+        public void ReplayCompletedMatches()
+        {
+            foreach (var match in Rounds.SelectMany(r => r.Matches))
+            {
+                match.TryAdvance();
+            }
+        }
+
+        private void RestoreStructuralReferences()
+        {
+            for (int r = 0; r < Rounds.Count - 1; r++)
+            {
+                var current = Rounds[r];
+                var next = Rounds[r + 1];
+
+                for (int i = 0; i < current.Matches.Count; i++)
+                {
+                    var match = current.Matches[i];
+                    int targetIndex = i / 2;
+
+                    if (targetIndex < next.Matches.Count && (!match.NextMatchId.HasValue || match.NextMatch == null))
+                    {
+                        match.NextMatch = next.Matches[targetIndex];
+                        match.IsTeam1InNext = i % 2 == 0;
+                    }
+
+                    if (BronzeMatch != null && next.Matches.Count == 1 && !match.BronzeLoserTargetId.HasValue)
+                    {
+                        match.BronzeLoserTarget = BronzeMatch;
+                    }
                 }
             }
         }

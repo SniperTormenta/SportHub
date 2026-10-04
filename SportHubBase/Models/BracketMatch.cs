@@ -54,7 +54,15 @@ namespace SportHubBase.Models
         }
 
         [JsonIgnore]
-        public BracketMatch NextMatch { get; set; }
+        public BracketMatch NextMatch
+        {
+            get => _nextMatch;
+            set
+            {
+                _nextMatch = value;
+                NextMatchId = value?.Id;
+            }
+        }
 
         [JsonProperty("nextMatchId")]
         public Guid? NextMatchId { get; set; }
@@ -63,7 +71,15 @@ namespace SportHubBase.Models
         public bool IsTeam1InNext { get; set; }
 
         [JsonIgnore]
-        public BracketMatch BronzeLoserTarget { get; set; }
+        public BracketMatch BronzeLoserTarget
+        {
+            get => _bronzeLoserTarget;
+            set
+            {
+                _bronzeLoserTarget = value;
+                BronzeLoserTargetId = value?.Id;
+            }
+        }
 
         [JsonProperty("bronzeLoserTargetId")]
         public Guid? BronzeLoserTargetId { get; set; }
@@ -88,6 +104,9 @@ namespace SportHubBase.Models
         [JsonIgnore]
         public double YPosition { get; set; }
 
+        private BracketMatch _nextMatch;
+        private BracketMatch _bronzeLoserTarget;
+
         [JsonIgnore]
         public bool IsBye => Team2 == null && Team1 != null;
 
@@ -98,14 +117,15 @@ namespace SportHubBase.Models
         public string DisplayTeam2 => Team2?.Name ?? (IsBye ? "" : "Ожидание...");
 
         [JsonIgnore]
-        public Team Winner => !IsCompleted ? null :
+        public Team Winner => IsBye ? Team1 :
+                              !IsCompleted ? null :
                               string.IsNullOrEmpty(Score1) || string.IsNullOrEmpty(Score2) ? null :
                               int.TryParse(Score1, out int s1) && int.TryParse(Score2, out int s2) ?
                                   (s1 > s2 ? Team1 : (s2 > s1 ? Team2 : null)) : null;
 
         public void TryAdvance()
         {
-            if (!IsCompleted || Winner == null) return;
+            if ((!IsCompleted && !IsBye) || Winner == null) return;
 
             // Продвигаем победителя в следующий матч
             if (NextMatch != null)
