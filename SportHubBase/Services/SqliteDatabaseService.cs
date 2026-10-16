@@ -85,34 +85,48 @@ namespace SportHubBase.Services
                 // -------------------------------------------------------
                 ExecuteNonQuery(connection, @"
                     CREATE TABLE IF NOT EXISTS Tournaments (
-                        Id              TEXT    PRIMARY KEY,
-                        Name            TEXT    NOT NULL,
-                        SportType       TEXT,
-                        Type            TEXT,
-                        Status          TEXT    NOT NULL DEFAULT 'Не начат',
-                        EditMode        TEXT,
-                        AccessMode      TEXT,
-                        IsPublic        INTEGER NOT NULL DEFAULT 1,
-                        NoScore         INTEGER NOT NULL DEFAULT 0,
-                        Description     TEXT,
-                        City            TEXT,
-                        Contacts        TEXT,
-                        LogoUrl         TEXT,
-                        InviteCode      TEXT,
-                        StartDate       TEXT    NOT NULL,
-                        EndDate         TEXT,
-                        OwnerId         TEXT,
-                        AllowedUserIds  TEXT,
-                        ScoringSystem   TEXT,
-                        CustomWinPoints  INTEGER NOT NULL DEFAULT 3,
-                        CustomDrawPoints INTEGER NOT NULL DEFAULT 1,
-                        CustomLossPoints INTEGER NOT NULL DEFAULT 0,
-                        BracketJson     TEXT,
-                        IsDeleted       INTEGER NOT NULL DEFAULT 0
+                        Id                    TEXT    PRIMARY KEY,
+                        Name                  TEXT    NOT NULL,
+                        SportType             TEXT,
+                        Type                  TEXT,
+                        TotalRounds           INTEGER NOT NULL DEFAULT 0,
+                        Status                TEXT    NOT NULL DEFAULT 'Не начат',
+                        EditMode              TEXT,
+                        AccessMode            TEXT,
+                        IsPublic              INTEGER NOT NULL DEFAULT 1,
+                        NoScore               INTEGER NOT NULL DEFAULT 0,
+                        Description           TEXT,
+                        City                  TEXT,
+                        Contacts              TEXT,
+                        LogoUrl               TEXT,
+                        InviteCode            TEXT,
+                        StartDate             TEXT    NOT NULL,
+                        EndDate               TEXT,
+                        OwnerId               TEXT,
+                        AllowedUserIds        TEXT,
+                        ScoringSystem         TEXT,
+                        CustomWinPoints       INTEGER NOT NULL DEFAULT 3,
+                        CustomDrawPoints      INTEGER NOT NULL DEFAULT 1,
+                        CustomLossPoints      INTEGER NOT NULL DEFAULT 0,
+                        TieBreakerRule        TEXT,
+                        BracketJson           TEXT,
+                        IsRemote              INTEGER NOT NULL DEFAULT 0,
+                        ServerAddress         TEXT,
+                        OrganizerLogin        TEXT,
+                        OrganizerPasswordHash TEXT,
+                        IsOrganizerRemembered INTEGER NOT NULL DEFAULT 0,
+                        IsDeleted             INTEGER NOT NULL DEFAULT 0
                     );");
 
-                // Автоматическое обновление существующей БД для работы с Архивом
+                // Автоматическое обновление существующей БД
                 TryAddColumn(connection, "Tournaments", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
+                TryAddColumn(connection, "Tournaments", "TotalRounds", "INTEGER NOT NULL DEFAULT 0");
+                TryAddColumn(connection, "Tournaments", "TieBreakerRule", "TEXT");
+                TryAddColumn(connection, "Tournaments", "IsRemote", "INTEGER NOT NULL DEFAULT 0");
+                TryAddColumn(connection, "Tournaments", "ServerAddress", "TEXT");
+                TryAddColumn(connection, "Tournaments", "OrganizerLogin", "TEXT");
+                TryAddColumn(connection, "Tournaments", "OrganizerPasswordHash", "TEXT");
+                TryAddColumn(connection, "Tournaments", "IsOrganizerRemembered", "INTEGER NOT NULL DEFAULT 0");
 
                 // -------------------------------------------------------
                 // Таблица команд

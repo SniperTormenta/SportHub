@@ -1,0 +1,128 @@
+<Window x:Class="SportHubBase.View.ConnectRemoteTournamentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Подключение удалённого турнира с сервера"
+        Width="740"
+        Height="560"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F8FAFC"
+        FontFamily="Segoe UI">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="🌐 Подключить турнир с сервера (MS SQL Server)"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="#0F172A"/>
+            <TextBlock Text="Укажите адрес сервера базы данных, выберите нужный турнир из списка и добавьте его в свой список турниров. Турнир будет автоматически кэшироваться для работы оффлайн."
+                       FontSize="13"
+                       Foreground="#64748B"
+                       TextWrapping="Wrap"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Строка подключения к серверу -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="Адрес SQL Server:"
+                           FontWeight="SemiBold"
+                           FontSize="14"
+                           Foreground="#334155"
+                           VerticalAlignment="Center"
+                           Margin="0,0,12,0"/>
+
+                <TextBox x:Name="ServerAddressTextBox"
+                         Grid.Column="1"
+                         Height="38"
+                         Padding="12,0"
+                         VerticalContentAlignment="Center"
+                         FontSize="14"
+                         Text="localhost"
+                         Margin="0,0,12,0"/>
+
+                <Button x:Name="SearchServerButton"
+                        Grid.Column="2"
+                        Content="Найти турниры"
+                        Style="{StaticResource DefaultModernButton}"
+                        Height="38"
+                        Padding="20,0"
+                        Click="SearchServerButton_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- Список найденных турниров -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="StatusTextBlock"
+                           Grid.Row="0"
+                           Text="Введите адрес сервера и нажмите «Найти турниры»"
+                           FontSize="13"
+                           Foreground="#64748B"
+                           Margin="4,0,4,8"/>
+
+                <DataGrid x:Name="RemoteTournamentsGrid"
+                          Grid.Row="1"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#F1F5F9"
+                          BorderThickness="0"
+                          Background="White"
+                          RowHeight="38"
+                          MouseDoubleClick="RemoteTournamentsGrid_MouseDoubleClick">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Название турнира" Binding="{Binding Name}" Width="2*"/>
+                        <DataGridTextColumn Header="Вид спорта" Binding="{Binding SportType}" Width="*"/>
+                        <DataGridTextColumn Header="Формат" Binding="{Binding Type}" Width="*"/>
+                        <DataGridTextColumn Header="Команд" Binding="{Binding TeamsCount}" Width="75"/>
+                        <DataGridTextColumn Header="Организатор" Binding="{Binding OwnerName}" Width="*"/>
+                        <DataGridTextColumn Header="Дата" Binding="{Binding StartDate, StringFormat=dd.MM.yyyy}" Width="95"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <!-- Кнопки внизу -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Отмена"
+                    Width="120"
+                    Height="40"
+                    Margin="0,0,12,0"
+                    Background="#E2E8F0"
+                    Foreground="#334155"
+                    BorderThickness="0"
+                    FontWeight="SemiBold"
+                    Cursor="Hand"
+                    Click="CancelButton_Click"/>
+            <Button x:Name="ConnectButton"
+                    Content="Подключить выбранный турнир"
+                    Style="{StaticResource DefaultModernButton}"
+                    Height="40"
+                    Padding="24,0"
+                    Click="ConnectButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -25,22 +25,10 @@ namespace SportHubBase
             base.OnStartup(e);
 
             ConfigureContainer();
-            ShowAuthWindow();
-        }
 
-        private void ShowAuthWindow()
-        {
-            var authViewModel = Container.GetInstance<AuthViewModel>();
-            var authWindow = new AuthWindow { DataContext = authViewModel };
-
-            authViewModel.LoginSuccess += () =>
-            {
-                var mainWindow = new MainWindow();
-                mainWindow.Show();
-                authWindow.Close();
-            };
-
-            authWindow.Show();
+            var mainWindow = new MainWindow();
+            MainWindow = mainWindow;
+            mainWindow.Show();
         }
 
         private void ConfigureContainer()

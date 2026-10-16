@@ -1,4 +1,4 @@
-﻿// Services/SqlServerStorageService.cs
+// Services/SqlServerStorageService.cs
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using SportHubBase.Interfaces;
@@ -28,37 +28,30 @@ namespace SportHubBase.Services
 
         public List<Tournament> LoadTournaments()
         {
+            return LoadTournaments(null);
+        }
+
+        public List<Tournament> LoadTournaments(string serverAddress)
+        {
             var tournaments = new List<Tournament>();
 
-            using (var conn = OpenConnection())
+            using (var conn = OpenConnection(serverAddress))
             {
                 var accountNames = LoadAccountNames(conn);
 
                 using (var cmd = conn.CreateCommand())
                 {
-                    string currentUserId = CurrentSession.CurrentUser?.Id.ToString();
-
-                    // Используем оператор "+" для конкатенации строк в T-SQL вместо "||" в SQLite
                     cmd.CommandText = @"
-                    SELECT * FROM Tournaments 
-                    WHERE IsDeleted = 0 AND 
-                         (IsPublic = 1 
-                          OR OwnerId = @CurrentUserId
-                          OR (AllowedUserIds IS NOT NULL AND 
-                              (AllowedUserIds = @CurrentUserId 
-                               OR AllowedUserIds LIKE @CurrentUserId + ',%' 
-                               OR AllowedUserIds LIKE '%,' + @CurrentUserId + ',%' 
-                               OR AllowedUserIds LIKE '%,' + @CurrentUserId)))
-                    ORDER BY StartDate DESC";
-
-                    cmd.Parameters.AddWithValue("@CurrentUserId", (object)currentUserId ?? DBNull.Value);
+                        SELECT * FROM Tournaments 
+                        WHERE IsDeleted = 0
+                        ORDER BY StartDate DESC";
 
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            var t = ReadTournamentRow(reader);
-                            if (!string.IsNullOrEmpty(t.OwnerId) && accountNames.TryGetValue(t.OwnerId, out string ownerName))
+                            var t = ReadTournamentRow(reader, serverAddress);
+                            if (string.IsNullOrEmpty(t.OrganizerLogin) && !string.IsNullOrEmpty(t.OwnerId) && accountNames.TryGetValue(t.OwnerId, out string ownerName))
                             {
                                 t.OwnerName = ownerName;
                             }
@@ -77,22 +70,100 @@ namespace SportHubBase.Services
             return tournaments;
         }
 
+        public Tournament GetTournamentById(Guid tournamentId)
+        {
+            return GetTournamentById(tournamentId, null);
+        }
+
+        public Tournament GetTournamentById(Guid tournamentId, string serverAddress)
+        {
+            using (var conn = OpenConnection(serverAddress))
+            {
+                Tournament t = null;
+                var accountNames = LoadAccountNames(conn);
+
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT * FROM Tournaments WHERE Id = @Id AND IsDeleted = 0";
+                    cmd.Parameters.AddWithValue("@Id", tournamentId.ToString());
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            t = ReadTournamentRow(reader, serverAddress);
+                            if (string.IsNullOrEmpty(t.OrganizerLogin) && !string.IsNullOrEmpty(t.OwnerId) && accountNames.TryGetValue(t.OwnerId, out string ownerName))
+                            {
+                                t.OwnerName = ownerName;
+                            }
+                        }
+                    }
+                }
+
+                if (t != null)
+                {
+                    t.Teams = LoadTeamsForTournament(conn, t.Id);
+                    t.Matches = LoadMatchesForTournament(conn, t.Id);
+                }
+
+                return t;
+            }
+        }
+
+        public List<Tournament> GetRemoteTournamentsList(string serverAddress)
+        {
+            return LoadTournaments(serverAddress);
+        }
+
+        public Tournament ConnectRemoteTournament(Guid tournamentId, string serverAddress)
+        {
+            return GetTournamentById(tournamentId, serverAddress);
+        }
+
+        public bool TrySyncRemoteTournament(Guid tournamentId, out Tournament syncedTournament)
+        {
+            syncedTournament = GetTournamentById(tournamentId);
+            return syncedTournament != null;
+        }
+
+        public bool IsTournamentEditable(Tournament tournament)
+        {
+            return true;
+        }
+
+        public bool UnlockTournament(Tournament tournament, string login, string password, bool rememberMe, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            return true;
+        }
+
+        public void LockTournament(Tournament tournament)
+        {
+        }
+
+        public void DisconnectLocalCopy(Guid tournamentId)
+        {
+        }
+
         private Dictionary<string, string> LoadAccountNames(Microsoft.Data.SqlClient.SqlConnection conn)
         {
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            using (var cmd = conn.CreateCommand())
+            try
             {
-                cmd.CommandText = "SELECT Id, Username FROM Accounts";
-                using (var r = cmd.ExecuteReader())
+                using (var cmd = conn.CreateCommand())
                 {
-                    while (r.Read())
+                    cmd.CommandText = "SELECT Id, Username FROM Accounts";
+                    using (var r = cmd.ExecuteReader())
                     {
-                        string id = r["Id"].ToString();
-                        string name = r["Username"].ToString();
-                        if (!map.ContainsKey(id)) map[id] = name;
+                        while (r.Read())
+                        {
+                            string id = r["Id"].ToString();
+                            string name = r["Username"].ToString();
+                            if (!map.ContainsKey(id)) map[id] = name;
+                        }
                     }
                 }
             }
+            catch { }
             return map;
         }
 
@@ -117,7 +188,12 @@ namespace SportHubBase.Services
 
         public void DeleteTournament(Guid tournamentId)
         {
-            using (var conn = OpenConnection())
+            DeleteTournament(tournamentId, null);
+        }
+
+        public void DeleteTournament(Guid tournamentId, string serverAddress)
+        {
+            using (var conn = OpenConnection(serverAddress))
             using (var cmd = conn.CreateCommand())
             {
                 cmd.CommandText = "UPDATE Tournaments SET IsDeleted = 1 WHERE Id = @Id";
@@ -132,20 +208,35 @@ namespace SportHubBase.Services
 
         public void AddTeam(Guid tournamentId, Team team)
         {
+            AddTeam(tournamentId, team, null);
+        }
+
+        public void AddTeam(Guid tournamentId, Team team, string serverAddress)
+        {
             if (team == null) throw new ArgumentNullException(nameof(team));
             if (team.Id == Guid.Empty) team.Id = Guid.NewGuid();
-            using (var conn = OpenConnection()) UpsertTeam(conn, tournamentId, team);
+            using (var conn = OpenConnection(serverAddress)) UpsertTeam(conn, tournamentId, team);
         }
 
         public void UpdateTeam(Guid tournamentId, Team team)
         {
+            UpdateTeam(tournamentId, team, null);
+        }
+
+        public void UpdateTeam(Guid tournamentId, Team team, string serverAddress)
+        {
             if (team == null) throw new ArgumentNullException(nameof(team));
-            using (var conn = OpenConnection()) UpsertTeam(conn, tournamentId, team);
+            using (var conn = OpenConnection(serverAddress)) UpsertTeam(conn, tournamentId, team);
         }
 
         public void DeleteTeam(Guid tournamentId, Guid teamId)
         {
-            using (var conn = OpenConnection())
+            DeleteTeam(tournamentId, teamId, null);
+        }
+
+        public void DeleteTeam(Guid tournamentId, Guid teamId, string serverAddress)
+        {
+            using (var conn = OpenConnection(serverAddress))
             using (var cmd = conn.CreateCommand())
             {
                 cmd.CommandText = "UPDATE Teams SET IsDeleted = 1 WHERE Id = @Id AND TournamentId = @TournamentId";
@@ -190,14 +281,24 @@ namespace SportHubBase.Services
 
         public void SaveMatch(Guid tournamentId, Match match)
         {
+            SaveMatch(tournamentId, match, null);
+        }
+
+        public void SaveMatch(Guid tournamentId, Match match, string serverAddress)
+        {
             if (match == null) throw new ArgumentNullException(nameof(match));
             if (match.Id == Guid.Empty) match.Id = Guid.NewGuid();
-            using (var conn = OpenConnection()) UpsertMatch(conn, tournamentId, match);
+            using (var conn = OpenConnection(serverAddress)) UpsertMatch(conn, tournamentId, match);
         }
 
         public void DeleteMatch(Guid matchId)
         {
-            using (var conn = OpenConnection())
+            DeleteMatch(matchId, null);
+        }
+
+        public void DeleteMatch(Guid matchId, string serverAddress)
+        {
+            using (var conn = OpenConnection(serverAddress))
             using (var cmd = conn.CreateCommand())
             {
                 cmd.CommandText = "UPDATE Matches SET IsDeleted = 1 WHERE Id = @Id";
@@ -212,9 +313,14 @@ namespace SportHubBase.Services
 
         public void SaveStandings(Guid tournamentId, IEnumerable<ResultRow> rows)
         {
+            SaveStandings(tournamentId, rows, null);
+        }
+
+        public void SaveStandings(Guid tournamentId, IEnumerable<ResultRow> rows, string serverAddress)
+        {
             if (rows == null) return;
 
-            using (var conn = OpenConnection())
+            using (var conn = OpenConnection(serverAddress))
             {
                 var teamIds = LoadTeamNameToIdMap(conn, tournamentId);
 
@@ -264,7 +370,7 @@ namespace SportHubBase.Services
 
         private void UpsertTournamentCore(Tournament t)
         {
-            using (var conn = OpenConnection())
+            using (var conn = OpenConnection(t.ServerAddress))
             using (var tx = conn.BeginTransaction())
             {
                 try
@@ -282,15 +388,17 @@ namespace SportHubBase.Services
                                     LogoUrl = @LogoUrl, InviteCode = @InviteCode, StartDate = @StartDate, EndDate = @EndDate,
                                     OwnerId = @OwnerId, AllowedUserIds = @AllowedUserIds, ScoringSystem = @ScoringSystem,
                                     CustomWinPoints = @CustomWinPoints, CustomDrawPoints = @CustomDrawPoints, 
-                                    CustomLossPoints = @CustomLossPoints, BracketJson = @BracketJson
+                                    CustomLossPoints = @CustomLossPoints, TotalRounds = @TotalRounds, TieBreakerRule = @TieBreakerRule,
+                                    OrganizerLogin = @OrganizerLogin, OrganizerPasswordHash = @OrganizerPasswordHash,
+                                    BracketJson = @BracketJson, IsDeleted = 0
                                 WHERE Id = @Id
                             END
                             ELSE
                             BEGIN
                                 INSERT INTO Tournaments
-                                    (Id, Name, SportType, Type, Status, EditMode, AccessMode, IsPublic, NoScore, Description, City, Contacts, LogoUrl, InviteCode, StartDate, EndDate, OwnerId, AllowedUserIds, ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, BracketJson)
+                                    (Id, Name, SportType, Type, Status, EditMode, AccessMode, IsPublic, NoScore, Description, City, Contacts, LogoUrl, InviteCode, StartDate, EndDate, OwnerId, AllowedUserIds, ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, TotalRounds, TieBreakerRule, OrganizerLogin, OrganizerPasswordHash, BracketJson, IsDeleted)
                                 VALUES
-                                    (@Id, @Name, @SportType, @Type, @Status, @EditMode, @AccessMode, @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @InviteCode, @StartDate, @EndDate, @OwnerId, @AllowedUserIds, @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @BracketJson)
+                                    (@Id, @Name, @SportType, @Type, @Status, @EditMode, @AccessMode, @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @InviteCode, @StartDate, @EndDate, @OwnerId, @AllowedUserIds, @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @TotalRounds, @TieBreakerRule, @OrganizerLogin, @OrganizerPasswordHash, @BracketJson, 0)
                             END";
 
                         string bracketJson = t.Bracket != null ? JsonConvert.SerializeObject(t.Bracket, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }) : null;
@@ -318,6 +426,10 @@ namespace SportHubBase.Services
                         cmd.Parameters.AddWithValue("@CustomWinPoints", t.CustomWinPoints);
                         cmd.Parameters.AddWithValue("@CustomDrawPoints", t.CustomDrawPoints);
                         cmd.Parameters.AddWithValue("@CustomLossPoints", t.CustomLossPoints);
+                        cmd.Parameters.AddWithValue("@TotalRounds", t.TotalRounds);
+                        cmd.Parameters.AddWithValue("@TieBreakerRule", DbValue(t.TieBreakerRule));
+                        cmd.Parameters.AddWithValue("@OrganizerLogin", DbValue(t.OrganizerLogin));
+                        cmd.Parameters.AddWithValue("@OrganizerPasswordHash", DbValue(t.OrganizerPasswordHash));
                         cmd.Parameters.AddWithValue("@BracketJson", DbValue(bracketJson));
                         cmd.ExecuteNonQuery();
                     }
@@ -374,12 +486,12 @@ namespace SportHubBase.Services
                 cmd.CommandText = @"
                     IF EXISTS (SELECT 1 FROM Teams WHERE Id = @Id)
                     BEGIN
-                        UPDATE Teams SET Name = @Name, Captain = @Captain, City = @City, LogoUrl = @LogoUrl, OwnerUserId = @OwnerUserId, MemberUserIds = @MemberUserIds WHERE Id = @Id
+                        UPDATE Teams SET Name = @Name, Captain = @Captain, City = @City, LogoUrl = @LogoUrl, OwnerUserId = @OwnerUserId, MemberUserIds = @MemberUserIds, IsDeleted = 0 WHERE Id = @Id
                     END
                     ELSE
                     BEGIN
-                        INSERT INTO Teams (Id, TournamentId, Name, Captain, City, LogoUrl, OwnerUserId, MemberUserIds)
-                        VALUES (@Id, @TournamentId, @Name, @Captain, @City, @LogoUrl, @OwnerUserId, @MemberUserIds)
+                        INSERT INTO Teams (Id, TournamentId, Name, Captain, City, LogoUrl, OwnerUserId, MemberUserIds, IsDeleted)
+                        VALUES (@Id, @TournamentId, @Name, @Captain, @City, @LogoUrl, @OwnerUserId, @MemberUserIds, 0)
                     END";
 
                 string memberIds = team.MemberUserIds != null && team.MemberUserIds.Count > 0 ? string.Join(",", team.MemberUserIds.Select(id => id.ToString())) : null;
@@ -421,12 +533,12 @@ namespace SportHubBase.Services
                 cmd.CommandText = @"
                     IF EXISTS (SELECT 1 FROM Players WHERE Id = @Id)
                     BEGIN
-                        UPDATE Players SET Name = @Name, Role = @Role, IsCaptain = @IsCaptain, UserId = @UserId WHERE Id = @Id
+                        UPDATE Players SET Name = @Name, Role = @Role, IsCaptain = @IsCaptain, UserId = @UserId, IsDeleted = 0 WHERE Id = @Id
                     END
                     ELSE
                     BEGIN
-                        INSERT INTO Players (Id, TeamId, Name, Role, IsCaptain, UserId)
-                        VALUES (@Id, @TeamId, @Name, @Role, @IsCaptain, @UserId)
+                        INSERT INTO Players (Id, TeamId, Name, Role, IsCaptain, UserId, IsDeleted)
+                        VALUES (@Id, @TeamId, @Name, @Role, @IsCaptain, @UserId, 0)
                     END";
 
                 cmd.Parameters.AddWithValue("@Id", player.Id.ToString());
@@ -439,7 +551,7 @@ namespace SportHubBase.Services
             }
         }
 
-        private void UpsertMatch(Microsoft.Data.SqlClient.SqlConnection conn, Guid tournamentId, Match match, Microsoft.Data.SqlClient. SqlTransaction tx = null)
+        private void UpsertMatch(Microsoft.Data.SqlClient.SqlConnection conn, Guid tournamentId, Match match, Microsoft.Data.SqlClient.SqlTransaction tx = null)
         {
             using (var cmd = conn.CreateCommand())
             {
@@ -447,12 +559,12 @@ namespace SportHubBase.Services
                 cmd.CommandText = @"
                     IF EXISTS (SELECT 1 FROM Matches WHERE Id = @Id)
                     BEGIN
-                        UPDATE Matches SET Round = @Round, RoundName = @RoundName, MatchNumber = @MatchNumber, Team1 = @Team1, Team2 = @Team2, Status = @Status, Team1QuickScore = @Team1QuickScore, Team2QuickScore = @Team2QuickScore, SetsScore = @SetsScore, SetsBySet = @SetsBySet, TotalScore = @TotalScore, Duration = @Duration, Referee = @Referee, Location = @Location, Mvp = @Mvp, WinnerId = @WinnerId, CreatedByUserId = @CreatedByUserId WHERE Id = @Id
+                        UPDATE Matches SET Round = @Round, RoundName = @RoundName, MatchNumber = @MatchNumber, Team1 = @Team1, Team2 = @Team2, Status = @Status, Team1QuickScore = @Team1QuickScore, Team2QuickScore = @Team2QuickScore, SetsScore = @SetsScore, SetsBySet = @SetsBySet, TotalScore = @TotalScore, Duration = @Duration, Referee = @Referee, Location = @Location, Mvp = @Mvp, WinnerId = @WinnerId, CreatedByUserId = @CreatedByUserId, IsDeleted = 0 WHERE Id = @Id
                     END
                     ELSE
                     BEGIN
-                        INSERT INTO Matches (Id, TournamentId, Round, RoundName, MatchNumber, Team1, Team2, Status, Team1QuickScore, Team2QuickScore, SetsScore, SetsBySet, TotalScore, Duration, Referee, Location, Mvp, WinnerId, CreatedByUserId)
-                        VALUES (@Id, @TournamentId, @Round, @RoundName, @MatchNumber, @Team1, @Team2, @Status, @Team1QuickScore, @Team2QuickScore, @SetsScore, @SetsBySet, @TotalScore, @Duration, @Referee, @Location, @Mvp, @WinnerId, @CreatedByUserId)
+                        INSERT INTO Matches (Id, TournamentId, Round, RoundName, MatchNumber, Team1, Team2, Status, Team1QuickScore, Team2QuickScore, SetsScore, SetsBySet, TotalScore, Duration, Referee, Location, Mvp, WinnerId, CreatedByUserId, IsDeleted)
+                        VALUES (@Id, @TournamentId, @Round, @RoundName, @MatchNumber, @Team1, @Team2, @Status, @Team1QuickScore, @Team2QuickScore, @SetsScore, @SetsBySet, @TotalScore, @Duration, @Referee, @Location, @Mvp, @WinnerId, @CreatedByUserId, 0)
                     END";
 
                 cmd.Parameters.AddWithValue("@Id", match.Id.ToString());
@@ -478,7 +590,7 @@ namespace SportHubBase.Services
             }
         }
 
-        private Tournament ReadTournamentRow(Microsoft.Data.SqlClient.SqlDataReader r)
+        private Tournament ReadTournamentRow(Microsoft.Data.SqlClient.SqlDataReader r, string serverAddress = null)
         {
             var t = new Tournament
             {
@@ -496,11 +608,22 @@ namespace SportHubBase.Services
                 Contacts = ReadString(r, "Contacts"),
                 LogoUrl = ReadString(r, "LogoUrl"),
                 InviteCode = ReadString(r, "InviteCode"),
-                ScoringSystem = ReadString(r, "ScoringSystem"),
+                ScoringSystem = ReadString(r, "ScoringSystem") ?? "Стандартная (3-1-0)",
                 CustomWinPoints = Convert.ToInt32(r["CustomWinPoints"]),
                 CustomDrawPoints = Convert.ToInt32(r["CustomDrawPoints"]),
                 CustomLossPoints = Convert.ToInt32(r["CustomLossPoints"]),
+                IsRemote = true,
+                ServerAddress = serverAddress
             };
+
+            if (HasColumn(r, "TotalRounds") && r["TotalRounds"] != DBNull.Value)
+                t.TotalRounds = Convert.ToInt32(r["TotalRounds"]);
+            if (HasColumn(r, "TieBreakerRule") && r["TieBreakerRule"] != DBNull.Value)
+                t.TieBreakerRule = ReadString(r, "TieBreakerRule") ?? "По разнице мячей";
+            if (HasColumn(r, "OrganizerLogin"))
+                t.OrganizerLogin = ReadString(r, "OrganizerLogin");
+            if (HasColumn(r, "OrganizerPasswordHash"))
+                t.OrganizerPasswordHash = ReadString(r, "OrganizerPasswordHash");
 
             if (r["StartDate"] != DBNull.Value)
             {
@@ -609,6 +732,7 @@ namespace SportHubBase.Services
                         {
                             Id = Guid.Parse(r["Id"].ToString()),
                             Round = Convert.ToInt32(r["Round"]),
+                            RoundName = HasColumn(r, "RoundName") ? ReadString(r, "RoundName") : null,
                             Team1 = ReadString(r, "Team1"),
                             Team2 = ReadString(r, "Team2"),
                             Status = r["Status"].ToString(),
@@ -654,11 +778,19 @@ namespace SportHubBase.Services
             return map;
         }
 
-        private Microsoft.Data.SqlClient.SqlConnection OpenConnection()
+        private Microsoft.Data.SqlClient.SqlConnection OpenConnection(string serverAddress = null)
         {
-            var conn = new Microsoft.Data.SqlClient.SqlConnection(_db.GetConnectionString());
-            conn.Open();
-            return conn;
+            return _db.OpenConnection(serverAddress);
+        }
+
+        private static bool HasColumn(Microsoft.Data.SqlClient.SqlDataReader r, string columnName)
+        {
+            for (int i = 0; i < r.FieldCount; i++)
+            {
+                if (string.Equals(r.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
         }
 
         private static object DbValue(string value) => string.IsNullOrEmpty(value) ? (object)DBNull.Value : value;

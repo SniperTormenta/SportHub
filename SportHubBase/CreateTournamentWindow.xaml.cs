@@ -1,18 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using SportHubBase.Interfaces;
 using SportHubBase.Models;
+using SportHubBase.Services;
 using SportHubBase.ViewModels;
 
 namespace SportHubBase
@@ -23,17 +15,14 @@ namespace SportHubBase
         {
             InitializeComponent();
 
-
-            // Создание ViewModel через контейнер зависимостей
             var storage = App.Container.GetInstance<IStorage>();
             DataContext = new CreateTournamentViewModel(storage);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadAdministratorsBlock();
             UpdateTournamentTypeDescription("Круговой");
-            WindowState = WindowState.Normal; // на всякий случай
+            WindowState = WindowState.Normal;
 
             double screenWidth = SystemParameters.WorkArea.Width;
             double screenHeight = SystemParameters.WorkArea.Height;
@@ -44,31 +33,23 @@ namespace SportHubBase
             Left = (screenWidth - Width) / 2;
             Top = (screenHeight - Height) / 2;
 
-            // Подписываемся на изменение текста в ComboBox
+            StartDatePicker.SelectedDate = DateTime.Today;
+            if (!string.IsNullOrWhiteSpace(DatabaseConfig.SqlServerAddress))
+            {
+                ServerAddressTextBox.Text = DatabaseConfig.SqlServerAddress;
+            }
+
             SetupCityComboBox();
         }
 
-        private void LoadAdministratorsBlock()
+        private void IsRemoteCheckBox_Changed(object sender, RoutedEventArgs e)
         {
-            var block = new StackPanel { Margin = new Thickness(0, 0, 0, 20) };
-
-            var label = new TextBlock
+            if (RemoteSettingsPanel != null)
             {
-                Text = "Администраторы *",
-                FontWeight = FontWeights.Bold,
-                FontSize = 14
-            };
-            block.Children.Add(label);
-
-            var adminsText = new TextBlock
-            {
-                Text = string.Format("Владелец - {0}", CurrentSession.Username),
-                Foreground = Brushes.Gray,
-                Margin = new Thickness(0, 4, 0, 0)
-            };
-            block.Children.Add(adminsText);
-
-            AdministratorsPlaceholder.Content = block;
+                RemoteSettingsPanel.Visibility = IsRemoteCheckBox.IsChecked == true
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
         }
 
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
@@ -104,7 +85,6 @@ namespace SportHubBase
                 description = "";
             }
 
-            // Проверяем, что TournamentTypeDescriptionPlaceholder инициализирован
             if (TournamentTypeDescriptionPlaceholder == null)
                 return;
 
@@ -119,8 +99,7 @@ namespace SportHubBase
                 CornerRadius = new CornerRadius(6),
                 Padding = new Thickness(12),
                 Margin = new Thickness(0, 8, 0, 0),
-                // Фиксируем ширину Border, чтобы она не менялась
-                Width = double.NaN, // Auto
+                Width = double.NaN,
                 HorizontalAlignment = HorizontalAlignment.Left
             };
 
@@ -130,8 +109,7 @@ namespace SportHubBase
                 TextWrapping = TextWrapping.Wrap,
                 FontSize = 13,
                 Foreground = new SolidColorBrush(Color.FromRgb(55, 65, 81)),
-                // Ограничиваем ширину текста, чтобы он переносился
-                MaxWidth = 600 // или другое значение
+                MaxWidth = 600
             };
 
             newBorder.Child = textBlock;
@@ -140,7 +118,6 @@ namespace SportHubBase
 
         private void CreateTournament_Click(object sender, RoutedEventArgs e)
         {
-            // Проверка обязательных полей
             if (string.IsNullOrWhiteSpace(NameTextBox.Text))
             {
                 MessageBox.Show("Поле 'Название' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -166,18 +143,6 @@ namespace SportHubBase
                 return;
             }
 
-            if (EditModeComboBox.SelectedItem == null)
-            {
-                MessageBox.Show("Поле 'Режим редактирования игр' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            if (AccessModeComboBox.SelectedItem == null)
-            {
-                MessageBox.Show("Поле 'Режим доступа' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
             if (StartDatePicker.SelectedDate == null)
             {
                 MessageBox.Show("Поле 'Дата начала' обязательно для заполнения.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -194,14 +159,31 @@ namespace SportHubBase
                 }
             }
 
-            // Если всё OK, собираем объект
-            string contactsInfo = "";
-            if (AddContactsCheckBox.IsChecked == true && CurrentSession.CurrentUser != null)
+            bool isRemote = IsRemoteCheckBox.IsChecked == true;
+            string serverAddress = null;
+            string organizerLogin = null;
+            string organizerPasswordHash = null;
+
+            if (isRemote)
             {
-                var contactsList = new List<string>();
-                if (!string.IsNullOrWhiteSpace(CurrentSession.CurrentUser.Email)) contactsList.Add(CurrentSession.CurrentUser.Email);
-                if (!string.IsNullOrWhiteSpace(CurrentSession.CurrentUser.PhoneNumber)) contactsList.Add(CurrentSession.CurrentUser.PhoneNumber);
-                contactsInfo = string.Join(", ", contactsList);
+                serverAddress = ServerAddressTextBox.Text?.Trim();
+                organizerLogin = OrganizerLoginTextBox.Text?.Trim();
+                string organizerPassword = OrganizerPasswordBox.Password;
+
+                if (string.IsNullOrWhiteSpace(serverAddress))
+                {
+                    MessageBox.Show("Укажите адрес SQL Server для публикации удалённого турнира.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(organizerLogin) || string.IsNullOrWhiteSpace(organizerPassword))
+                {
+                    MessageBox.Show("Для удалённого турнира необходимо задать логин и пароль организатора.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                organizerPasswordHash = PasswordHasher.HashPassword(organizerPassword);
+                DatabaseConfig.SqlServerAddress = serverAddress;
             }
 
             string sportType = ((ComboBoxItem)SportTypeComboBox.SelectedItem).Content.ToString();
@@ -211,34 +193,49 @@ namespace SportHubBase
 
             var tournament = new Tournament
             {
-                Name = NameTextBox.Text,
-                LogoUrl = "", // Если есть поле для логотипа
+                Name = NameTextBox.Text.Trim(),
+                LogoUrl = "",
                 Status = ((ComboBoxItem)StatusComboBox.SelectedItem).Content.ToString(),
                 SportType = sportType,
                 ScoringSystem = defaultScoring,
                 Type = selectedType,
                 TotalRounds = totalRounds,
-                EditMode = ((ComboBoxItem)EditModeComboBox.SelectedItem).Content.ToString(),
-                AccessMode = ((ComboBoxItem)AccessModeComboBox.SelectedItem).Content.ToString(),
-                IsPublic = ((ComboBoxItem)AccessModeComboBox.SelectedItem).Content.ToString() != "Приватный",
-                NoScore = NoScoreCheckBox.IsChecked ?? false,
-                Description = DescriptionTextBox.Text,
-                City = CityComboBox.Text,
-                Contacts = contactsInfo,
+                EditMode = "Только организатор турнира",
+                AccessMode = "Доступно всем",
+                IsPublic = true,
+                NoScore = false,
+                Description = DescriptionTextBox.Text?.Trim(),
+                City = CityComboBox.Text?.Trim(),
+                Contacts = ContactsTextBox.Text?.Trim(),
                 StartDate = StartDatePicker.SelectedDate.Value,
-                // Устанавливаем владельца из текущей сессии
-                OwnerId = CurrentSession.CurrentUser != null 
-                    ? CurrentSession.CurrentUser.Id.ToString() 
-                    : null
+                IsRemote = isRemote,
+                ServerAddress = serverAddress,
+                OrganizerLogin = organizerLogin,
+                OrganizerPasswordHash = organizerPasswordHash,
+                IsOrganizerRemembered = isRemote
             };
 
-            // Сохранение через сервис хранения
-            var storage = App.Container.GetInstance<IStorage>();
-            storage.CreateTournament(tournament);
+            try
+            {
+                var storage = App.Container.GetInstance<IStorage>();
+                storage.CreateTournament(tournament);
 
-            // Показать сообщение об успешном создании
-            MessageBox.Show("Турнир успешно создан!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
-            this.Close(); // Закрыть текущее окно
+                DialogResult = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Не удалось создать турнир:\n" + ex.Message,
+                    "Ошибка сохранения",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
 
         private string GetSelectedTournamentType()
@@ -257,7 +254,6 @@ namespace SportHubBase
 
         private void SetupCityComboBox()
         {
-            // Находим TextBox внутри ComboBox для обработки изменения текста
             var textBox = CityComboBox.Template.FindName("PART_EditableTextBox", CityComboBox) as TextBox;
             if (textBox != null)
             {
@@ -276,6 +272,5 @@ namespace SportHubBase
                 }
             }
         }
-
     }
 }

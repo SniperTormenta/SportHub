@@ -8,6 +8,8 @@
     <converters:ResultCellColorConverter x:Key="ResultCellColorConverter"/>
     <converters:SportTypeToHeaderConverter x:Key="SportTypeToHeaderConverter"/>
     <converters:SportTypeToTooltipConverter x:Key="SportTypeToTooltipConverter"/>
+    <converters:SelfCellImageConverter x:Key="SelfCellImageConverter"/>
+    <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     
     <!-- Шаблон для Круговой системы (Round Robin) -->
     <DataTemplate DataType="{x:Type data:RoundRobinResultsData}">
@@ -129,19 +131,31 @@
                                             </ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Width="57" Height="60" Margin="0,0,4,0" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Background="{Binding Converter={StaticResource ResultCellBackgroundConverter}}">
-                                                        <Grid>
+                                                    <Border Width="57" Height="60" Margin="0,0,4,0" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0" Background="{Binding Converter={StaticResource ResultCellBackgroundConverter}}" ClipToBounds="True">
+                                                        <Grid ClipToBounds="True">
                                                             <Path Data="M0,0 L60,60 M0,60 L60,0" Stroke="#E5E7EB" StrokeThickness="1.5" Stretch="None" Visibility="Collapsed">
                                                                 <Path.Style>
                                                                     <Style TargetType="Path">
                                                                         <Style.Triggers>
-                                                                            <DataTrigger Binding="{Binding IsSelf}" Value="True">
+                                                                            <MultiDataTrigger>
+                                                                                <MultiDataTrigger.Conditions>
+                                                                                    <Condition Binding="{Binding IsSelf}" Value="True"/>
+                                                                                    <Condition Binding="{Binding HasSelfImage}" Value="False"/>
+                                                                                </MultiDataTrigger.Conditions>
                                                                                 <Setter Property="Visibility" Value="Visible"/>
-                                                                            </DataTrigger>
+                                                                            </MultiDataTrigger>
                                                                         </Style.Triggers>
                                                                     </Style>
                                                                 </Path.Style>
                                                             </Path>
+                                                            <Image Source="{Binding SelfImageData, Converter={StaticResource SelfCellImageConverter}}"
+                                                                   Width="38" Height="38"
+                                                                   MaxWidth="44" MaxHeight="44"
+                                                                   Stretch="Uniform"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                                                   Visibility="{Binding HasSelfImage, Converter={StaticResource BoolToVis}}"/>
                                                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" Foreground="{Binding Converter={StaticResource ResultCellColorConverter}}" Text="{Binding DisplayText}">
                                                                 <TextBlock.Style>
                                                                     <Style TargetType="TextBlock">

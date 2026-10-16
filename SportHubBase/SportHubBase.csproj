@@ -42,8 +42,8 @@
     <ApplicationIcon>SportHub.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BCrypt.Net-Next, Version=4.1.0.0, Culture=neutral, PublicKeyToken=1e11be04b6288443, processorArchitecture=MSIL">
-      <HintPath>..\packages\BCrypt.Net-Next.4.1.0\lib\net48\BCrypt.Net-Next.dll</HintPath>
+    <Reference Include="BCrypt-Net-Next, Version=4.2.0.0, Culture=neutral, PublicKeyToken=1e11be04b6288443, processorArchitecture=MSIL">
+      <HintPath>..\packages\BCrypt.Net-Next.4.2.0\lib\net48\BCrypt-Net-Next.dll</HintPath>
     </Reference>
     <Reference Include="ClosedXML, Version=0.105.0.0, Culture=neutral, PublicKeyToken=fd1eb21b62ae805b, processorArchitecture=MSIL">
       <HintPath>..\packages\ClosedXML.0.105.0\lib\netstandard2.0\ClosedXML.dll</HintPath>
@@ -383,6 +383,12 @@
     <Compile Include="View\DeleteAccountConfirmWindow.xaml.cs">
       <DependentUpon>DeleteAccountConfirmWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\ConnectRemoteTournamentWindow.xaml.cs">
+      <DependentUpon>ConnectRemoteTournamentWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\OrganizerLoginWindow.xaml.cs">
+      <DependentUpon>OrganizerLoginWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="CreateTournamentWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -439,6 +445,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\DeleteAccountConfirmWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ConnectRemoteTournamentWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\OrganizerLoginWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

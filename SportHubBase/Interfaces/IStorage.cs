@@ -1,4 +1,4 @@
-﻿// Interfaces/IStorage.cs
+// Interfaces/IStorage.cs
 using SportHubBase.Models;
 using System;
 using System.Collections.Generic;
@@ -13,10 +13,20 @@ namespace SportHubBase.Interfaces
     {
         // ─── Турниры ──────────────────────────────────────────────────────────────
         List<Tournament> LoadTournaments();
+        Tournament GetTournamentById(Guid tournamentId);
         void SaveTournaments(List<Tournament> tournaments);
         void CreateTournament(Tournament tournament);
         void UpdateTournament(Tournament tournament);
         void DeleteTournament(Guid tournamentId);
+
+        // ─── Удалённые турниры и права организатора ───────────────────────────────
+        List<Tournament> GetRemoteTournamentsList(string serverAddress);
+        Tournament ConnectRemoteTournament(Guid tournamentId, string serverAddress);
+        bool TrySyncRemoteTournament(Guid tournamentId, out Tournament syncedTournament);
+        bool IsTournamentEditable(Tournament tournament);
+        bool UnlockTournament(Tournament tournament, string login, string password, bool rememberMe, out string errorMessage);
+        void LockTournament(Tournament tournament);
+        void DisconnectLocalCopy(Guid tournamentId);
 
         // ─── Команды ──────────────────────────────────────────────────────────────
         void AddTeam(Guid tournamentId, Team team);

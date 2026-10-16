@@ -13,6 +13,7 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:SelfCellImageConverter x:Key="SelfCellImageConverter"/>
 
         <!-- Шаблон строки результатов для экспорта -->
         <DataTemplate x:Key="ResultsRowTemplate">
@@ -100,13 +101,24 @@
                                                 <Path.Style>
                                                     <Style TargetType="Path">
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding}" Value="SELF">
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding IsSelf}" Value="True"/>
+                                                                    <Condition Binding="{Binding HasSelfImage}" Value="False"/>
+                                                                </MultiDataTrigger.Conditions>
                                                                 <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
+                                                            </MultiDataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Path.Style>
                                             </Path>
+                                            <Image Source="{Binding SelfImageData, Converter={StaticResource SelfCellImageConverter}}"
+                                                   Width="38" Height="38"
+                                                   Stretch="Uniform"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                                   Visibility="{Binding HasSelfImage, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                             <TextBlock HorizontalAlignment="Center"
            VerticalAlignment="Center"
            FontSize="16"

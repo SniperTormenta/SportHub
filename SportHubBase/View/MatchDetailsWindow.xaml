@@ -127,13 +127,8 @@
             </Grid.ColumnDefinitions>
 
             <!-- Левая команда -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <Ellipse Width="80" Height="80" Margin="0,0,20,0">
-                    <Ellipse.Fill>
-                        <ImageBrush ImageSource="{Binding Team1Logo}" Stretch="UniformToFill"/>
-                    </Ellipse.Fill>
-                </Ellipse>
-                <TextBlock Text="{Binding Team1}" FontSize="28" FontWeight="Bold" Foreground="#111418" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="250"/>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
+                <TextBlock Text="{Binding Team1}" FontSize="28" FontWeight="Bold" Foreground="#111418" VerticalAlignment="Center" TextWrapping="Wrap" TextAlignment="Right" MaxWidth="320"/>
             </StackPanel>
 
             <!-- Центральный счёт -->
@@ -151,13 +146,8 @@
             </StackPanel>
 
             <!-- Правая команда -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Team2}" FontSize="28" FontWeight="Bold" Foreground="#111418" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="250"/>
-                <Ellipse Width="80" Height="80" Margin="20,0,0,0">
-                    <Ellipse.Fill>
-                        <ImageBrush ImageSource="{Binding Team2Logo}" Stretch="UniformToFill"/>
-                    </Ellipse.Fill>
-                </Ellipse>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0">
+                <TextBlock Text="{Binding Team2}" FontSize="28" FontWeight="Bold" Foreground="#111418" VerticalAlignment="Center" TextWrapping="Wrap" TextAlignment="Left" MaxWidth="320"/>
             </StackPanel>
         </Grid>
 

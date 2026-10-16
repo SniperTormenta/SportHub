@@ -16,7 +16,7 @@
             <Border Background="White" 
                     CornerRadius="8" 
                     Padding="40,30" 
-                    MaxWidth="540" 
+                    MaxWidth="560" 
                     HorizontalAlignment="Center">
 
                 <StackPanel>
@@ -31,15 +31,11 @@
                                FontSize="13" 
                                Margin="0,0,0,24"/>
 
-                    <!-- === ДИНАМИЧЕСКИЙ БЛОК: Администраторы === -->
-                    <ContentControl x:Name="AdministratorsPlaceholder"/>
-
                     <!-- Название -->
                     <StackPanel Margin="0,0,0,20">
                         <TextBlock Text="Название *" FontWeight="Bold" FontSize="14"/>
-                        <TextBox x:Name="NameTextBox" Height="42" Margin="0,8,0,0"/>
+                        <TextBox x:Name="NameTextBox" Height="42" Margin="0,8,0,0" Padding="10,0" VerticalContentAlignment="Center"/>
                     </StackPanel>
-
 
                     <!-- Статус + Вид спорта -->
                     <Grid Margin="0,0,0,20">
@@ -58,7 +54,7 @@
 
                         <StackPanel Grid.Column="1" Margin="12,0,0,0">
                             <TextBlock Text="Вид спорта *" FontWeight="Bold" FontSize="14"/>
-                            <ComboBox x:Name="SportTypeComboBox" Height="36" Margin="0,8,0,0" Style="{StaticResource ModernComboBox}">
+                            <ComboBox x:Name="SportTypeComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="1" Style="{StaticResource ModernComboBox}">
                                 <ComboBoxItem>Другое</ComboBoxItem>
                                 <ComboBoxItem>Волейбол</ComboBoxItem>
                                 <ComboBoxItem>Баскетбол</ComboBoxItem>
@@ -105,40 +101,10 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!-- Режимы -->
-                    <Grid Margin="0,0,0,20">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                            <TextBlock Text="Режим редактирования игр *" FontWeight="Bold" FontSize="14"/>
-                            <ComboBox x:Name="EditModeComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="0" Style="{StaticResource ModernComboBox}">
-                                <ComboBoxItem>Только администраторы турнира</ComboBoxItem>
-                            </ComboBox>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                            <TextBlock Text="Режим доступа *" FontWeight="Bold" FontSize="14"/>
-                            <ComboBox x:Name="AccessModeComboBox" Height="36" Margin="0,8,0,0" SelectedIndex="0" Style="{StaticResource ModernComboBox}">
-                                <ComboBoxItem>Доступно всем</ComboBoxItem>
-                                <ComboBoxItem>Приватный</ComboBoxItem>
-                            </ComboBox>
-                        </StackPanel>
-                    </Grid>
-
-                    <!-- Без счёта -->
-                    <StackPanel Margin="0,0,0,20" Visibility="Hidden">
-                        <CheckBox x:Name="NoScoreCheckBox" Content="Без счета" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8" />
-                        <TextBlock Text="Для турниров, где важен только факт победы или поражения"
-                                   Foreground="#6B7280" FontSize="13" Margin="24,0,0,0"/>
-                    </StackPanel>
-
                     <!-- Описание -->
                     <StackPanel Margin="0,0,0,20">
                         <TextBlock Text="Описание" FontWeight="Bold" FontSize="14"/>
-                        <TextBox x:Name="DescriptionTextBox" Height="100" Margin="0,8,0,0" AcceptsReturn="True" TextWrapping="Wrap"/>
+                        <TextBox x:Name="DescriptionTextBox" Height="80" Margin="0,8,0,0" Padding="8" AcceptsReturn="True" TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <!-- Город -->
@@ -158,7 +124,7 @@
                             <ComboBox x:Name="CityComboBox" Grid.Column="1"
                                       Style="{StaticResource ModernComboBox}"
                                       HorizontalAlignment="Right"
-                                      Width="200"
+                                      Width="220"
                                       Height="36"
                                       VerticalAlignment="Center"
                                       IsEditable="True"
@@ -167,18 +133,61 @@
                         </Grid>
                     </StackPanel>
 
-                    <!-- Контакты -->
+                    <!-- Контакты организатора -->
                     <StackPanel Margin="0,0,0,20">
-                        <CheckBox x:Name="AddContactsCheckBox" Content="Добавить контактные данные" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                        <TextBlock Text="Ваши контактные данные (Email, Телефон) из профиля будут видны всем"
-                                   Foreground="#6B7280" FontSize="13" Margin="24,0,0,0"/>
+                        <TextBlock Text="Контакты организатора (телефон, email, соцсети)" FontWeight="Bold" FontSize="14"/>
+                        <TextBox x:Name="ContactsTextBox" Height="38" Margin="0,8,0,0" Padding="10,0" VerticalContentAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Дата начала -->
-                    <StackPanel Width="250" HorizontalAlignment="Left" Margin="0,0,0,30">
+                    <StackPanel Width="250" HorizontalAlignment="Left" Margin="0,0,0,24">
                         <TextBlock Text="Дата начала *" FontWeight="Bold" FontSize="14"/>
                         <DatePicker x:Name="StartDatePicker" Height="36" Margin="0,8,0,0" />
                     </StackPanel>
+
+                    <!-- === БЛОК: РАЗМЕЩЕНИЕ НА УДАЛЁННОМ СЕРВЕРЕ === -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,28">
+                        <StackPanel>
+                            <CheckBox x:Name="IsRemoteCheckBox"
+                                      Content="🌐 Опубликовать турнир на удалённом сервере (MS SQL Server)"
+                                      FontSize="14"
+                                      FontWeight="SemiBold"
+                                      Foreground="#0F172A"
+                                      Checked="IsRemoteCheckBox_Changed"
+                                      Unchecked="IsRemoteCheckBox_Changed"/>
+                            <TextBlock Text="По умолчанию турнир хранится локально на вашем ПК и не требует пароля. Если включить публикацию на сервере, другие пользователи смогут подключить его для просмотра, а редактирование будет защищено логином и паролем организатора."
+                                       Foreground="#64748B"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Margin="24,6,0,0"/>
+
+                            <StackPanel x:Name="RemoteSettingsPanel" Visibility="Collapsed" Margin="0,16,0,0">
+                                <StackPanel Margin="0,0,0,12">
+                                    <TextBlock Text="Адрес SQL Server *" FontWeight="SemiBold" FontSize="13" Foreground="#334155"/>
+                                    <TextBox x:Name="ServerAddressTextBox" Text="localhost" Height="36" Margin="0,6,0,0" Padding="10,0" VerticalContentAlignment="Center"/>
+                                    <TextBlock Text="Например: localhost, .\SQLEXPRESS или IP-адрес сервера" Foreground="#94A3B8" FontSize="11" Margin="0,4,0,0"/>
+                                </StackPanel>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Логин организатора *" FontWeight="SemiBold" FontSize="13" Foreground="#334155"/>
+                                        <TextBox x:Name="OrganizerLoginTextBox" Height="36" Margin="0,6,0,0" Padding="10,0" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Пароль организатора *" FontWeight="SemiBold" FontSize="13" Foreground="#334155"/>
+                                        <PasswordBox x:Name="OrganizerPasswordBox" Height="36" Margin="0,6,0,0" Padding="10,0" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
 
                     <!-- Кнопки -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
@@ -192,6 +201,7 @@
                                 Margin="0,0,16,0"/>
                         <Button Content="Отмена" 
                                 Style="{StaticResource DefaultModernButton}"
+                                Click="CancelButton_Click"
                                 Padding="24,12"/>
                     </StackPanel>
 

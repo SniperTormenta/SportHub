@@ -21,8 +21,6 @@ namespace SportHubBase.ViewModels
 
         public string Team1 => _match.Team1;
         public string Team2 => _match.Team2;
-        public string Team1Logo => "https://via.placeholder.com/80";
-        public string Team2Logo => "https://via.placeholder.com/80";
 
         public ObservableCollection<string> PlayersList { get; } = new ObservableCollection<string>();
 
@@ -51,9 +49,12 @@ namespace SportHubBase.ViewModels
             }
         }
 
+        private readonly Guid _tournamentId;
+
         public MatchDetailsViewModel(Match match, Guid tournamentId, IStorage storage, IMatchService matchService, ISportScoreStrategy strategy, bool canEdit)
         {
             CanEdit = canEdit;
+            _tournamentId = tournamentId;
             _match = match ?? throw new ArgumentNullException(nameof(match));
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
             _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
@@ -71,10 +72,8 @@ namespace SportHubBase.ViewModels
         {
             PlayersList.Clear();
             
-            var tournaments = _storage.LoadTournaments();
-            var tournament = tournaments.Find(t => t.Id == tournamentId);
-            
-            if (tournament == null)
+            var tournament = _storage.GetTournamentById(tournamentId);
+            if (tournament == null || tournament.Teams == null)
                 return;
 
             var team1 = tournament.Teams.FirstOrDefault(t => 
@@ -107,10 +106,9 @@ namespace SportHubBase.ViewModels
 
             if (MatchNumber.HasValue)
             {
-                var tournaments = _storage.LoadTournaments();
-                var tournament = tournaments.Find(t => t.Matches != null && t.Matches.Any(m => m.Id == _match.Id));
+                var tournament = _storage.GetTournamentById(_tournamentId);
                 
-                if (tournament != null)
+                if (tournament != null && tournament.Matches != null)
                 {
                     if (!_matchService.ValidateUniqueNumber(_match, tournament.Matches))
                     {

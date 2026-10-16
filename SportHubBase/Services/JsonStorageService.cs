@@ -1,4 +1,4 @@
-﻿// Services/JsonStorageService.cs
+// Services/JsonStorageService.cs
 // Используется как fallback / для обратной совместимости.
 // Основным хранилищем является SqliteStorageService.
 using Newtonsoft.Json;
@@ -28,6 +28,47 @@ namespace SportHubBase.Services
 
             string json = File.ReadAllText(_filePath);
             return JsonConvert.DeserializeObject<List<Tournament>>(json) ?? new List<Tournament>();
+        }
+
+        public Tournament GetTournamentById(Guid tournamentId)
+        {
+            return LoadTournaments().Find(t => t.Id == tournamentId);
+        }
+
+        public List<Tournament> GetRemoteTournamentsList(string serverAddress)
+        {
+            return new List<Tournament>();
+        }
+
+        public Tournament ConnectRemoteTournament(Guid tournamentId, string serverAddress)
+        {
+            return null;
+        }
+
+        public bool TrySyncRemoteTournament(Guid tournamentId, out Tournament syncedTournament)
+        {
+            syncedTournament = GetTournamentById(tournamentId);
+            return false;
+        }
+
+        public bool IsTournamentEditable(Tournament tournament)
+        {
+            return tournament != null && !tournament.IsRemote;
+        }
+
+        public bool UnlockTournament(Tournament tournament, string login, string password, bool rememberMe, out string errorMessage)
+        {
+            errorMessage = "Не поддерживается в JSON хранилище.";
+            return false;
+        }
+
+        public void LockTournament(Tournament tournament)
+        {
+        }
+
+        public void DisconnectLocalCopy(Guid tournamentId)
+        {
+            DeleteTournament(tournamentId);
         }
 
         public void SaveTournaments(List<Tournament> tournaments)

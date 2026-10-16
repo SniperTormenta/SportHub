@@ -71,8 +71,83 @@ namespace SportHubBase.ViewModels
         /// Текущий турнир (Model). Биндится к UI для заголовков/дат.
         public Tournament CurrentTournament { get; private set; }
         
-        public bool CanEdit { get; private set; }
+        private bool _canEdit;
+        public bool CanEdit
+        {
+            get => _canEdit;
+            private set
+            {
+                if (_canEdit != value)
+                {
+                    _canEdit = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(IsReadOnly));
+                    OnPropertyChanged(nameof(ShowUnlockOrganizerButton));
+                    OnPropertyChanged(nameof(ShowLockOrganizerButton));
+                    OnPropertyChanged(nameof(StorageStatusText));
+                    OnPropertyChanged(nameof(CanEditRoundRobin));
+                }
+            }
+        }
+
         public bool IsReadOnly => !CanEdit;
+
+        public bool IsRoundRobin => CurrentTournament != null && string.Equals(CurrentTournament.Type, "Круговой", StringComparison.OrdinalIgnoreCase);
+        public bool CanEditRoundRobin => CanEdit && IsRoundRobin;
+        public bool HasSelfCellImage => CurrentTournament != null && !string.IsNullOrWhiteSpace(CurrentTournament.LogoUrl);
+        public string SelfCellImageData => CurrentTournament != null ? CurrentTournament.LogoUrl : string.Empty;
+
+        public string SelfCellImageStatusText
+        {
+            get
+            {
+                string data = SelfCellImageData;
+                if (string.IsNullOrWhiteSpace(data))
+                    return "Не выбрано (стандартное перекрестие)";
+                if (string.Equals(data, "preset:volleyball", StringComparison.OrdinalIgnoreCase))
+                    return "Выбрано: Волейбольный мяч (встроенная иконка)";
+                if (string.Equals(data, "preset:football", StringComparison.OrdinalIgnoreCase))
+                    return "Выбрано: Футбольный мяч (встроенная иконка)";
+                if (string.Equals(data, "preset:basketball", StringComparison.OrdinalIgnoreCase))
+                    return "Выбрано: Баскетбольный мяч (встроенная иконка)";
+                return "Выбрано: Пользовательское изображение";
+            }
+        }
+
+        public string SelfCellImageLimitHint => "Ограничение размера: от 16×16 до 512×512 пикселей (PNG, JPG, BMP). Картинка автоматически центрируется и гарантированно вписывается в ячейку (57×60 пикс.).";
+
+        public ICommand SelectSelfCellImageCommand { get; private set; }
+        public ICommand SetPresetSelfCellImageCommand { get; private set; }
+        public ICommand ClearSelfCellImageCommand { get; private set; }
+        public ICommand OnSelfCellClickCommand { get; private set; }
+
+        public bool IsRemote => CurrentTournament != null && CurrentTournament.IsRemote;
+        public bool IsOfflineCache => CurrentTournament != null && CurrentTournament.IsRemote && CurrentTournament.IsOfflineCache;
+        public bool ShowUnlockOrganizerButton => IsRemote && !IsOfflineCache && !CanEdit;
+        public bool ShowLockOrganizerButton => IsRemote && CanEdit;
+
+        public string StorageStatusText
+        {
+            get
+            {
+                if (CurrentTournament == null) return string.Empty;
+                if (!CurrentTournament.IsRemote)
+                    return "💻 Локальный турнир (полный доступ)";
+
+                string server = string.IsNullOrWhiteSpace(CurrentTournament.ServerAddress) ? "localhost" : CurrentTournament.ServerAddress;
+                if (CurrentTournament.IsOfflineCache)
+                    return string.Format("⚡ Оффлайн-кэш ({0}) — только просмотр", server);
+
+                return CanEdit
+                    ? string.Format("🌐 Сервер: {0} (Режим организатора)", server)
+                    : string.Format("🌐 Сервер: {0} (Режим просмотра)", server);
+            }
+        }
+
+        public ICommand UnlockOrganizerCommand { get; private set; }
+        public ICommand LockOrganizerCommand { get; private set; }
+        public ICommand SyncRemoteCommand { get; private set; }
+        public ICommand DisconnectRemoteCommand { get; private set; }
 
         
         /// Коллекция команд для UI (ListView/DataGrid). Observable для добавления/удаления.
@@ -726,8 +801,7 @@ namespace SportHubBase.ViewModels
             _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
             _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
 
-            var tournaments = _storage.LoadTournaments();
-            CurrentTournament = tournaments.Find(t => t.Id == tournamentId);
+            CurrentTournament = _storage.GetTournamentById(tournamentId);
 
             // Если турнир не найден (например, при Guid.Empty), создаем новый
             if (CurrentTournament == null && tournamentId != Guid.Empty)
@@ -746,18 +820,7 @@ namespace SportHubBase.ViewModels
                 };
             }
 
-            if (CurrentTournament != null)
-            {
-                string currentId = CurrentSession.CurrentUser?.Id.ToString();
-                bool isOwner = currentId != null && CurrentTournament.OwnerId == currentId;
-                bool isAllowed = currentId != null && CurrentTournament.AllowedUserIds != null && 
-                                 CurrentTournament.AllowedUserIds.Any(id => id.ToString() == currentId);
-                CanEdit = isOwner || isAllowed;
-            }
-            else
-            {
-                CanEdit = false;
-            }
+            CanEdit = _storage.IsTournamentEditable(CurrentTournament);
 
             if (CurrentTournament != null && CurrentTournament.Teams != null)
             {
@@ -773,7 +836,7 @@ namespace SportHubBase.ViewModels
             Bracket = CurrentTournament.Bracket;
             if (CurrentTournament.Type == "Олимпийский")
             {
-                if (Bracket == null && Teams.Count >= 2)
+                if (Bracket == null && Teams.Count >= 2 && CanEdit)
                 {
                     RegenerateBracket();
                 }
@@ -781,7 +844,10 @@ namespace SportHubBase.ViewModels
                 {
                     Bracket.ReconnectReferences();
                     SubscribeToBracket(Bracket);
-                    _storage.UpdateTournament(CurrentTournament);
+                    if (CanEdit)
+                    {
+                        _storage.UpdateTournament(CurrentTournament);
+                    }
                 }
 
                 ScheduleVM.LoadMatches();
@@ -800,6 +866,16 @@ namespace SportHubBase.ViewModels
                 var limits = GetSwissRoundsLimits(TeamsCount);
                 TotalRounds = limits.recMin; // Берем нижнюю границу рекомендации
             });
+
+            UnlockOrganizerCommand = new RelayCommand(UnlockOrganizer);
+            LockOrganizerCommand = new RelayCommand(LockOrganizer);
+            SyncRemoteCommand = new RelayCommand(SyncRemoteTournament);
+            DisconnectRemoteCommand = new RelayCommand(DisconnectRemoteTournament);
+
+            SelectSelfCellImageCommand = new RelayCommand(SelectSelfCellImage);
+            SetPresetSelfCellImageCommand = new RelayCommand(SetPresetSelfCellImage);
+            ClearSelfCellImageCommand = new RelayCommand(_ => ApplySelfCellImageData(string.Empty));
+            OnSelfCellClickCommand = new RelayCommand(OnSelfCellClick);
 
             // GenerateSchedule(); // Теперь в ScheduleVM
             GenerateResults();
@@ -826,6 +902,266 @@ namespace SportHubBase.ViewModels
             
             // Инициализация команды завершения
             FinishTournamentCommand = new RelayCommand(FinishTournament, CanFinishTournament);
+        }
+
+        private const int MinSelfImagePixels = 16;
+        private const int MaxSelfImagePixels = 512;
+        private const int MaxNormalizedCellImagePixels = 64;
+
+        private void OnSelfCellClick(object parameter)
+        {
+            if (!CanEdit) return;
+            var cell = parameter as CellResult;
+            if (cell != null && !cell.IsSelf) return;
+            SelectSelfCellImage(null);
+        }
+
+        private void SelectSelfCellImage(object parameter)
+        {
+            if (!CanEdit || CurrentTournament == null) return;
+
+            var ofd = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Выберите изображение для серой ячейки (от 16x16 до 512x512 пикс.)",
+                Filter = "Изображения (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|Все файлы (*.*)|*.*"
+            };
+
+            if (ofd.ShowDialog() == true)
+            {
+                try
+                {
+                    byte[] rawBytes = System.IO.File.ReadAllBytes(ofd.FileName);
+                    int width;
+                    int height;
+                    byte[] normalizedPngBytes;
+
+                    using (var ms = new System.IO.MemoryStream(rawBytes))
+                    {
+                        var bmp = new System.Windows.Media.Imaging.BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                        bmp.StreamSource = ms;
+                        bmp.EndInit();
+                        bmp.Freeze();
+
+                        width = bmp.PixelWidth;
+                        height = bmp.PixelHeight;
+
+                        if (width < MinSelfImagePixels || height < MinSelfImagePixels ||
+                            width > MaxSelfImagePixels || height > MaxSelfImagePixels)
+                        {
+                            MessageBox.Show(
+                                string.Format(
+                                    "Размер выбранного изображения ({0}×{1} пикс.) не соответствует ограничениям.\n\n" +
+                                    "Допустимый размер: от {2}×{2} до {3}×{3} пикселей.\n" +
+                                    "Пожалуйста, выберите изображение подходящего размера.",
+                                    width, height, MinSelfImagePixels, MaxSelfImagePixels),
+                                "Ограничение размера изображения",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+                            return;
+                        }
+
+                        // Масштабируем и перекодируем в PNG с фиксированным размером <= 64x64 пикс.,
+                        // чтобы изображение гарантированно и чётко вставало в ячейку 57x60 независимо от DPI файла
+                        double scale = 1.0;
+                        if (width > MaxNormalizedCellImagePixels || height > MaxNormalizedCellImagePixels)
+                        {
+                            scale = Math.Min(
+                                (double)MaxNormalizedCellImagePixels / width,
+                                (double)MaxNormalizedCellImagePixels / height);
+                        }
+
+                        System.Windows.Media.Imaging.BitmapSource sourceToEncode = bmp;
+                        if (scale < 1.0)
+                        {
+                            var transformed = new System.Windows.Media.Imaging.TransformedBitmap(
+                                bmp,
+                                new System.Windows.Media.ScaleTransform(scale, scale));
+                            transformed.Freeze();
+                            sourceToEncode = transformed;
+                        }
+
+                        var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(sourceToEncode));
+                        using (var outMs = new System.IO.MemoryStream())
+                        {
+                            encoder.Save(outMs);
+                            normalizedPngBytes = outMs.ToArray();
+                        }
+                    }
+
+                    string base64Data = "base64:" + Convert.ToBase64String(normalizedPngBytes);
+                    ApplySelfCellImageData(base64Data);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        string.Format("Не удалось загрузить изображение (убедитесь, что файл является корректной картинкой PNG/JPG/BMP): {0}", ex.Message),
+                        "Ошибка загрузки изображения",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void SetPresetSelfCellImage(object parameter)
+        {
+            if (!CanEdit || CurrentTournament == null) return;
+            string preset = parameter as string;
+            if (preset == null) return;
+            ApplySelfCellImageData(preset);
+        }
+
+        private void ApplySelfCellImageData(string imageData)
+        {
+            if (CurrentTournament == null) return;
+
+            CurrentTournament.LogoUrl = imageData ?? string.Empty;
+
+            if (CurrentResults is RoundRobinResultsData rrData && rrData.Rows != null)
+            {
+                foreach (var row in rrData.Rows)
+                {
+                    if (row.Cells == null) continue;
+                    foreach (var cell in row.Cells)
+                    {
+                        if (cell != null && cell.IsSelf)
+                        {
+                            cell.SelfImageData = CurrentTournament.LogoUrl;
+                        }
+                    }
+                }
+            }
+
+            if (CanEdit)
+            {
+                _storage.UpdateTournament(CurrentTournament);
+            }
+
+            OnPropertyChanged(nameof(HasSelfCellImage));
+            OnPropertyChanged(nameof(SelfCellImageData));
+            OnPropertyChanged(nameof(SelfCellImageStatusText));
+        }
+
+        private void UnlockOrganizer(object parameter)
+        {
+            if (CurrentTournament == null || !CurrentTournament.IsRemote) return;
+
+            if (CurrentTournament.IsOfflineCache)
+            {
+                MessageBox.Show(
+                    "Редактирование удалённого турнира недоступно в оффлайн-режиме.\nВосстановите подключение к серверу и нажмите «Обновить с сервера».",
+                    "Оффлайн-режим",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            var currentWindow = Application.Current.Windows
+                .OfType<TournamentWindow>()
+                .FirstOrDefault(w => w.IsActive);
+
+            var loginWindow = new OrganizerLoginWindow(CurrentTournament, _storage)
+            {
+                Owner = currentWindow
+            };
+
+            if (loginWindow.ShowDialog() == true)
+            {
+                CanEdit = _storage.IsTournamentEditable(CurrentTournament);
+                NotifyStorageStateChanged();
+            }
+        }
+
+        private void LockOrganizer(object parameter)
+        {
+            if (CurrentTournament == null || !CurrentTournament.IsRemote) return;
+            _storage.LockTournament(CurrentTournament);
+            CanEdit = _storage.IsTournamentEditable(CurrentTournament);
+            NotifyStorageStateChanged();
+        }
+
+        private void SyncRemoteTournament(object parameter)
+        {
+            if (CurrentTournament == null || !CurrentTournament.IsRemote) return;
+
+            bool ok = _storage.TrySyncRemoteTournament(CurrentTournament.Id, out Tournament synced);
+            if (synced != null)
+            {
+                CurrentTournament = synced;
+                CanEdit = _storage.IsTournamentEditable(CurrentTournament);
+
+                Teams.Clear();
+                if (CurrentTournament.Teams != null)
+                {
+                    foreach (var team in CurrentTournament.Teams)
+                    {
+                        Teams.Add(team);
+                    }
+                }
+
+                Bracket = CurrentTournament.Bracket;
+                if (Bracket != null)
+                {
+                    Bracket.ReconnectReferences();
+                    SubscribeToBracket(Bracket);
+                }
+
+                RecreateScheduleVM();
+                GenerateResults();
+                UpdateStatistics();
+                NotifyStorageStateChanged();
+            }
+
+            if (ok)
+            {
+                MessageBox.Show("Данные турнира успешно синхронизированы с сервером!", "Синхронизация", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Сервер сейчас недоступен. Вы просматриваете сохранённую локальную оффлайн-копию турнира.",
+                    "Оффлайн-режим",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+
+        private void DisconnectRemoteTournament(object parameter)
+        {
+            if (CurrentTournament == null || !CurrentTournament.IsRemote) return;
+
+            var res = MessageBox.Show(
+                string.Format("Отключить турнир «{0}» от списка на этом ПК?\n\nНа удалённом сервере турнир останется нетронутым, и вы сможете подключить его снова в любой момент.", CurrentTournament.Name),
+                "Отключение удалённого турнира",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (res == MessageBoxResult.Yes)
+            {
+                _storage.DisconnectLocalCopy(CurrentTournament.Id);
+                Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.DataContext == this)?.Close();
+            }
+        }
+
+        private void NotifyStorageStateChanged()
+        {
+            OnPropertyChanged(nameof(CurrentTournament));
+            OnPropertyChanged(nameof(IsRemote));
+            OnPropertyChanged(nameof(IsOfflineCache));
+            OnPropertyChanged(nameof(ShowUnlockOrganizerButton));
+            OnPropertyChanged(nameof(ShowLockOrganizerButton));
+            OnPropertyChanged(nameof(StorageStatusText));
+            OnPropertyChanged(nameof(TeamsCount));
+            OnPropertyChanged(nameof(FormatText));
+            OnPropertyChanged(nameof(DatesText));
+            OnPropertyChanged(nameof(TournamentStatusText));
+            OnPropertyChanged(nameof(IsRoundRobin));
+            OnPropertyChanged(nameof(CanEditRoundRobin));
+            OnPropertyChanged(nameof(HasSelfCellImage));
+            OnPropertyChanged(nameof(SelfCellImageData));
+            OnPropertyChanged(nameof(SelfCellImageStatusText));
         }
 
         private void FinishTournament(object parameter)
@@ -877,14 +1213,10 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        // OnResultsTableCollectionChanged removed (logic moved to CurrentResults setter)
-
-        
-        /// Открывает вспомогательное окно добавления команды.
-        /// После закрытия — перезагружает команды из JSON (надёжно).
-        
         private void OpenAddTeamWindow(object parameter)
         {
+            if (!CanEdit) return;
+
             var currentWindow = Application.Current.Windows
                 .OfType<TournamentWindow>()
                 .FirstOrDefault(w => w.IsActive);
@@ -893,10 +1225,9 @@ namespace SportHubBase.ViewModels
                 var addTeamWindow = new AddTeamWindow(currentWindow, CurrentTournament.Id);
                 if (addTeamWindow.ShowDialog() == true)
                 {
-                    var updated = _storage.LoadTournaments().Find(t => t.Id == CurrentTournament.Id);
+                    var updated = _storage.GetTournamentById(CurrentTournament.Id);
                     if (updated != null)
                     {
-                        // ВАЖНО: Обновляем ссылку на объект турнира, чтобы он не был устаревшим
                         CurrentTournament = updated;
                         OnPropertyChanged(nameof(CurrentTournament));
                         OnPropertyChanged(nameof(IsOlympic));
@@ -913,16 +1244,13 @@ namespace SportHubBase.ViewModels
                     }
                     OnPropertyChanged(nameof(TeamsCount));
  
-                    // Обновляем расписание и результаты после добавления команды
-                    ScheduleVM.LoadMatches(); // Обновляем через VM
+                    ScheduleVM.LoadMatches();
                     GenerateResults();
                     UpdateStatistics();
                 }
             }
         }
 
-        /// Открывает окно экспорта результатов.
-        /// Показывает превью таблицы и позволяет сохранить в PNG/JPG.
         private void OpenExportWindow(object parameter)
         {
             var currentWindow = Application.Current.Windows
@@ -931,9 +1259,6 @@ namespace SportHubBase.ViewModels
 
             if (currentWindow != null && CurrentTournament != null && CurrentResults is RoundRobinResultsData rrData)
             {
-                // Конвертируем IReadOnlyList<int> в ObservableCollection для совместимости с ExportPreviewViewModel,
-                // либо, если там строго ObservableCollection, создаем новую.
-                // В старом коде ResultsHeaderNumbers был ObservableCollection<int>.
                 var headers = new ObservableCollection<int>(rrData.HeaderNumbers);
 
                 var exportViewModel = new ExportPreviewViewModel(
@@ -953,12 +1278,27 @@ namespace SportHubBase.ViewModels
             }
         }
 
-        /// Открывает окно редактирования команды.
-        
         private void EditTeam(object parameter)
         {
             var team = parameter as Team;
             if (team == null) return;
+
+            if (!CanEdit)
+            {
+                string playersInfo = team.Players != null && team.Players.Any()
+                    ? string.Join("\n", team.Players.Select((p, idx) => string.Format("{0}. {1}{2}", idx + 1, p.Name, p.IsCaptain ? " (Капитан)" : "")))
+                    : "Список игроков не указан";
+
+                MessageBox.Show(
+                    string.Format("Команда: {0}\nКапитан: {1}\n\nСостав команды:\n{2}",
+                        team.Name,
+                        string.IsNullOrWhiteSpace(team.Captain) ? "—" : team.Captain,
+                        playersInfo),
+                    "Информация о команде",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
 
             var currentWindow = Application.Current.Windows
                 .OfType<TournamentWindow>()
@@ -968,10 +1308,9 @@ namespace SportHubBase.ViewModels
                 var editTeamWindow = new AddTeamWindow(currentWindow, CurrentTournament.Id, team);
                 if (editTeamWindow.ShowDialog() == true)
                 {
-                    var updated = _storage.LoadTournaments().Find(t => t.Id == CurrentTournament.Id);
+                    var updated = _storage.GetTournamentById(CurrentTournament.Id);
                     if (updated != null)
                     {
-                        // ВАЖНО: Обновляем ссылку на объект турнира
                         CurrentTournament = updated;
                         OnPropertyChanged(nameof(CurrentTournament));
                         OnPropertyChanged(nameof(IsOlympic));
@@ -987,8 +1326,7 @@ namespace SportHubBase.ViewModels
                     }
                     OnPropertyChanged(nameof(TeamsCount));
  
-                    // Обновляем расписание и результаты после редактирования команды
-                    ScheduleVM.LoadMatches(); // Обновляем через VM
+                    ScheduleVM.LoadMatches();
                     GenerateResults();
                     UpdateStatistics();
                 }
@@ -1206,9 +1544,7 @@ namespace SportHubBase.ViewModels
         {
             if (MessageBox.Show("Отменить все несохраненные изменения?", "Отмена", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                // Перезагружаем турнир из хранилища
-                var tournaments = _storage.LoadTournaments();
-                var reloaded = tournaments.Find(t => t.Id == CurrentTournament.Id);
+                var reloaded = _storage.GetTournamentById(CurrentTournament.Id);
                 if (reloaded != null)
                 {
                     CurrentTournament = reloaded;
@@ -1322,7 +1658,7 @@ namespace SportHubBase.ViewModels
                         OnPropertyChanged(nameof(TeamsCount));
                         
                         // ВАЖНО: Загружаем свежий объект из базы для надёжной работы
-                        var updated = _storage.LoadTournaments().Find(t => t.Id == CurrentTournament.Id);
+                        var updated = _storage.GetTournamentById(CurrentTournament.Id);
                         if (updated != null)
                         {
                             CurrentTournament = updated;
@@ -1407,7 +1743,7 @@ namespace SportHubBase.ViewModels
             {
                 var owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive);
                 var window = new MatchDetailsWindow(owner, match, CurrentTournament.Id, _matchService, CanEdit);
-                if (window.ShowDialog() == true)
+                if (window.ShowDialog() == true && CanEdit)
                 {
                     UpdateResultsFromMatches();
                     UpdateStatistics();
@@ -1437,6 +1773,8 @@ namespace SportHubBase.ViewModels
 
         private void OnMatchPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (!CanEdit) return;
+
             if (e.PropertyName == nameof(Match.Team1QuickScore) || e.PropertyName == nameof(Match.Team2QuickScore) || e.PropertyName == nameof(Match.Status))
             {
                 UpdateResultsFromMatches();

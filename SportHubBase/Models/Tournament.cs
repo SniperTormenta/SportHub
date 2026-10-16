@@ -89,15 +89,79 @@ namespace SportHubBase.Models
         [JsonProperty("tieBreakerRule")]
         public string TieBreakerRule { get; set; } // "Standard", "GoalDiff", "HeadToHead", etc.
 
+        [JsonProperty("isRemote")]
+        public bool IsRemote { get; set; }
+
+        [JsonProperty("serverAddress")]
+        public string ServerAddress { get; set; }
+
+        [JsonProperty("organizerLogin")]
+        public string OrganizerLogin { get; set; }
+
+        [JsonProperty("organizerPasswordHash")]
+        public string OrganizerPasswordHash { get; set; }
+
+        [JsonProperty("isOrganizerRemembered")]
+        public bool IsOrganizerRemembered { get; set; }
+
+        /// <summary>
+        /// Флаг рантайма: турнир является удалённым, но сервер сейчас недоступен и данные загружены из локального оффлайн-кэша.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsOfflineCache { get; set; }
+
+        [JsonIgnore]
+        public string StorageBadgeText
+        {
+            get
+            {
+                if (!IsRemote) return "💻 Локальный";
+                if (IsOfflineCache) return "⚡ Оффлайн-кэш";
+                return "🌐 Сервер";
+            }
+        }
+
+        [JsonIgnore]
+        public string StorageBadgeBackground
+        {
+            get
+            {
+                if (!IsRemote) return "#F1F5F9";
+                if (IsOfflineCache) return "#FEF3C7";
+                return "#E0F2FE";
+            }
+        }
+
+        [JsonIgnore]
+        public string StorageBadgeForeground
+        {
+            get
+            {
+                if (!IsRemote) return "#475569";
+                if (IsOfflineCache) return "#D97706";
+                return "#0284C7";
+            }
+        }
+
         // Live — только если сейчас между началом и концом (или конец не указан)
         [JsonIgnore]
         public bool IsLive => DateTime.Now >= StartDate && (EndDate == null || DateTime.Now <= EndDate.Value);
 
+        private string _ownerName;
+
         /// <summary>
-        /// Имя владельца турнира. Заполняется при загрузке из БД.
-        /// Не сохраняется в JSON — только для отображения в UI.
+        /// Имя организатора турнира.
         /// </summary>
         [JsonIgnore]
-        public string OwnerName { get; set; }
+        public string OwnerName
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(_ownerName)) return _ownerName;
+                if (!string.IsNullOrWhiteSpace(OrganizerLogin)) return OrganizerLogin;
+                return IsRemote ? "Организатор сервера" : "Локальный";
+            }
+            set { _ownerName = value; }
+        }
     }
 }

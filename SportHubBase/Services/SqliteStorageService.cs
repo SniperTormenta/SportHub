@@ -36,35 +36,21 @@ namespace SportHubBase.Services
 
             using (var conn = OpenConnection())
             {
-                // 1. Загружаем словарь accountId -> username за один запрос
                 var accountNames = LoadAccountNames(conn);
 
-                // 2. Загружаем турниры
                 using (var cmd = conn.CreateCommand())
                 {
-                    string currentUserId = CurrentSession.CurrentUser?.Id.ToString();
-
                     cmd.CommandText = @"
                         SELECT * FROM Tournaments 
-                        WHERE IsDeleted = 0 AND 
-                             (IsPublic = 1 
-                              OR OwnerId = @CurrentUserId
-                              OR (AllowedUserIds IS NOT NULL AND 
-                                  (AllowedUserIds = @CurrentUserId 
-                                   OR AllowedUserIds LIKE @CurrentUserId + ',%' 
-                                   OR AllowedUserIds LIKE '%,' + @CurrentUserId + ',%' 
-                                   OR AllowedUserIds LIKE '%,' + @CurrentUserId)))
+                        WHERE IsDeleted = 0
                         ORDER BY StartDate DESC";
-
-                    cmd.Parameters.AddWithValue("@CurrentUserId", currentUserId ?? string.Empty);
 
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             var t = ReadTournamentRow(reader);
-                            // Заполняем OwnerName из кэша аккаунтов
-                            if (!string.IsNullOrEmpty(t.OwnerId))
+                            if (string.IsNullOrEmpty(t.OrganizerLogin) && !string.IsNullOrEmpty(t.OwnerId))
                             {
                                 string ownerName;
                                 if (accountNames.TryGetValue(t.OwnerId, out ownerName))
@@ -75,7 +61,6 @@ namespace SportHubBase.Services
                     }
                 }
 
-                // 3. Загружаем команды, игроков и матчи для каждого турнира
                 foreach (var t in tournaments)
                 {
                     t.Teams = LoadTeamsForTournament(conn, t.Id);
@@ -86,27 +71,110 @@ namespace SportHubBase.Services
             return tournaments;
         }
 
+        public Tournament GetTournamentById(Guid tournamentId)
+        {
+            using (var conn = OpenConnection())
+            {
+                Tournament t = null;
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT * FROM Tournaments WHERE Id = @Id AND IsDeleted = 0";
+                    cmd.Parameters.AddWithValue("@Id", tournamentId.ToString());
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            t = ReadTournamentRow(reader);
+                        }
+                    }
+                }
+
+                if (t != null)
+                {
+                    t.Teams = LoadTeamsForTournament(conn, t.Id);
+                    t.Matches = LoadMatchesForTournament(conn, t.Id);
+                }
+
+                return t;
+            }
+        }
+
+        public void SetOrganizerRemembered(Guid tournamentId, bool remembered)
+        {
+            using (var conn = OpenConnection())
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "UPDATE Tournaments SET IsOrganizerRemembered = @Rem WHERE Id = @Id";
+                cmd.Parameters.AddWithValue("@Rem", remembered ? 1 : 0);
+                cmd.Parameters.AddWithValue("@Id", tournamentId.ToString());
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public List<Tournament> GetRemoteTournamentsList(string serverAddress)
+        {
+            return new List<Tournament>();
+        }
+
+        public Tournament ConnectRemoteTournament(Guid tournamentId, string serverAddress)
+        {
+            return GetTournamentById(tournamentId);
+        }
+
+        public bool TrySyncRemoteTournament(Guid tournamentId, out Tournament syncedTournament)
+        {
+            syncedTournament = GetTournamentById(tournamentId);
+            return false;
+        }
+
+        public bool IsTournamentEditable(Tournament tournament)
+        {
+            return tournament != null && !tournament.IsRemote;
+        }
+
+        public bool UnlockTournament(Tournament tournament, string login, string password, bool rememberMe, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            return true;
+        }
+
+        public void LockTournament(Tournament tournament)
+        {
+            if (tournament != null)
+            {
+                SetOrganizerRemembered(tournament.Id, false);
+            }
+        }
+
+        public void DisconnectLocalCopy(Guid tournamentId)
+        {
+            DeleteTournament(tournamentId);
+        }
+
         /// <summary>
-        /// Загружает словарь Id(строка) -> Username из таблицы Accounts.
-        /// Используется для денормализации OwnerName в Tournament.
+        /// Загружает словарь Id(строка) -> Username из таблицы Accounts (для обратной совместимости).
         /// </summary>
         private Dictionary<string, string> LoadAccountNames(SqliteConnection conn)
         {
             var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            using (var cmd = conn.CreateCommand())
+            try
             {
-                cmd.CommandText = "SELECT Id, Username FROM Accounts";
-                using (var r = cmd.ExecuteReader())
+                using (var cmd = conn.CreateCommand())
                 {
-                    while (r.Read())
+                    cmd.CommandText = "SELECT Id, Username FROM Accounts";
+                    using (var r = cmd.ExecuteReader())
                     {
-                        string id   = r["Id"].ToString();
-                        string name = r["Username"].ToString();
-                        if (!map.ContainsKey(id))
-                            map[id] = name;
+                        while (r.Read())
+                        {
+                            string id   = r["Id"].ToString();
+                            string name = r["Username"].ToString();
+                            if (!map.ContainsKey(id))
+                                map[id] = name;
+                        }
                     }
                 }
             }
+            catch { }
             return map;
         }
 
@@ -324,38 +392,48 @@ namespace SportHubBase.Services
                         cmd.Transaction = tx;
                         cmd.CommandText = @"
                             INSERT INTO Tournaments
-                                (Id, Name, SportType, Type, Status, EditMode, AccessMode,
+                                (Id, Name, SportType, Type, TotalRounds, Status, EditMode, AccessMode,
                                  IsPublic, NoScore, Description, City, Contacts, LogoUrl, InviteCode,
                                  StartDate, EndDate, OwnerId, AllowedUserIds,
-                                 ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, BracketJson)
+                                 ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, TieBreakerRule,
+                                 BracketJson, IsRemote, ServerAddress, OrganizerLogin, OrganizerPasswordHash, IsOrganizerRemembered, IsDeleted)
                             VALUES
-                                (@Id, @Name, @SportType, @Type, @Status, @EditMode, @AccessMode,
+                                (@Id, @Name, @SportType, @Type, @TotalRounds, @Status, @EditMode, @AccessMode,
                                  @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @InviteCode,
                                  @StartDate, @EndDate, @OwnerId, @AllowedUserIds,
-                                 @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @BracketJson)
+                                 @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @TieBreakerRule,
+                                 @BracketJson, @IsRemote, @ServerAddress, @OrganizerLogin, @OrganizerPasswordHash, @IsOrganizerRemembered, 0)
                             ON CONFLICT(Id) DO UPDATE SET
-                                Name             = excluded.Name,
-                                SportType        = excluded.SportType,
-                                Type             = excluded.Type,
-                                Status           = excluded.Status,
-                                EditMode         = excluded.EditMode,
-                                AccessMode       = excluded.AccessMode,
-                                IsPublic         = excluded.IsPublic,
-                                NoScore          = excluded.NoScore,
-                                Description      = excluded.Description,
-                                City             = excluded.City,
-                                Contacts         = excluded.Contacts,
-                                LogoUrl          = excluded.LogoUrl,
-                                InviteCode       = excluded.InviteCode,
-                                StartDate        = excluded.StartDate,
-                                EndDate          = excluded.EndDate,
-                                OwnerId          = excluded.OwnerId,
-                                AllowedUserIds   = excluded.AllowedUserIds,
-                                ScoringSystem    = excluded.ScoringSystem,
-                                CustomWinPoints  = excluded.CustomWinPoints,
-                                CustomDrawPoints = excluded.CustomDrawPoints,
-                                CustomLossPoints = excluded.CustomLossPoints,
-                                BracketJson      = excluded.BracketJson";
+                                Name                  = excluded.Name,
+                                SportType             = excluded.SportType,
+                                Type                  = excluded.Type,
+                                TotalRounds           = excluded.TotalRounds,
+                                Status                = excluded.Status,
+                                EditMode              = excluded.EditMode,
+                                AccessMode            = excluded.AccessMode,
+                                IsPublic              = excluded.IsPublic,
+                                NoScore               = excluded.NoScore,
+                                Description           = excluded.Description,
+                                City                  = excluded.City,
+                                Contacts              = excluded.Contacts,
+                                LogoUrl               = excluded.LogoUrl,
+                                InviteCode            = excluded.InviteCode,
+                                StartDate             = excluded.StartDate,
+                                EndDate               = excluded.EndDate,
+                                OwnerId               = excluded.OwnerId,
+                                AllowedUserIds        = excluded.AllowedUserIds,
+                                ScoringSystem         = excluded.ScoringSystem,
+                                CustomWinPoints       = excluded.CustomWinPoints,
+                                CustomDrawPoints      = excluded.CustomDrawPoints,
+                                CustomLossPoints      = excluded.CustomLossPoints,
+                                TieBreakerRule        = excluded.TieBreakerRule,
+                                BracketJson           = excluded.BracketJson,
+                                IsRemote              = excluded.IsRemote,
+                                ServerAddress         = excluded.ServerAddress,
+                                OrganizerLogin        = excluded.OrganizerLogin,
+                                OrganizerPasswordHash = excluded.OrganizerPasswordHash,
+                                IsOrganizerRemembered = excluded.IsOrganizerRemembered,
+                                IsDeleted             = 0";
 
                         string bracketJson = t.Bracket != null
                             ? JsonConvert.SerializeObject(t.Bracket, new JsonSerializerSettings
@@ -372,6 +450,7 @@ namespace SportHubBase.Services
                         cmd.Parameters.AddWithValue("@Name", t.Name ?? string.Empty);
                         cmd.Parameters.AddWithValue("@SportType", DbValue(t.SportType));
                         cmd.Parameters.AddWithValue("@Type", DbValue(t.Type));
+                        cmd.Parameters.AddWithValue("@TotalRounds", t.TotalRounds);
                         cmd.Parameters.AddWithValue("@Status", t.Status ?? "Не начат");
                         cmd.Parameters.AddWithValue("@EditMode", DbValue(t.EditMode));
                         cmd.Parameters.AddWithValue("@AccessMode", DbValue(t.AccessMode));
@@ -390,7 +469,13 @@ namespace SportHubBase.Services
                         cmd.Parameters.AddWithValue("@CustomWinPoints", t.CustomWinPoints);
                         cmd.Parameters.AddWithValue("@CustomDrawPoints", t.CustomDrawPoints);
                         cmd.Parameters.AddWithValue("@CustomLossPoints", t.CustomLossPoints);
+                        cmd.Parameters.AddWithValue("@TieBreakerRule", DbValue(t.TieBreakerRule));
                         cmd.Parameters.AddWithValue("@BracketJson", DbValue(bracketJson));
+                        cmd.Parameters.AddWithValue("@IsRemote", t.IsRemote ? 1 : 0);
+                        cmd.Parameters.AddWithValue("@ServerAddress", DbValue(t.ServerAddress));
+                        cmd.Parameters.AddWithValue("@OrganizerLogin", DbValue(t.OrganizerLogin));
+                        cmd.Parameters.AddWithValue("@OrganizerPasswordHash", DbValue(t.OrganizerPasswordHash));
+                        cmd.Parameters.AddWithValue("@IsOrganizerRemembered", t.IsOrganizerRemembered ? 1 : 0);
                         cmd.ExecuteNonQuery();
                     }
 
@@ -600,24 +685,31 @@ namespace SportHubBase.Services
         {
             var t = new Tournament
             {
-                Id              = Guid.Parse(r["Id"].ToString()),
-                Name            = r["Name"].ToString(),
-                SportType       = ReadString(r, "SportType"),
-                Type            = ReadString(r, "Type"),
-                Status          = r["Status"].ToString(),
-                EditMode        = ReadString(r, "EditMode"),
-                AccessMode      = ReadString(r, "AccessMode"),
-                IsPublic        = Convert.ToInt32(r["IsPublic"]) == 1,
-                NoScore         = Convert.ToInt32(r["NoScore"]) == 1,
-                Description     = ReadString(r, "Description"),
-                City            = ReadString(r, "City"),
-                Contacts        = ReadString(r, "Contacts"),
-                LogoUrl         = ReadString(r, "LogoUrl"),
-                InviteCode      = ReadString(r, "InviteCode"),
-                ScoringSystem   = ReadString(r, "ScoringSystem"),
-                CustomWinPoints  = Convert.ToInt32(r["CustomWinPoints"]),
-                CustomDrawPoints = Convert.ToInt32(r["CustomDrawPoints"]),
-                CustomLossPoints = Convert.ToInt32(r["CustomLossPoints"]),
+                Id                    = Guid.Parse(r["Id"].ToString()),
+                Name                  = r["Name"].ToString(),
+                SportType             = ReadString(r, "SportType"),
+                Type                  = ReadString(r, "Type"),
+                TotalRounds           = ReadInt(r, "TotalRounds"),
+                Status                = r["Status"].ToString(),
+                EditMode              = ReadString(r, "EditMode"),
+                AccessMode            = ReadString(r, "AccessMode"),
+                IsPublic              = Convert.ToInt32(r["IsPublic"]) == 1,
+                NoScore               = Convert.ToInt32(r["NoScore"]) == 1,
+                Description           = ReadString(r, "Description"),
+                City                  = ReadString(r, "City"),
+                Contacts              = ReadString(r, "Contacts"),
+                LogoUrl               = ReadString(r, "LogoUrl"),
+                InviteCode            = ReadString(r, "InviteCode"),
+                ScoringSystem         = ReadString(r, "ScoringSystem"),
+                CustomWinPoints       = Convert.ToInt32(r["CustomWinPoints"]),
+                CustomDrawPoints      = Convert.ToInt32(r["CustomDrawPoints"]),
+                CustomLossPoints      = Convert.ToInt32(r["CustomLossPoints"]),
+                TieBreakerRule        = ReadString(r, "TieBreakerRule"),
+                IsRemote              = ReadInt(r, "IsRemote") == 1,
+                ServerAddress         = ReadString(r, "ServerAddress"),
+                OrganizerLogin        = ReadString(r, "OrganizerLogin"),
+                OrganizerPasswordHash = ReadString(r, "OrganizerPasswordHash"),
+                IsOrganizerRemembered = ReadInt(r, "IsOrganizerRemembered") == 1
             };
 
             // StartDate
@@ -758,6 +850,7 @@ namespace SportHubBase.Services
                         {
                             Id             = Guid.Parse(r["Id"].ToString()),
                             Round          = Convert.ToInt32(r["Round"]),
+                            RoundName      = ReadString(r, "RoundName"),
                             Team1          = ReadString(r, "Team1"),
                             Team2          = ReadString(r, "Team2"),
                             Status         = r["Status"].ToString(),
@@ -838,8 +931,29 @@ namespace SportHubBase.Services
 
         private static string ReadString(SqliteDataReader r, string columnName)
         {
-            object val = r[columnName];
-            return val == DBNull.Value ? null : val?.ToString();
+            try
+            {
+                object val = r[columnName];
+                return val == DBNull.Value ? null : val?.ToString();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static int ReadInt(SqliteDataReader r, string columnName)
+        {
+            try
+            {
+                object val = r[columnName];
+                if (val == null || val == DBNull.Value) return 0;
+                return Convert.ToInt32(val);
+            }
+            catch
+            {
+                return 0;
+            }
         }
     }
 }

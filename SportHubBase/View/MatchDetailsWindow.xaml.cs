@@ -19,8 +19,7 @@ namespace SportHubBase.View
             var storage = App.Container.GetInstance<IStorage>();
             var factory = App.Container.GetInstance<ISportScoreStrategyFactory>();
             
-            var tournaments = storage.LoadTournaments();
-            var tournament = tournaments.Find(t => t.Id == tournamentId);
+            var tournament = storage.GetTournamentById(tournamentId);
             var strategy = factory.GetStrategy(tournament?.SportType);
 
             _viewModel = new MatchDetailsViewModel(match, tournamentId, storage, matchService, strategy, canEdit);

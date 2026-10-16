@@ -174,8 +174,7 @@ namespace SportHubBase.ViewModels
 
             try
             {
-                var tournaments = _storage.LoadTournaments();
-                var tournament = tournaments.Find(t => t.Id == _tournamentId);
+                var tournament = _storage.GetTournamentById(_tournamentId);
                 if (tournament == null) return;
 
                 // 2. НОВАЯ ПРОВЕРКА: Уникальность названия команды
@@ -220,7 +219,7 @@ namespace SportHubBase.ViewModels
             }
             catch (Exception ex)
             {
-                // Перехватываем ошибки SQLite (например, блокировка файла)
+                // Перехватываем ошибки БД
                 MessageBox.Show($"Произошла ошибка при сохранении команды в базу данных:\n{ex.Message}",
                     "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -240,8 +239,7 @@ namespace SportHubBase.ViewModels
             if (result != MessageBoxResult.Yes)
                 return;
 
-            var tournaments = _storage.LoadTournaments();
-            var tournament = tournaments.Find(t => t.Id == _tournamentId);
+            var tournament = _storage.GetTournamentById(_tournamentId);
             if (tournament != null)
             {
                 var teamToRemove = tournament.Teams.FirstOrDefault(t => t.Id == _existingTeam.Id);

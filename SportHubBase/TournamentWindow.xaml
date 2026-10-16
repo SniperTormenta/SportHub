@@ -22,7 +22,7 @@
     </Window.Resources>
 
     <Grid>
-        <Border Background="White" Height="80" VerticalAlignment="Top">
+        <Border Background="White" Height="80" VerticalAlignment="Top" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
             <Grid Margin="32,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -32,12 +32,50 @@
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Width="32" Height="32" CornerRadius="8" Background="#137FEC" Margin="0,0,12,0">
-                        <TextBlock Text="C" Foreground="White" FontWeight="Bold" FontSize="18"
+                        <TextBlock Text="S" Foreground="White" FontWeight="Bold" FontSize="18"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#F1F5F9" CornerRadius="6" Padding="12,6" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding StorageStatusText}"
+                                   Foreground="#334155"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"/>
                     </Border>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="🔄 Обновить с сервера"
+                            Command="{Binding SyncRemoteCommand}"
+                            Visibility="{Binding IsRemote, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Style="{StaticResource AddTeamButtonStyle}"
+                            Background="#F1F5F9"
+                            Foreground="#1E293B"
+                            Padding="14,8"
+                            Margin="0,0,10,0"/>
+
+                    <Button Content="🔒 Войти как организатор"
+                            Command="{Binding UnlockOrganizerCommand}"
+                            Visibility="{Binding ShowUnlockOrganizerButton, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Style="{StaticResource DefaultModernButton}"
+                            Padding="16,8"
+                            Margin="0,0,10,0"/>
+
+                    <Button Content="🔓 Выйти из режима организатора"
+                            Command="{Binding LockOrganizerCommand}"
+                            Visibility="{Binding ShowLockOrganizerButton, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Style="{StaticResource AddTeamButtonStyle}"
+                            Background="#FEF3C7"
+                            Foreground="#B45309"
+                            Padding="14,8"
+                            Margin="0,0,10,0"/>
+
+                    <Button Content="Убрать из списка ПК"
+                            Command="{Binding DisconnectRemoteCommand}"
+                            Visibility="{Binding IsRemote, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Style="{StaticResource AddTeamButtonStyle}"
+                            Background="#FEE2E2"
+                            Foreground="#DC2626"
+                            Padding="14,8"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -875,7 +913,158 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <Border Grid.Row="2"
+                                Background="White"
+                                CornerRadius="12"
+                                Padding="24"
+                                Margin="0,0,0,24"
+                                BorderBrush="#E5E7EB"
+                                BorderThickness="1"
+                                Visibility="{Binding IsRoundRobin, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="Оформление шахматной таблицы (диагональная ячейка)"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="#111418"
+                                           Margin="0,0,0,6"/>
+                                <TextBlock Text="Выберите изображение (например, мяч или логотип турнира), которое будет отображаться в серых диагональных ячейках таблицы результатов (встреча команды с самой собой)."
+                                           FontSize="13"
+                                           Foreground="#6B7280"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,20"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="24"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Предпросмотр серой диагональной ячейки -->
+                                    <StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                        <TextBlock Text="Предпросмотр"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#617589"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,0,0,8"/>
+                                        <Border Width="60"
+                                                Height="60"
+                                                Background="#F3F4F6"
+                                                BorderBrush="#E5E7EB"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                ClipToBounds="True">
+                                            <Grid ClipToBounds="True">
+                                                <Path Data="M0,0 L60,60 M0,60 L60,0"
+                                                      Stroke="#E5E7EB"
+                                                      StrokeThickness="1.5"
+                                                      Stretch="None">
+                                                    <Path.Style>
+                                                        <Style TargetType="Path">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding HasSelfCellImage}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Path.Style>
+                                                </Path>
+                                                <Image Source="{Binding SelfCellImageData, Converter={StaticResource SelfCellImageConverter}}"
+                                                       Width="38" Height="38"
+                                                       MaxWidth="44" MaxHeight="44"
+                                                       Stretch="Uniform"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                                       Visibility="{Binding HasSelfCellImage, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                            </Grid>
+                                        </Border>
+                                        <TextBlock Text="57 × 60 пикс."
+                                                   FontSize="11"
+                                                   Foreground="#9CA3AF"
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,6,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Управление изображением и информация об ограничениях -->
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding SelfCellImageStatusText}"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#111418"
+                                                   Margin="0,0,0,8"/>
+
+                                        <Border Background="#F0F9FF"
+                                                CornerRadius="8"
+                                                Padding="12,8"
+                                                BorderBrush="#BAE6FD"
+                                                BorderThickness="1"
+                                                Margin="0,0,0,16">
+                                            <TextBlock Text="{Binding SelfCellImageLimitHint}"
+                                                       FontSize="12"
+                                                       Foreground="#0369A1"
+                                                       TextWrapping="Wrap"/>
+                                        </Border>
+
+                                        <WrapPanel Orientation="Horizontal">
+                                            <Button Content="🖼 Загрузить своё изображение..."
+                                                    Command="{Binding SelectSelfCellImageCommand}"
+                                                    Style="{StaticResource AddTeamButtonStyle}"
+                                                    Background="#E0F2FE"
+                                                    Foreground="#137FEC"
+                                                    Padding="14,8"
+                                                    Margin="0,0,8,8"
+                                                    FontSize="13"
+                                                    FontWeight="SemiBold"/>
+
+                                            <Button Content="🏐 Волейбольный мяч"
+                                                    Command="{Binding SetPresetSelfCellImageCommand}"
+                                                    CommandParameter="preset:volleyball"
+                                                    Style="{StaticResource AddTeamButtonStyle}"
+                                                    Background="#F3F4F6"
+                                                    Foreground="#111418"
+                                                    Padding="12,8"
+                                                    Margin="0,0,8,8"
+                                                    FontSize="13"/>
+
+                                            <Button Content="⚽ Футбольный мяч"
+                                                    Command="{Binding SetPresetSelfCellImageCommand}"
+                                                    CommandParameter="preset:football"
+                                                    Style="{StaticResource AddTeamButtonStyle}"
+                                                    Background="#F3F4F6"
+                                                    Foreground="#111418"
+                                                    Padding="12,8"
+                                                    Margin="0,0,8,8"
+                                                    FontSize="13"/>
+
+                                            <Button Content="🏀 Баскетбольный мяч"
+                                                    Command="{Binding SetPresetSelfCellImageCommand}"
+                                                    CommandParameter="preset:basketball"
+                                                    Style="{StaticResource AddTeamButtonStyle}"
+                                                    Background="#F3F4F6"
+                                                    Foreground="#111418"
+                                                    Padding="12,8"
+                                                    Margin="0,0,8,8"
+                                                    FontSize="13"/>
+
+                                            <Button Content="✕ Сбросить (перекрестие)"
+                                                    Command="{Binding ClearSelfCellImageCommand}"
+                                                    Visibility="{Binding HasSelfCellImage, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                    Style="{StaticResource AddTeamButtonStyle}"
+                                                    Background="#FFF1F2"
+                                                    Foreground="#E11D48"
+                                                    Padding="12,8"
+                                                    Margin="0,0,0,8"
+                                                    FontSize="13"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Row="3" Background="White" CornerRadius="12" Padding="24" Margin="0,0,0,24" BorderBrush="#E5E7EB" BorderThickness="1">
                             <StackPanel>
                                 <TextBlock Text="Дополнительные действия" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
 

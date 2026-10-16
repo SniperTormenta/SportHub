@@ -1,4 +1,4 @@
-﻿// Models/DatabaseConfig.cs
+// Models/DatabaseConfig.cs
 namespace SportHubBase.Models
 {
     public static class DatabaseConfig
@@ -6,7 +6,10 @@ namespace SportHubBase.Models
         // Флажок: используем внешний сервер?
         public static bool UseSqlServer { get; set; } = false;
 
-        // Строка подключения (пользователь введет ее в интерфейсе)
+        // Строка подключения
         public static string SqlConnectionString { get; set; } = "";
+
+        // Последний использованный адрес SQL Server по умолчанию
+        public static string SqlServerAddress { get; set; } = "localhost";
     }
 }

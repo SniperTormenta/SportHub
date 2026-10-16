@@ -74,6 +74,7 @@ namespace SportHubBase.Services.Results
                     {
                         cell.Outcome = "SELF";
                         cell.DisplayText = "";
+                        cell.SelfImageData = tournament.LogoUrl;
                     }
                     else
                     {
