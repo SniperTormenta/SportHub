@@ -173,4 +173,129 @@ namespace SportHubBase.Converters
             return img;
         }
     }
+
+    /// <summary>
+    /// Конвертер заднего фона карточки матча/турнира.
+    /// Если пользовательский фон не задан, возвращает фирменный фон ВОЛЕЙБОЛ АЛВ.
+    /// </summary>
+    public class CardBackgroundImageConverter : IValueConverter
+    {
+        private static ImageSource _defaultBackground;
+        private static readonly SelfCellImageConverter _innerConverter = new SelfCellImageConverter();
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            string data = value as string;
+            if (!string.IsNullOrWhiteSpace(data) && !string.Equals(data, "default", StringComparison.OrdinalIgnoreCase))
+            {
+                var customImg = _innerConverter.Convert(data, targetType, parameter, culture) as ImageSource;
+                if (customImg != null)
+                {
+                    return customImg;
+                }
+            }
+
+            return GetDefaultBackground();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static ImageSource GetDefaultBackground()
+        {
+            if (_defaultBackground != null)
+                return _defaultBackground;
+
+            try
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.UriSource = new Uri("pack://application:,,,/Resources/alv_card_bg.jpg", UriKind.Absolute);
+                bmp.EndInit();
+                bmp.Freeze();
+                _defaultBackground = bmp;
+                return _defaultBackground;
+            }
+            catch
+            {
+                try
+                {
+                    string localPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "alv_card_bg.jpg");
+                    if (File.Exists(localPath))
+                    {
+                        var bmp = new BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = BitmapCacheOption.OnLoad;
+                        bmp.UriSource = new Uri(localPath, UriKind.Absolute);
+                        bmp.EndInit();
+                        bmp.Freeze();
+                        _defaultBackground = bmp;
+                        return _defaultBackground;
+                    }
+                }
+                catch
+                {
+                }
+            }
+
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Вспомогательный класс для нормализации и кодирования изображений (логотипов и фонов) в строку base64.
+    /// </summary>
+    public static class ImageStorageHelper
+    {
+        public static string EncodeImageFileToBase64(string filePath, int maxWidth, int maxHeight, bool encodeAsJpeg)
+        {
+            byte[] rawBytes = File.ReadAllBytes(filePath);
+            using (var ms = new MemoryStream(rawBytes))
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.StreamSource = ms;
+                bmp.EndInit();
+                bmp.Freeze();
+
+                int width = bmp.PixelWidth;
+                int height = bmp.PixelHeight;
+
+                double scale = 1.0;
+                if (width > maxWidth || height > maxHeight)
+                {
+                    scale = Math.Min((double)maxWidth / width, (double)maxHeight / height);
+                }
+
+                BitmapSource sourceToEncode = bmp;
+                if (scale < 1.0)
+                {
+                    var transformed = new TransformedBitmap(bmp, new ScaleTransform(scale, scale));
+                    transformed.Freeze();
+                    sourceToEncode = transformed;
+                }
+
+                BitmapEncoder encoder;
+                if (encodeAsJpeg)
+                {
+                    encoder = new JpegBitmapEncoder { QualityLevel = 90 };
+                }
+                else
+                {
+                    encoder = new PngBitmapEncoder();
+                }
+
+                encoder.Frames.Add(BitmapFrame.Create(sourceToEncode));
+                using (var outMs = new MemoryStream())
+                {
+                    encoder.Save(outMs);
+                    return "base64:" + System.Convert.ToBase64String(outMs.ToArray());
+                }
+            }
+        }
+    }
 }

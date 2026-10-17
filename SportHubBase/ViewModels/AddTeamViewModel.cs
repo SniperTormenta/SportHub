@@ -15,7 +15,31 @@ namespace SportHubBase.ViewModels
         private readonly Guid _tournamentId;
         private readonly Team _existingTeam;
 
+        public const int MinTeamLogoPixels = 32;
+        public const int MaxTeamLogoPixels = 512;
+        public const int MaxNormalizedLogoPixels = 128;
+
         public string TeamName { get; set; }
+
+        private string _logoUrl;
+        public string LogoUrl
+        {
+            get => _logoUrl;
+            set
+            {
+                _logoUrl = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasLogo));
+            }
+        }
+
+        public bool HasLogo => !string.IsNullOrWhiteSpace(_logoUrl);
+
+        public string LogoSizeCaption => string.Format("от {0}×{0} до {1}×{1} пикс.", MinTeamLogoPixels, MaxTeamLogoPixels);
+
+        public string LogoSizeLimitHint => string.Format(
+            "Ограничение размера: от {0}×{0} до {1}×{1} пикселей (PNG, JPG, BMP). Изображение автоматически подгоняется под размер рамки, чтобы идеально вставать в карточку матча и список команд.",
+            MinTeamLogoPixels, MaxTeamLogoPixels);
 
         // Выбранный капитан из ComboBox
         private Player _selectedCaptain;
@@ -47,6 +71,8 @@ namespace SportHubBase.ViewModels
         public ICommand ImportExcelCommand { get; }
         public ICommand DownloadTemplateCommand { get; }
         public ICommand MakeCaptainCommand { get; }
+        public ICommand SelectLogoCommand { get; }
+        public ICommand ClearLogoCommand { get; }
 
         public event Action<bool> RequestClose;
 
@@ -70,12 +96,15 @@ namespace SportHubBase.ViewModels
             ImportExcelCommand = new RelayCommand(_ => ImportExcel());
             DownloadTemplateCommand = new RelayCommand(_ => DownloadTemplate());
             MakeCaptainCommand = new RelayCommand(MakeCaptain, p => p is Player);
+            SelectLogoCommand = new RelayCommand(_ => SelectLogo());
+            ClearLogoCommand = new RelayCommand(_ => LogoUrl = string.Empty);
 
             // Если редактируем существующую команду — подставляем её данные
             if (_existingTeam != null)
             {
                 TeamName = _existingTeam.Name;
                 OnPropertyChanged(nameof(TeamName));
+                LogoUrl = _existingTeam.LogoUrl;
 
                 // Загружаем сохранённый состав, если есть
                 if (_existingTeam.Players != null && _existingTeam.Players.Any())
@@ -106,6 +135,87 @@ namespace SportHubBase.ViewModels
                     OnPropertyChanged(nameof(PlayersCount));
 
                     SelectedCaptain = captainPlayer;
+                }
+            }
+        }
+
+        private void SelectLogo()
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = string.Format("Выберите аватарку команды (от {0}x{0} до {1}x{1} пикс.)", MinTeamLogoPixels, MaxTeamLogoPixels),
+                Filter = "Изображения (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp|Все файлы (*.*)|*.*"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    byte[] rawBytes = System.IO.File.ReadAllBytes(dialog.FileName);
+                    int width;
+                    int height;
+                    byte[] normalizedPngBytes;
+
+                    using (var ms = new System.IO.MemoryStream(rawBytes))
+                    {
+                        var bmp = new System.Windows.Media.Imaging.BitmapImage();
+                        bmp.BeginInit();
+                        bmp.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                        bmp.StreamSource = ms;
+                        bmp.EndInit();
+                        bmp.Freeze();
+
+                        width = bmp.PixelWidth;
+                        height = bmp.PixelHeight;
+
+                        if (width < MinTeamLogoPixels || height < MinTeamLogoPixels ||
+                            width > MaxTeamLogoPixels || height > MaxTeamLogoPixels)
+                        {
+                            MessageBox.Show(
+                                string.Format(
+                                    "Размер выбранного изображения ({0}×{1} пикс.) не соответствует ограничениям.\n\n" +
+                                    "Допустимый размер аватарки команды: от {2}×{2} до {3}×{3} пикселей.\n" +
+                                    "Пожалуйста, выберите изображение подходящего размера.",
+                                    width, height, MinTeamLogoPixels, MaxTeamLogoPixels),
+                                "Ограничение размера изображения",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+                            return;
+                        }
+
+                        double scale = 1.0;
+                        if (width > MaxNormalizedLogoPixels || height > MaxNormalizedLogoPixels)
+                        {
+                            scale = Math.Min(
+                                (double)MaxNormalizedLogoPixels / width,
+                                (double)MaxNormalizedLogoPixels / height);
+                        }
+
+                        System.Windows.Media.Imaging.BitmapSource sourceToEncode = bmp;
+                        if (scale < 1.0)
+                        {
+                            var transformed = new System.Windows.Media.Imaging.TransformedBitmap(
+                                bmp,
+                                new System.Windows.Media.ScaleTransform(scale, scale));
+                            transformed.Freeze();
+                            sourceToEncode = transformed;
+                        }
+
+                        var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(sourceToEncode));
+                        using (var outMs = new System.IO.MemoryStream())
+                        {
+                            encoder.Save(outMs);
+                            normalizedPngBytes = outMs.ToArray();
+                        }
+                    }
+
+                    LogoUrl = "base64:" + Convert.ToBase64String(normalizedPngBytes);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Не удалось загрузить изображение аватарки команды:\n" + ex.Message,
+                        "Ошибка загрузки", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -196,6 +306,7 @@ namespace SportHubBase.ViewModels
                     {
                         Id = Guid.NewGuid(),
                         Name = newTeamName,
+                        LogoUrl = LogoUrl,
                         Captain = SelectedCaptain?.Name ?? "Капитан не выбран",
                         Players = Players.ToList()
                     };
@@ -209,6 +320,7 @@ namespace SportHubBase.ViewModels
                     if (teamToUpdate != null)
                     {
                         teamToUpdate.Name = newTeamName;
+                        teamToUpdate.LogoUrl = LogoUrl;
                         teamToUpdate.Captain = SelectedCaptain?.Name ?? "Капитан не выбран";
                         teamToUpdate.Players = Players.ToList();
                     }

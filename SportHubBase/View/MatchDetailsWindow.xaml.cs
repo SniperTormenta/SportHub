@@ -18,12 +18,24 @@ namespace SportHubBase.View
 
             var storage = App.Container.GetInstance<IStorage>();
             var factory = App.Container.GetInstance<ISportScoreStrategyFactory>();
+            var encoderFactory = App.Container.GetInstance<IImageEncoderStrategyFactory>();
             
             var tournament = storage.GetTournamentById(tournamentId);
             var strategy = factory.GetStrategy(tournament?.SportType);
 
             _viewModel = new MatchDetailsViewModel(match, tournamentId, storage, matchService, strategy, canEdit);
             DataContext = _viewModel;
+
+            _viewModel.RequestOpenCardPreview += (m, tId) =>
+            {
+                var currentTournament = storage.GetTournamentById(tId) ?? tournament;
+                if (currentTournament != null)
+                {
+                    var cardVm = new MatchCardPreviewViewModel(currentTournament, m, storage, encoderFactory);
+                    var previewWin = new MatchCardPreviewWindow(this, cardVm);
+                    previewWin.ShowDialog();
+                }
+            };
 
             _viewModel.RequestClose += () =>
             {

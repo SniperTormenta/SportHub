@@ -385,7 +385,7 @@ namespace SportHubBase.Services
                                     Name = @Name, SportType = @SportType, Type = @Type, Status = @Status,
                                     EditMode = @EditMode, AccessMode = @AccessMode, IsPublic = @IsPublic,
                                     NoScore = @NoScore, Description = @Description, City = @City, Contacts = @Contacts,
-                                    LogoUrl = @LogoUrl, InviteCode = @InviteCode, StartDate = @StartDate, EndDate = @EndDate,
+                                    LogoUrl = @LogoUrl, CardBackgroundData = @CardBackgroundData, InviteCode = @InviteCode, StartDate = @StartDate, EndDate = @EndDate,
                                     OwnerId = @OwnerId, AllowedUserIds = @AllowedUserIds, ScoringSystem = @ScoringSystem,
                                     CustomWinPoints = @CustomWinPoints, CustomDrawPoints = @CustomDrawPoints, 
                                     CustomLossPoints = @CustomLossPoints, TotalRounds = @TotalRounds, TieBreakerRule = @TieBreakerRule,
@@ -396,9 +396,9 @@ namespace SportHubBase.Services
                             ELSE
                             BEGIN
                                 INSERT INTO Tournaments
-                                    (Id, Name, SportType, Type, Status, EditMode, AccessMode, IsPublic, NoScore, Description, City, Contacts, LogoUrl, InviteCode, StartDate, EndDate, OwnerId, AllowedUserIds, ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, TotalRounds, TieBreakerRule, OrganizerLogin, OrganizerPasswordHash, BracketJson, IsDeleted)
+                                    (Id, Name, SportType, Type, Status, EditMode, AccessMode, IsPublic, NoScore, Description, City, Contacts, LogoUrl, CardBackgroundData, InviteCode, StartDate, EndDate, OwnerId, AllowedUserIds, ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, TotalRounds, TieBreakerRule, OrganizerLogin, OrganizerPasswordHash, BracketJson, IsDeleted)
                                 VALUES
-                                    (@Id, @Name, @SportType, @Type, @Status, @EditMode, @AccessMode, @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @InviteCode, @StartDate, @EndDate, @OwnerId, @AllowedUserIds, @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @TotalRounds, @TieBreakerRule, @OrganizerLogin, @OrganizerPasswordHash, @BracketJson, 0)
+                                    (@Id, @Name, @SportType, @Type, @Status, @EditMode, @AccessMode, @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @CardBackgroundData, @InviteCode, @StartDate, @EndDate, @OwnerId, @AllowedUserIds, @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @TotalRounds, @TieBreakerRule, @OrganizerLogin, @OrganizerPasswordHash, @BracketJson, 0)
                             END";
 
                         string bracketJson = t.Bracket != null ? JsonConvert.SerializeObject(t.Bracket, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }) : null;
@@ -417,6 +417,7 @@ namespace SportHubBase.Services
                         cmd.Parameters.AddWithValue("@City", DbValue(t.City));
                         cmd.Parameters.AddWithValue("@Contacts", DbValue(t.Contacts));
                         cmd.Parameters.AddWithValue("@LogoUrl", DbValue(t.LogoUrl));
+                        cmd.Parameters.AddWithValue("@CardBackgroundData", DbValue(t.CardBackgroundData));
                         cmd.Parameters.AddWithValue("@InviteCode", DbValue(t.InviteCode));
                         cmd.Parameters.AddWithValue("@StartDate", t.StartDate.ToString("o"));
                         cmd.Parameters.AddWithValue("@EndDate", t.EndDate.HasValue ? (object)t.EndDate.Value.ToString("o") : DBNull.Value);
@@ -559,12 +560,12 @@ namespace SportHubBase.Services
                 cmd.CommandText = @"
                     IF EXISTS (SELECT 1 FROM Matches WHERE Id = @Id)
                     BEGIN
-                        UPDATE Matches SET Round = @Round, RoundName = @RoundName, MatchNumber = @MatchNumber, Team1 = @Team1, Team2 = @Team2, Status = @Status, Team1QuickScore = @Team1QuickScore, Team2QuickScore = @Team2QuickScore, SetsScore = @SetsScore, SetsBySet = @SetsBySet, TotalScore = @TotalScore, Duration = @Duration, Referee = @Referee, Location = @Location, Mvp = @Mvp, WinnerId = @WinnerId, CreatedByUserId = @CreatedByUserId, IsDeleted = 0 WHERE Id = @Id
+                        UPDATE Matches SET Round = @Round, RoundName = @RoundName, MatchNumber = @MatchNumber, Team1 = @Team1, Team2 = @Team2, Status = @Status, Team1QuickScore = @Team1QuickScore, Team2QuickScore = @Team2QuickScore, SetsScore = @SetsScore, SetsBySet = @SetsBySet, TotalScore = @TotalScore, Duration = @Duration, Referee = @Referee, Location = @Location, Mvp = @Mvp, MatchDate = @MatchDate, StartTime = @StartTime, WinnerId = @WinnerId, CreatedByUserId = @CreatedByUserId, IsDeleted = 0 WHERE Id = @Id
                     END
                     ELSE
                     BEGIN
-                        INSERT INTO Matches (Id, TournamentId, Round, RoundName, MatchNumber, Team1, Team2, Status, Team1QuickScore, Team2QuickScore, SetsScore, SetsBySet, TotalScore, Duration, Referee, Location, Mvp, WinnerId, CreatedByUserId, IsDeleted)
-                        VALUES (@Id, @TournamentId, @Round, @RoundName, @MatchNumber, @Team1, @Team2, @Status, @Team1QuickScore, @Team2QuickScore, @SetsScore, @SetsBySet, @TotalScore, @Duration, @Referee, @Location, @Mvp, @WinnerId, @CreatedByUserId, 0)
+                        INSERT INTO Matches (Id, TournamentId, Round, RoundName, MatchNumber, Team1, Team2, Status, Team1QuickScore, Team2QuickScore, SetsScore, SetsBySet, TotalScore, Duration, Referee, Location, Mvp, MatchDate, StartTime, WinnerId, CreatedByUserId, IsDeleted)
+                        VALUES (@Id, @TournamentId, @Round, @RoundName, @MatchNumber, @Team1, @Team2, @Status, @Team1QuickScore, @Team2QuickScore, @SetsScore, @SetsBySet, @TotalScore, @Duration, @Referee, @Location, @Mvp, @MatchDate, @StartTime, @WinnerId, @CreatedByUserId, 0)
                     END";
 
                 cmd.Parameters.AddWithValue("@Id", match.Id.ToString());
@@ -584,6 +585,8 @@ namespace SportHubBase.Services
                 cmd.Parameters.AddWithValue("@Referee", DbValue(match.Referee));
                 cmd.Parameters.AddWithValue("@Location", DbValue(match.Location));
                 cmd.Parameters.AddWithValue("@Mvp", DbValue(match.Mvp));
+                cmd.Parameters.AddWithValue("@MatchDate", match.MatchDate.HasValue ? (object)match.MatchDate.Value.ToString("o") : DBNull.Value);
+                cmd.Parameters.AddWithValue("@StartTime", DbValue(match.StartTime));
                 cmd.Parameters.AddWithValue("@WinnerId", match.WinnerId.HasValue ? (object)match.WinnerId.Value.ToString() : DBNull.Value);
                 cmd.Parameters.AddWithValue("@CreatedByUserId", match.CreatedByUserId.HasValue ? (object)match.CreatedByUserId.Value.ToString() : DBNull.Value);
                 cmd.ExecuteNonQuery();
@@ -607,6 +610,7 @@ namespace SportHubBase.Services
                 City = ReadString(r, "City"),
                 Contacts = ReadString(r, "Contacts"),
                 LogoUrl = ReadString(r, "LogoUrl"),
+                CardBackgroundData = HasColumn(r, "CardBackgroundData") ? ReadString(r, "CardBackgroundData") : null,
                 InviteCode = ReadString(r, "InviteCode"),
                 ScoringSystem = ReadString(r, "ScoringSystem") ?? "Стандартная (3-1-0)",
                 CustomWinPoints = Convert.ToInt32(r["CustomWinPoints"]),
@@ -747,6 +751,13 @@ namespace SportHubBase.Services
                             Mvp = ReadString(r, "Mvp"),
                         };
                         if (r["MatchNumber"] != DBNull.Value) match.MatchNumber = Convert.ToInt32(r["MatchNumber"]);
+                        if (HasColumn(r, "StartTime")) match.StartTime = ReadString(r, "StartTime");
+                        if (HasColumn(r, "MatchDate"))
+                        {
+                            string mDateStr = ReadString(r, "MatchDate");
+                            if (!string.IsNullOrEmpty(mDateStr) && DateTime.TryParse(mDateStr, out DateTime parsedMDate))
+                                match.MatchDate = parsedMDate;
+                        }
                         string winnerStr = ReadString(r, "WinnerId");
                         if (!string.IsNullOrEmpty(winnerStr) && Guid.TryParse(winnerStr, out Guid winner)) match.WinnerId = winner;
                         string createdStr = ReadString(r, "CreatedByUserId");

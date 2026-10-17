@@ -605,6 +605,9 @@ namespace SportHubBase.ViewModels
 
         public ICommand OpenMatchCommand { get; }
 
+        /// Команда открытия графической карточки матча для экспорта.
+        public ICommand OpenMatchGraphicCardCommand { get; }
+
         /// Команда экспорта результатов.
         public ICommand ExportResultsCommand { get; }
 
@@ -856,6 +859,7 @@ namespace SportHubBase.ViewModels
             AddTeamCommand = new RelayCommand(OpenAddTeamWindow);
             EditTeamCommand = new RelayCommand(EditTeam, t => t is Team);
             OpenMatchCommand = new RelayCommand(OpenMatchCard, m => m is Match);
+            OpenMatchGraphicCardCommand = new RelayCommand(OpenMatchGraphicCard, m => m is Match);
             ExportResultsCommand = new RelayCommand(OpenExportWindow);
             ExportResultsExcelCommand = new RelayCommand(ExportResultsExcel);
             ImportTeamsExcelCommand = new RelayCommand(ImportTeamsExcel);
@@ -1267,7 +1271,9 @@ namespace SportHubBase.ViewModels
                     headers, 
                     rrData.Rows,
                     ExportTableType.Results,
-                    _imageEncoderFactory);
+                    _imageEncoderFactory,
+                    CurrentTournament,
+                    _storage);
 
                 var exportWindow = new View.ExportPreviewWindow(currentWindow, exportViewModel);
                 exportWindow.ShowDialog();
@@ -1749,6 +1755,17 @@ namespace SportHubBase.ViewModels
                     UpdateStatistics();
                     _storage.UpdateTournament(CurrentTournament);
                 }
+            }
+        }
+
+        private void OpenMatchGraphicCard(object parameter)
+        {
+            if (parameter is Match match && CurrentTournament != null)
+            {
+                var owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(x => x.IsActive);
+                var cardVm = new MatchCardPreviewViewModel(CurrentTournament, match, _storage, _imageEncoderFactory);
+                var previewWindow = new MatchCardPreviewWindow(owner, cardVm);
+                previewWindow.ShowDialog();
             }
         }
 

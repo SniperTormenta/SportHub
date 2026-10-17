@@ -18,6 +18,7 @@
                 <ResourceDictionary Source="Resources/ResultTemplates.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:SelfCellImageConverter x:Key="SelfCellImageConverter"/>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -149,13 +150,32 @@
                                                 CornerRadius="36"
                                                 Margin="0,0,0,10"
                                                 Background="#F0F2F4"
+                                                ClipToBounds="True"
                                                 HorizontalAlignment="Center">
-                                                        <TextBlock Text="T"
-                                                        Foreground="#617589"
-                                                       FontSize="30"
-                                                        FontWeight="Bold"
-                                                       HorizontalAlignment="Center"
-                                                        VerticalAlignment="Center"/>
+                                                        <Grid>
+                                                            <TextBlock Text="{Binding Initial}"
+                                                                       Foreground="#617589"
+                                                                       FontSize="30"
+                                                                       FontWeight="Bold"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding HasLogo}" Value="True">
+                                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                            <Image Source="{Binding LogoUrl, Converter={StaticResource SelfCellImageConverter}}"
+                                                                   Stretch="Uniform"
+                                                                   Margin="6"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                                                   Visibility="{Binding HasLogo, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                        </Grid>
                                                     </Border>
 
                                                     <TextBlock Text="{Binding Name}"
@@ -432,12 +452,21 @@
                                                     <TextBlock Grid.Column="2" Text="{Binding Team2}" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="24,0,0,0" FontSize="15" TextTrimming="CharacterEllipsis" Foreground="Black"/>
                                                 </Grid>
 
-                                                <Button Grid.Column="3" Content="Подробнее" 
-                                                        Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                                        CommandParameter="{Binding}" 
-                                                        Style="{StaticResource AddTeamButtonStyle}" 
-                                                        Padding="16,8" Margin="24,0,0,0"
-                                                        Background="#E0F2FE" Foreground="#137FEC"/>
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="20,0,0,0">
+                                                    <Button Content="🖼 Карточка"
+                                                            Command="{Binding DataContext.OpenMatchGraphicCardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource AddTeamButtonStyle}"
+                                                            Padding="12,8" Margin="0,0,8,0"
+                                                            Background="#0B2246" Foreground="#38BDF8"
+                                                            ToolTip="Создать графическую карточку матча"/>
+                                                    <Button Content="Подробнее" 
+                                                            Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                            CommandParameter="{Binding}" 
+                                                            Style="{StaticResource AddTeamButtonStyle}" 
+                                                            Padding="16,8"
+                                                            Background="#E0F2FE" Foreground="#137FEC"/>
+                                                </StackPanel>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -507,12 +536,21 @@
                                                                     </Border>
                                                                     <TextBlock Grid.Column="2" Text="{Binding Team2}" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="24,0,0,0" FontSize="15" TextTrimming="CharacterEllipsis" Foreground="Black"/>
                                                                 </Grid>
-                                                                <Button Grid.Column="3" Content="Подробнее" 
-                                                                        Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                                                        CommandParameter="{Binding}" 
-                                                                        Style="{StaticResource AddTeamButtonStyle}" 
-                                                                        Padding="16,8" Margin="24,0,0,0"
-                                                                        Background="#E0F2FE" Foreground="#137FEC"/>
+                                                                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="20,0,0,0">
+                                                                    <Button Content="🖼 Карточка"
+                                                                            Command="{Binding DataContext.OpenMatchGraphicCardCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Style="{StaticResource AddTeamButtonStyle}"
+                                                                            Padding="12,8" Margin="0,0,8,0"
+                                                                            Background="#0B2246" Foreground="#38BDF8"
+                                                                            ToolTip="Создать графическую карточку матча"/>
+                                                                    <Button Content="Подробнее" 
+                                                                            Command="{Binding DataContext.OpenMatchCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                                            CommandParameter="{Binding}" 
+                                                                            Style="{StaticResource AddTeamButtonStyle}" 
+                                                                            Padding="16,8"
+                                                                            Background="#E0F2FE" Foreground="#137FEC"/>
+                                                                </StackPanel>
                                                             </Grid>
                                                         </Border>
                                                     </DataTemplate>

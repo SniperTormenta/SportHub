@@ -127,6 +127,7 @@ namespace SportHubBase.Services
                 TryAddColumn(connection, "Tournaments", "OrganizerLogin", "TEXT");
                 TryAddColumn(connection, "Tournaments", "OrganizerPasswordHash", "TEXT");
                 TryAddColumn(connection, "Tournaments", "IsOrganizerRemembered", "INTEGER NOT NULL DEFAULT 0");
+                TryAddColumn(connection, "Tournaments", "CardBackgroundData", "TEXT");
 
                 // -------------------------------------------------------
                 // Таблица команд
@@ -184,12 +185,16 @@ namespace SportHubBase.Services
                         Referee             TEXT,
                         Location            TEXT,
                         Mvp                 TEXT,
+                        MatchDate           TEXT,
+                        StartTime           TEXT,
                         WinnerId            TEXT,
                         CreatedByUserId     TEXT,
                         IsDeleted           INTEGER NOT NULL DEFAULT 0
                     );");
 
                 TryAddColumn(connection, "Matches", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
+                TryAddColumn(connection, "Matches", "MatchDate", "TEXT");
+                TryAddColumn(connection, "Matches", "StartTime", "TEXT");
 
                 // -------------------------------------------------------
                 // Таблица сетов матча (детальный счёт по партиям)

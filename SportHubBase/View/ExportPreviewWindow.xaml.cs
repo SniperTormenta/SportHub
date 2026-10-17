@@ -41,20 +41,40 @@ namespace SportHubBase.View
             // Обеспечиваем корректный размер визуального элемента
             EnsureMeasured(PreviewRoot);
 
-            var width = (int)Math.Ceiling(PreviewRoot.ActualWidth);
-            var height = (int)Math.Ceiling(PreviewRoot.ActualHeight);
+            double baseWidth = PreviewRoot.ActualWidth;
+            double baseHeight = PreviewRoot.ActualHeight;
 
-            if (width <= 0 || height <= 0)
+            if (baseWidth <= 0 || baseHeight <= 0)
                 return;
 
+            const double scale = 1.5;
+            int width = (int)Math.Ceiling(baseWidth * scale);
+            int height = (int)Math.Ceiling(baseHeight * scale);
+
+            var dv = new DrawingVisual();
+            using (DrawingContext dc = dv.RenderOpen())
+            {
+                var vb = new VisualBrush(PreviewRoot)
+                {
+                    Stretch = Stretch.Fill
+                };
+                dc.DrawRectangle(vb, null, new Rect(0, 0, width, height));
+            }
+
             var rtb = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-            rtb.Render(PreviewRoot);
+            rtb.Render(dv);
+
+            string safeFileName = string.Format("{0} - {1}", _viewModel.TournamentName, _viewModel.TableTitle);
+            foreach (char invalidChar in Path.GetInvalidFileNameChars())
+            {
+                safeFileName = safeFileName.Replace(invalidChar, '_');
+            }
 
             var dialog = new SaveFileDialog
             {
                 Title = "Сохранить таблицу как изображение",
                 Filter = "PNG изображение (*.png)|*.png|JPEG изображение (*.jpg;*.jpeg)|*.jpg;*.jpeg",
-                FileName = $"{_viewModel.TournamentName} - {_viewModel.TableTitle}".Replace(":", "_")
+                FileName = safeFileName
             };
 
             if (dialog.ShowDialog(this) != true)

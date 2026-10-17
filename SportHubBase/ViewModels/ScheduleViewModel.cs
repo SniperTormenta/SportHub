@@ -331,6 +331,8 @@ namespace SportHubBase.ViewModels
                     generatedMatch.Location = savedMatch.Location;
                     generatedMatch.Mvp = savedMatch.Mvp;
                     generatedMatch.MatchNumber = savedMatch.MatchNumber; // Сохраняем номер
+                    generatedMatch.MatchDate = savedMatch.MatchDate;
+                    generatedMatch.StartTime = savedMatch.StartTime;
                 }
                 finalMatches.Add(generatedMatch);
             }

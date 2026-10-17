@@ -111,6 +111,8 @@ namespace SportHubBase.Services
                     ALTER TABLE dbo.Tournaments ADD OrganizerPasswordHash NVARCHAR(255) NULL;
                 IF COL_LENGTH('dbo.Tournaments', 'IsDeleted') IS NULL
                     ALTER TABLE dbo.Tournaments ADD IsDeleted BIT NOT NULL DEFAULT 0;
+                IF COL_LENGTH('dbo.Tournaments', 'CardBackgroundData') IS NULL
+                    ALTER TABLE dbo.Tournaments ADD CardBackgroundData NVARCHAR(MAX) NULL;
 
                 IF OBJECT_ID('dbo.Teams', 'U') IS NULL
                 BEGIN
@@ -120,7 +122,7 @@ namespace SportHubBase.Services
                         Name NVARCHAR(255) NOT NULL,
                         Captain NVARCHAR(255) NULL,
                         City NVARCHAR(150) NULL,
-                        LogoUrl NVARCHAR(500) NULL,
+                        LogoUrl NVARCHAR(MAX) NULL,
                         OwnerUserId NVARCHAR(100) NULL,
                         MemberUserIds NVARCHAR(MAX) NULL,
                         IsDeleted BIT NOT NULL DEFAULT 0
@@ -160,11 +162,18 @@ namespace SportHubBase.Services
                         Referee NVARCHAR(255) NULL,
                         Location NVARCHAR(255) NULL,
                         Mvp NVARCHAR(255) NULL,
+                        MatchDate NVARCHAR(64) NULL,
+                        StartTime NVARCHAR(50) NULL,
                         WinnerId NVARCHAR(100) NULL,
                         CreatedByUserId NVARCHAR(100) NULL,
                         IsDeleted BIT NOT NULL DEFAULT 0
                     );
                 END
+
+                IF COL_LENGTH('dbo.Matches', 'MatchDate') IS NULL
+                    ALTER TABLE dbo.Matches ADD MatchDate NVARCHAR(64) NULL;
+                IF COL_LENGTH('dbo.Matches', 'StartTime') IS NULL
+                    ALTER TABLE dbo.Matches ADD StartTime NVARCHAR(50) NULL;
 
                 IF OBJECT_ID('dbo.TournamentStandings', 'U') IS NULL
                 BEGIN

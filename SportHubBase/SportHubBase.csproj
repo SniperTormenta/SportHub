@@ -345,6 +345,7 @@
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\CreateTournamentViewModel.cs" />
     <Compile Include="ViewModels\ExportPreviewViewModel.cs" />
+    <Compile Include="ViewModels\MatchCardPreviewViewModel.cs" />
     <Compile Include="ViewModels\MatchDetailsViewModel.cs" />
     <Compile Include="Converters\BracketConverters.cs" />
     <Compile Include="ViewModels\TournamentStatistics.cs" />
@@ -367,6 +368,9 @@
     </Compile>
     <Compile Include="View\MatchDetailsWindow.xaml.cs">
       <DependentUpon>MatchDetailsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\MatchCardPreviewWindow.xaml.cs">
+      <DependentUpon>MatchCardPreviewWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\AddTeamWindow.xaml.cs">
       <DependentUpon>AddTeamWindow.xaml</DependentUpon>
@@ -425,6 +429,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\ExportPreviewWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\MatchCardPreviewWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -488,6 +496,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\alv_card_bg.jpg" />
     <Resource Include="Image\SportStadionUltraWitheMainLogo.jpeg" />
   </ItemGroup>
   <ItemGroup>

@@ -28,6 +28,8 @@ namespace SportHubBase.Models
         private bool _isBye;
         private string _team1Color;
         private string _team2Color;
+        private DateTime? _matchDate;
+        private string _startTime;
 
         public Guid Id { get; set; } = Guid.NewGuid();
 
@@ -175,6 +177,24 @@ namespace SportHubBase.Models
         {
             get => _team2Color;
             set => SetField(ref _team2Color, value);
+        }
+
+        /// <summary>
+        /// Дата проведения матча (если указана).
+        /// </summary>
+        public DateTime? MatchDate
+        {
+            get => _matchDate;
+            set => SetField(ref _matchDate, value);
+        }
+
+        /// <summary>
+        /// Время начала матча (например "20:00").
+        /// </summary>
+        public string StartTime
+        {
+            get => _startTime;
+            set => SetField(ref _startTime, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

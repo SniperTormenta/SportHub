@@ -29,6 +29,9 @@ namespace SportHubBase.Models
         [JsonProperty("logoUrl")]
         public string LogoUrl { get; set; }
 
+        [JsonProperty("cardBackgroundData")]
+        public string CardBackgroundData { get; set; }
+
         [JsonProperty("status")]
         public string Status { get; set; }
 

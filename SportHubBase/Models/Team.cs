@@ -43,6 +43,18 @@ namespace SportHubBase.Models
         [JsonIgnore]
         public bool IsBye => string.IsNullOrEmpty(Name) || Name.Equals("BYE", StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Возвращает true, если у команды загружен логотип.
+        /// </summary>
+        [JsonIgnore]
+        public bool HasLogo => !string.IsNullOrWhiteSpace(LogoUrl);
+
+        /// <summary>
+        /// Первая буква названия команды для заглушки, если нет логотипа.
+        /// </summary>
+        [JsonIgnore]
+        public string Initial => !string.IsNullOrWhiteSpace(Name) ? Name.Trim().Substring(0, 1).ToUpperInvariant() : "T";
+
         public override string ToString() => Name;
     }
 }

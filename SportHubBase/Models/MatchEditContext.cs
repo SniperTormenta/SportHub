@@ -52,6 +52,20 @@ namespace SportHubBase.Models
             set { _mvp = value; OnPropertyChanged(); }
         }
 
+        private DateTime? _matchDate;
+        public DateTime? MatchDate
+        {
+            get => _matchDate;
+            set { _matchDate = value; OnPropertyChanged(); }
+        }
+
+        private string _startTime;
+        public string StartTime
+        {
+            get => _startTime;
+            set { _startTime = value; OnPropertyChanged(); }
+        }
+
         private bool _isTechnicalDefeatVisible;
         public bool IsTechnicalDefeatVisible
         {
@@ -87,6 +101,8 @@ namespace SportHubBase.Models
             _referee = _match.Referee;
             _location = _match.Location;
             _mvp = _match.Mvp;
+            _matchDate = _match.MatchDate;
+            _startTime = _match.StartTime;
 
             CancelTechnicalDefeatCommand = new RelayCommand(_ => CancelTechnicalDefeat());
         }
@@ -120,6 +136,8 @@ namespace SportHubBase.Models
             _match.Referee = Referee;
             _match.Location = Location;
             _match.Mvp = Mvp;
+            _match.MatchDate = MatchDate;
+            _match.StartTime = StartTime;
         }
     }
 }

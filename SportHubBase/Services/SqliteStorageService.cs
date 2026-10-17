@@ -393,13 +393,13 @@ namespace SportHubBase.Services
                         cmd.CommandText = @"
                             INSERT INTO Tournaments
                                 (Id, Name, SportType, Type, TotalRounds, Status, EditMode, AccessMode,
-                                 IsPublic, NoScore, Description, City, Contacts, LogoUrl, InviteCode,
+                                 IsPublic, NoScore, Description, City, Contacts, LogoUrl, CardBackgroundData, InviteCode,
                                  StartDate, EndDate, OwnerId, AllowedUserIds,
                                  ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, TieBreakerRule,
                                  BracketJson, IsRemote, ServerAddress, OrganizerLogin, OrganizerPasswordHash, IsOrganizerRemembered, IsDeleted)
                             VALUES
                                 (@Id, @Name, @SportType, @Type, @TotalRounds, @Status, @EditMode, @AccessMode,
-                                 @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @InviteCode,
+                                 @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @CardBackgroundData, @InviteCode,
                                  @StartDate, @EndDate, @OwnerId, @AllowedUserIds,
                                  @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @TieBreakerRule,
                                  @BracketJson, @IsRemote, @ServerAddress, @OrganizerLogin, @OrganizerPasswordHash, @IsOrganizerRemembered, 0)
@@ -417,6 +417,7 @@ namespace SportHubBase.Services
                                 City                  = excluded.City,
                                 Contacts              = excluded.Contacts,
                                 LogoUrl               = excluded.LogoUrl,
+                                CardBackgroundData    = excluded.CardBackgroundData,
                                 InviteCode            = excluded.InviteCode,
                                 StartDate             = excluded.StartDate,
                                 EndDate               = excluded.EndDate,
@@ -460,6 +461,7 @@ namespace SportHubBase.Services
                         cmd.Parameters.AddWithValue("@City", DbValue(t.City));
                         cmd.Parameters.AddWithValue("@Contacts", DbValue(t.Contacts));
                         cmd.Parameters.AddWithValue("@LogoUrl", DbValue(t.LogoUrl));
+                        cmd.Parameters.AddWithValue("@CardBackgroundData", DbValue(t.CardBackgroundData));
                         cmd.Parameters.AddWithValue("@InviteCode", DbValue(t.InviteCode));
                         cmd.Parameters.AddWithValue("@StartDate", t.StartDate.ToString("o"));
                         cmd.Parameters.AddWithValue("@EndDate", t.EndDate.HasValue ? (object)t.EndDate.Value.ToString("o") : DBNull.Value);
@@ -631,12 +633,12 @@ namespace SportHubBase.Services
                         (Id, TournamentId, Round, RoundName, MatchNumber,
                          Team1, Team2, Status, Team1QuickScore, Team2QuickScore,
                          SetsScore, SetsBySet, TotalScore, Duration,
-                         Referee, Location, Mvp, WinnerId, CreatedByUserId)
+                         Referee, Location, Mvp, MatchDate, StartTime, WinnerId, CreatedByUserId)
                     VALUES
                         (@Id, @TournamentId, @Round, @RoundName, @MatchNumber,
                          @Team1, @Team2, @Status, @Team1QuickScore, @Team2QuickScore,
                          @SetsScore, @SetsBySet, @TotalScore, @Duration,
-                         @Referee, @Location, @Mvp, @WinnerId, @CreatedByUserId)
+                         @Referee, @Location, @Mvp, @MatchDate, @StartTime, @WinnerId, @CreatedByUserId)
                     ON CONFLICT(Id) DO UPDATE SET
                         Round           = excluded.Round,
                         RoundName       = excluded.RoundName,
@@ -653,6 +655,8 @@ namespace SportHubBase.Services
                         Referee         = excluded.Referee,
                         Location        = excluded.Location,
                         Mvp             = excluded.Mvp,
+                        MatchDate       = excluded.MatchDate,
+                        StartTime       = excluded.StartTime,
                         WinnerId        = excluded.WinnerId,
                         CreatedByUserId = excluded.CreatedByUserId";
 
@@ -673,6 +677,8 @@ namespace SportHubBase.Services
                 cmd.Parameters.AddWithValue("@Referee", DbValue(match.Referee));
                 cmd.Parameters.AddWithValue("@Location", DbValue(match.Location));
                 cmd.Parameters.AddWithValue("@Mvp", DbValue(match.Mvp));
+                cmd.Parameters.AddWithValue("@MatchDate", match.MatchDate.HasValue ? (object)match.MatchDate.Value.ToString("o") : DBNull.Value);
+                cmd.Parameters.AddWithValue("@StartTime", DbValue(match.StartTime));
                 cmd.Parameters.AddWithValue("@WinnerId", match.WinnerId.HasValue ? (object)match.WinnerId.Value.ToString() : DBNull.Value);
                 cmd.Parameters.AddWithValue("@CreatedByUserId", match.CreatedByUserId.HasValue ? (object)match.CreatedByUserId.Value.ToString() : DBNull.Value);
                 cmd.ExecuteNonQuery();
@@ -699,6 +705,7 @@ namespace SportHubBase.Services
                 City                  = ReadString(r, "City"),
                 Contacts              = ReadString(r, "Contacts"),
                 LogoUrl               = ReadString(r, "LogoUrl"),
+                CardBackgroundData    = ReadString(r, "CardBackgroundData"),
                 InviteCode            = ReadString(r, "InviteCode"),
                 ScoringSystem         = ReadString(r, "ScoringSystem"),
                 CustomWinPoints       = Convert.ToInt32(r["CustomWinPoints"]),
@@ -863,7 +870,12 @@ namespace SportHubBase.Services
                             Referee        = ReadString(r, "Referee"),
                             Location       = ReadString(r, "Location"),
                             Mvp            = ReadString(r, "Mvp"),
+                            StartTime      = ReadString(r, "StartTime"),
                         };
+
+                        string matchDateStr = ReadString(r, "MatchDate");
+                        if (!string.IsNullOrEmpty(matchDateStr) && DateTime.TryParse(matchDateStr, out DateTime parsedMatchDate))
+                            match.MatchDate = parsedMatchDate;
 
                         // MatchNumber
                         var matchNumObj = r["MatchNumber"];

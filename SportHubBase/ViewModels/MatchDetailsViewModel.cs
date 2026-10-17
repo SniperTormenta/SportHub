@@ -26,8 +26,10 @@ namespace SportHubBase.ViewModels
 
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
+        public ICommand OpenCardPreviewCommand { get; }
 
         public event Action RequestClose;
+        public event Action<Match, Guid> RequestOpenCardPreview;
 
         private string _errorMessage;
         public string ErrorMessage
@@ -64,8 +66,20 @@ namespace SportHubBase.ViewModels
 
             SaveCommand = new RelayCommand(_ => Save());
             CancelCommand = new RelayCommand(_ => Cancel());
+            OpenCardPreviewCommand = new RelayCommand(_ => OpenCardPreview());
 
             LoadPlayersFromTeams(tournamentId);
+        }
+
+        private void OpenCardPreview()
+        {
+            if (CanEdit)
+            {
+                EditContext.ApplyChanges();
+                _strategy.FinalizeMatch(_match, EditContext);
+            }
+
+            RequestOpenCardPreview?.Invoke(_match, _tournamentId);
         }
 
         private void LoadPlayersFromTeams(Guid tournamentId)
