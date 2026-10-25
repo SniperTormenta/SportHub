@@ -1,0 +1,57 @@
+name: Build & Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore SportHubBase.sln
+
+      - name: Build Solution
+        run: msbuild SportHubBase.sln /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Prepare Release ZIP and Manifest
+        id: pack
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          $outDir = "SportHubBase\bin\Release"
+          $zipName = "SportHubBase-$version.zip"
+          Compress-Archive -Path "$outDir\*" -DestinationPath $zipName
+          $hash = (Get-FileHash -Path $zipName -Algorithm SHA256).Hash
+
+          $xml = @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <item>
+              <version>$version</version>
+              <url>https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/$zipName</url>
+              <mandatory mode="2">false</mandatory>
+              <checksum algorithm="SHA256">$hash</checksum>
+          </item>
+          "@
+          Set-Content -Path "update.xml" -Value $xml -Encoding UTF8
+          echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ env.ZIP_NAME }}
+            update.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

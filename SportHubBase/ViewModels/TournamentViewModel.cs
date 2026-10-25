@@ -1263,17 +1263,11 @@ namespace SportHubBase.ViewModels
 
             if (currentWindow != null && CurrentTournament != null && CurrentResults is RoundRobinResultsData rrData)
             {
-                var headers = new ObservableCollection<int>(rrData.HeaderNumbers);
-
                 var exportViewModel = new ExportPreviewViewModel(
                     CurrentTournament.Name,
                     "Таблица результатов",
-                    headers, 
-                    rrData.Rows,
-                    ExportTableType.Results,
-                    _imageEncoderFactory,
-                    CurrentTournament,
-                    _storage);
+                    rrData,
+                    _imageEncoderFactory);
 
                 var exportWindow = new View.ExportPreviewWindow(currentWindow, exportViewModel);
                 exportWindow.ShowDialog();

@@ -1,0 +1,127 @@
+<Window x:Class="SportHubBase.View.UpdateAvailableWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Доступно обновление — SportHub" 
+        Height="460" Width="560"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F8FAFC"
+        FontFamily="Segoe UI, Inter, sans-serif"
+        TextElement.Foreground="#0F172A">
+
+    <Window.Resources>
+        <!-- Кнопка действия (синяя) -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="16,9"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1D4ED8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#93C5FD"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Второстепенная кнопка (серая) -->
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F1F5F9"/>
+                                <Setter Property="BorderBrush" Value="#94A3B8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#F8FAFC"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Хедер -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Доступна новая версия SportHub!" 
+                       FontSize="20" FontWeight="SemiBold" Foreground="#0F172A"/>
+            <TextBlock x:Name="TxtVersionInfo" 
+                       Margin="0,6,0,0" FontSize="13" Foreground="#64748B"/>
+        </StackPanel>
+
+        <!-- Заголовок чейнджлога -->
+        <TextBlock Grid.Row="1" Text="Что нового в этой версии:" 
+                   FontWeight="SemiBold" FontSize="13" Margin="0,0,0,8" Foreground="#334155"/>
+
+        <!-- Область отображения списка изменений -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" 
+                BorderThickness="1" CornerRadius="8" Padding="2" ClipToBounds="True">
+            <Grid>
+                <WebBrowser x:Name="ChangelogBrowser"/>
+                <TextBlock x:Name="TxtEmptyChangelog" 
+                           Text="Описание изменений не предоставлено." 
+                           Foreground="#94A3B8" 
+                           FontStyle="Italic"
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center" 
+                           Visibility="Collapsed"/>
+            </Grid>
+        </Border>
+
+        <!-- Кнопки действий -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button x:Name="BtnSkip" 
+                    Content="Пропустить версию" 
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Margin="0,0,10,0" 
+                    Click="BtnSkip_Click"/>
+
+            <Button x:Name="BtnRemindLater" 
+                    Content="Напомнить позже" 
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Margin="0,0,10,0" 
+                    Click="BtnRemindLater_Click"/>
+
+            <Button x:Name="BtnUpdate" 
+                    Content="Обновить сейчас" 
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Click="BtnUpdate_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

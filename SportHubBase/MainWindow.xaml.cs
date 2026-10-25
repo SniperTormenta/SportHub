@@ -14,6 +14,7 @@ namespace SportHubBase
     public partial class MainWindow : Window
     {
         private readonly IStorage _storage;
+        private readonly IUpdateService _updateService;
         private List<Tournament> _allTournaments = new List<Tournament>();
         public ObservableCollection<Tournament> Tournaments { get; set; } = new ObservableCollection<Tournament>();
 
@@ -24,12 +25,16 @@ namespace SportHubBase
             DataContext = this;
 
             _storage = App.Container.GetInstance<IStorage>();
+            _updateService = App.Container.GetInstance<IUpdateService>();
 
             Loaded += MainWindow_Loaded;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            TxtAppVersion.Text = string.Format("SportHub v{0}", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
+            _updateService.CheckForUpdatesInBackground();
+
             LoadTournamentsFromDatabase();
 
             double screenWidth = SystemParameters.WorkArea.Width;
@@ -160,6 +165,11 @@ namespace SportHubBase
                 };
                 tournamentWindow.Show();
             }
+        }
+
+        private void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
+        {
+            _updateService.CheckForUpdatesManual(this);
         }
     }
 }

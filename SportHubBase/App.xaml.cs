@@ -26,6 +26,10 @@ namespace SportHubBase
 
             ConfigureContainer();
 
+            // Инициализация модуля обновления
+            var updateService = Container.GetInstance<IUpdateService>();
+            updateService.Initialize();
+
             var mainWindow = new MainWindow();
             MainWindow = mainWindow;
             mainWindow.Show();
@@ -34,6 +38,9 @@ namespace SportHubBase
         private void ConfigureContainer()
         {
             Container = new Container();
+
+            // ── СЕРВИС ОБНОВЛЕНИЯ ───────────────────────────────────────────────
+            Container.Register<IUpdateService, UpdateService>(Lifestyle.Singleton);
 
             // ── БАЗЫ ДАННЫХ И ХРАНИЛИЩА (ДИНАМИЧЕСКИЙ ВЫБОР) ─────────────────────
 
@@ -72,9 +79,9 @@ namespace SportHubBase
 
             Container.Collection.Register<ISportScoreStrategy>(new[]
             {
-        typeof(DefaultScoreStrategy),
-        typeof(VolleyballScoreStrategy)
-    }, Lifestyle.Singleton);
+                typeof(DefaultScoreStrategy),
+                typeof(VolleyballScoreStrategy)
+            }, Lifestyle.Singleton);
             Container.Register<ISportScoreStrategyFactory, SportScoreStrategyFactory>(Lifestyle.Singleton);
 
             // ── ViewModels ──────────────────────────────────────────────────────
