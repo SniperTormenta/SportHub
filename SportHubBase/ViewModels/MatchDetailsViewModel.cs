@@ -1,4 +1,4 @@
-using SportHubBase.Interfaces;
+﻿using SportHubBase.Interfaces;
 using SportHubBase.Models;
 using System;
 using System.Collections.ObjectModel;
@@ -71,17 +71,30 @@ namespace SportHubBase.ViewModels
             LoadPlayersFromTeams(tournamentId);
         }
 
-        private void OpenCardPreview()
+        private bool ApplyEdit()
         {
-            if (CanEdit)
+            try
             {
-                EditContext.ApplyChanges();
-                _strategy.FinalizeMatch(_match, EditContext);
+                using (_match.BeginUpdate())
+                {
+                    EditContext.ApplyChanges();
+                    _strategy.FinalizeMatch(_match, EditContext);
+                }
+                return true;
             }
-
-            RequestOpenCardPreview?.Invoke(_match, _tournamentId);
+            catch (Exception ex)
+            {
+                SportHubBase.Services.ErrorLog.Write("Ввод результата матча", ex);
+                ErrorMessage = SportHubBase.Services.ErrorLog.UserMessage(ex);
+                return false;
+            }
         }
 
+        private void OpenCardPreview()
+        {
+            if (CanEdit && !ApplyEdit()) return;
+            RequestOpenCardPreview?.Invoke(_match, _tournamentId);
+        }
         private void LoadPlayersFromTeams(Guid tournamentId)
         {
             PlayersList.Clear();
@@ -91,9 +104,9 @@ namespace SportHubBase.ViewModels
                 return;
 
             var team1 = tournament.Teams.FirstOrDefault(t => 
-                string.Equals(t.Name, _match.Team1, StringComparison.OrdinalIgnoreCase));
+                (_match.Team1Id.HasValue ? t.Id == _match.Team1Id : string.Equals(t.Name, _match.Team1, StringComparison.OrdinalIgnoreCase)));
             var team2 = tournament.Teams.FirstOrDefault(t => 
-                string.Equals(t.Name, _match.Team2, StringComparison.OrdinalIgnoreCase));
+                (_match.Team2Id.HasValue ? t.Id == _match.Team2Id : string.Equals(t.Name, _match.Team2, StringComparison.OrdinalIgnoreCase)));
 
             if (team1 != null && team1.Players != null)
             {
@@ -132,8 +145,7 @@ namespace SportHubBase.ViewModels
                 }
             }
 
-            EditContext.ApplyChanges();
-            _strategy.FinalizeMatch(_match, EditContext);
+            if (!CanEdit || !ApplyEdit()) return;
 
             RequestClose?.Invoke();
         }

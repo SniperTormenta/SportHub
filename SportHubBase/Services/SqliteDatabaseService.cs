@@ -1,4 +1,4 @@
-// Services/SqliteDatabaseService.cs
+﻿// Services/SqliteDatabaseService.cs
 using System;
 using System.IO;
 using Microsoft.Data.Sqlite;
@@ -14,12 +14,28 @@ namespace SportHubBase.Services
     {
         private readonly string _connectionString;
 
-        public SqliteDatabaseService()
-        {
-            string baseFolder = AppDomain.CurrentDomain.BaseDirectory;
-            string dbPath = Path.Combine(baseFolder, "sporthub.db");
-            _connectionString = string.Format("Data Source={0}", dbPath);
+        public string DatabasePath { get; }
+        public DatabaseBackupService Backups { get; }
 
+        public SqliteDatabaseService() : this(null) { }
+
+        public SqliteDatabaseService(string databasePath)
+        {
+            var dataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SportHub");
+            DatabasePath = databasePath ?? Path.Combine(dataDirectory, "sporthub.db");
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(DatabasePath)));
+            var legacyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sporthub.db");
+            if (databasePath == null && !File.Exists(DatabasePath) && File.Exists(legacyPath))
+                DatabaseBackupService.CopyDatabase(legacyPath, DatabasePath);
+            _connectionString = new SqliteConnectionStringBuilder { DataSource = DatabasePath, ForeignKeys = true }.ToString();
+            Backups = new DatabaseBackupService(DatabasePath);
+            Backups.CreateBackup(true);
+            var pendingRestore = Path.Combine(Path.GetDirectoryName(DatabasePath), "pending-restore.db");
+            if (File.Exists(pendingRestore))
+            {
+                DatabaseBackupService.CopyDatabase(pendingRestore, DatabasePath);
+                File.Delete(pendingRestore);
+            }
             InitializeDatabase();
         }
 
@@ -118,6 +134,7 @@ namespace SportHubBase.Services
                         IsDeleted             INTEGER NOT NULL DEFAULT 0
                     );");
 
+                TryAddColumn(connection, "Tournaments", "Revision", "INTEGER NOT NULL DEFAULT 0");
                 // Автоматическое обновление существующей БД
                 TryAddColumn(connection, "Tournaments", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
                 TryAddColumn(connection, "Tournaments", "TotalRounds", "INTEGER NOT NULL DEFAULT 0");
@@ -228,6 +245,8 @@ namespace SportHubBase.Services
                         UNIQUE(TournamentId, TeamId)
                     );");
 
+                TryAddColumn(connection, "Matches", "Team1Id", "TEXT");
+                TryAddColumn(connection, "Matches", "Team2Id", "TEXT");
                 // Индексы для ускорения запросов
                 ExecuteNonQuery(connection, "CREATE INDEX IF NOT EXISTS IX_Teams_TournamentId ON Teams(TournamentId);");
                 ExecuteNonQuery(connection, "CREATE INDEX IF NOT EXISTS IX_Players_TeamId ON Players(TeamId);");
@@ -263,7 +282,7 @@ namespace SportHubBase.Services
                     ExecuteNonQuery(connection, string.Format("ALTER TABLE {0} ADD COLUMN {1} {2}", tableName, columnName, columnType));
                 }
             }
-            catch { /* Игнорируем ошибки при проверке/добавлении колонок */ }
+            catch (Exception ex) { ErrorLog.Write("Миграция SQLite", ex); throw; }
         }
 
         private static void ExecuteNonQuery(SqliteConnection connection, string sql)

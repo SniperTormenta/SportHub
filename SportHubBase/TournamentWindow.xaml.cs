@@ -23,8 +23,9 @@ namespace SportHubBase
             var imageEncoderFactory = App.Container.GetInstance<IImageEncoderStrategyFactory>();
             var matchService = App.Container.GetInstance<IMatchService>();
             var excelService = App.Container.GetInstance<IExcelService>();
+            var jsonExportService = App.Container.GetInstance<ITournamentJsonExportService>();
 
-            DataContext = new TournamentViewModel(tournamentId, storage, scheduleFactory, resultsFactory, statisticsFactory, imageEncoderFactory, matchService, excelService);
+            DataContext = new TournamentViewModel(tournamentId, storage, scheduleFactory, resultsFactory, statisticsFactory, imageEncoderFactory, matchService, excelService, jsonExportService);
         }
 
         private void TournamentWindow_Loaded(object sender, RoutedEventArgs e)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
@@ -180,8 +180,9 @@ namespace SportHubBase.ViewModels
                     }
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show("Ошибка при загрузке аватара: " + ex.Message);
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                    MessageBox.Show("Ошибка при загрузке аватара: " + SportHubBase.Services.ErrorLog.UserMessage(ex));
                 }
             }
         }
@@ -214,7 +215,8 @@ namespace SportHubBase.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка при сохранении профиля: " + ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                MessageBox.Show("Ошибка при сохранении профиля: " + SportHubBase.Services.ErrorLog.UserMessage(ex), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

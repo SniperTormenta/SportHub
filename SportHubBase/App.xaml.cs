@@ -18,13 +18,37 @@ namespace SportHubBase
     /// </summary>
     public partial class App : Application
     {
+        private System.Threading.Mutex _instanceMutex;
         public static Container Container { get; private set; }
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            ConfigureContainer();
+            bool created;
+            _instanceMutex = new System.Threading.Mutex(true, "Local\\SportHub-" + System.Security.Principal.WindowsIdentity.GetCurrent().User.Value, out created);
+            if (!created)
+            {
+                MessageBox.Show("SportHub уже запущен. Закройте другой экземпляр приложения.");
+                Shutdown();
+                return;
+            }
+            DispatcherUnhandledException += (sender, args) =>
+            {
+                ErrorLog.Write("Необработанная ошибка интерфейса", args.Exception);
+                MessageBox.Show(ErrorLog.UserMessage(args.Exception), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                args.Handled = args.Exception is System.Data.Common.DbException || args.Exception is System.IO.IOException
+                    || args.Exception is System.UnauthorizedAccessException || args.Exception is System.InvalidOperationException
+                    || args.Exception is System.ArgumentException;
+            };
+            try { ConfigureContainer(); }
+            catch (System.Exception ex)
+            {
+                ErrorLog.Write("Запуск приложения", ex);
+                MessageBox.Show("Не удалось открыть данные приложения. Проверьте доступ к папке данных и журнал ошибок.", "Ошибка запуска");
+                Shutdown();
+                return;
+            }
 
             // Инициализация модуля обновления
             var updateService = Container.GetInstance<IUpdateService>();
@@ -35,7 +59,7 @@ namespace SportHubBase
             mainWindow.Show();
         }
 
-        private void ConfigureContainer()
+        private void ConfigureContainer(string databasePath = null)
         {
             Container = new Container();
 
@@ -46,7 +70,7 @@ namespace SportHubBase
 
             // 1. Регистрируем обе СУБД (конкретные классы)
             // (SqlServerDatabaseService теперь берет строку из DatabaseConfig, поэтому конструктор без параметров)
-            Container.Register<SqliteDatabaseService>(Lifestyle.Singleton);
+            Container.Register<SqliteDatabaseService>(() => new SqliteDatabaseService(databasePath), Lifestyle.Singleton);
             Container.Register<SqlServerDatabaseService>(Lifestyle.Singleton);
 
             // 2. Регистрируем обе реализации хранилища данных
@@ -76,6 +100,7 @@ namespace SportHubBase
             Container.Register<IStatisticsCalculatorFactory, StatisticsCalculatorFactory>(Lifestyle.Singleton);
             Container.Register<IImageEncoderStrategyFactory, ImageEncoderStrategyFactory>(Lifestyle.Singleton);
             Container.Register<IExcelService, ExcelService>(Lifestyle.Singleton);
+            Container.Register<ITournamentJsonExportService, TournamentJsonExportService>(Lifestyle.Singleton);
 
             Container.Collection.Register<ISportScoreStrategy>(new[]
             {

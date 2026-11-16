@@ -1,4 +1,4 @@
-using SportHubBase.Interfaces;
+﻿using SportHubBase.Interfaces;
 using SportHubBase.Models;
 using SportHubBase.Services.Scheduling;
 using System;
@@ -243,107 +243,15 @@ namespace SportHubBase.ViewModels
                 return;
             }
 
-            IEnumerable<Match> generatedMatches;
-
-            if (strategy is ISequentialScheduleStrategy seqStrategy)
+            try
             {
-                // По-туровая стратегия не генерирует все раунды сразу, она просто берет историю
-                generatedMatches = Enumerable.Empty<Match>();
-                
-                // Автоматическая генерация первого тура, если матчей еще нет
-                if (_tournament.Matches == null || _tournament.Matches.Count == 0)
-                {
-                    try
-                    {
-                        var firstRoundMatches = seqStrategy.GenerateNextRound(_tournament, 1);
-                        if (firstRoundMatches != null && firstRoundMatches.Any())
-                        {
-                            if (_tournament.Matches == null)
-                                _tournament.Matches = new List<Match>();
-                            
-                            foreach (var match in firstRoundMatches)
-                            {
-                                _tournament.Matches.Add(match);
-                            }
-                            
-                            _matchService.AssignAutoNumbers(_tournament.Matches);
-                            _storage.UpdateTournament(_tournament);
-                            
-                            // Мы не вызываем LoadMatches рекурсивно, просто устанавливаем generatedMatches, 
-                            // чтобы нижний код обработал их как сгенерированные
-                            // Но поскольку SequentialScheduleStrategy распределяет по Rounds,
-                            // нам достаточно добавить их в _tournament.Matches, и нижний код их подхватит.
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        ScheduleMessage = $"Ошибка при автогенерации 1-го тура: {ex.Message}";
-                    }
-                }
+                new SportHubBase.Services.TournamentScheduleService(_storage, _matchService).Prepare(_tournament, strategy);
             }
-            else
+            catch (Exception ex)
             {
-                try
-                {
-                    generatedMatches = strategy.GenerateSchedule(_tournament.Teams.ToList()) ?? Enumerable.Empty<Match>();
-                }
-                catch (Exception)
-                {
-                    ScheduleMessage = "Произошла ошибка при генерации расписания.";
-                    return;
-                }
+                SportHubBase.Services.ErrorLog.Write("Загрузка расписания", ex);
+                ScheduleMessage = SportHubBase.Services.ErrorLog.UserMessage(ex);
             }
-
-            // Мерджим с существующими матчами (сохраняем результаты)
-            var savedMatchesDict = new Dictionary<string, Match>();
-            if (_tournament.Matches != null)
-            {
-                foreach (var savedMatch in _tournament.Matches)
-                {
-                    // Ключ не должен зависеть от раунда, так как при добавлении команд раунды смещаются.
-                    // Команды упорядочиваем по алфавиту для уникальности пары.
-                    var teams = new[] { savedMatch.Team1, savedMatch.Team2 }.OrderBy(t => t).ToArray();
-                    string key = $"{teams[0]}|{teams[1]}";
-                    
-                    if (!savedMatchesDict.ContainsKey(key))
-                        savedMatchesDict[key] = savedMatch;
-                }
-            }
-
-            var finalMatches = new List<Match>();
-            foreach (var generatedMatch in generatedMatches)
-            {
-                var teams = new[] { generatedMatch.Team1, generatedMatch.Team2 }.OrderBy(t => t).ToArray();
-                string key = $"{teams[0]}|{teams[1]}";
-
-                if (savedMatchesDict.TryGetValue(key, out Match savedMatch))
-                {
-                    // Переносим данные из сохранённого
-                    generatedMatch.Id = savedMatch.Id;
-                    generatedMatch.Status = savedMatch.Status;
-                    generatedMatch.Team1QuickScore = savedMatch.Team1QuickScore;
-                    generatedMatch.Team2QuickScore = savedMatch.Team2QuickScore;
-                    generatedMatch.SetsScore = savedMatch.SetsScore;
-                    generatedMatch.SetsBySet = savedMatch.SetsBySet;
-                    generatedMatch.TotalScore = savedMatch.TotalScore; // Исправлено: TotalScore был decimal в модели? Нет string.
-                    generatedMatch.Duration = savedMatch.Duration;
-                    generatedMatch.Referee = savedMatch.Referee;
-                    generatedMatch.Location = savedMatch.Location;
-                    generatedMatch.Mvp = savedMatch.Mvp;
-                    generatedMatch.MatchNumber = savedMatch.MatchNumber; // Сохраняем номер
-                    generatedMatch.MatchDate = savedMatch.MatchDate;
-                    generatedMatch.StartTime = savedMatch.StartTime;
-                }
-                finalMatches.Add(generatedMatch);
-            }
-
-            // Обновляем турнир
-            _tournament.Matches = finalMatches;
-            _storage.UpdateTournament(_tournament);
-            
-            // Автонумерация (для новых матчей)
-            _matchService.AssignAutoNumbers(_tournament.Matches);
-
             // Разносим по раундам для Sequential
             if (IsSequentialSchedule)
             {
@@ -381,6 +289,8 @@ namespace SportHubBase.ViewModels
                             {
                                 Id = bMatch.Id,
                                 RoundName = round.Name,
+                                Team1Id = bMatch.Team1?.Id,
+                                Team2Id = bMatch.Team2?.Id,
                                 Team1 = bMatch.DisplayTeam1,
                                 Team2 = bMatch.DisplayTeam2,
                                 Team1QuickScore = bMatch.Score1,
@@ -401,6 +311,8 @@ namespace SportHubBase.ViewModels
                             {
                                 Id = bMatch.Id,
                                 RoundName = "Матч за 3-е место",
+                                Team1Id = bMatch.Team1?.Id,
+                                Team2Id = bMatch.Team2?.Id,
                                 Team1 = bMatch.DisplayTeam1,
                                 Team2 = bMatch.DisplayTeam2,
                                 Team1QuickScore = bMatch.Score1,
@@ -434,7 +346,7 @@ namespace SportHubBase.ViewModels
                 match.PropertyChanged += Match_PropertyChanged;
             }
 
-            if (Matches.Count == 0)
+            if (Matches.Count == 0 && string.IsNullOrEmpty(ScheduleMessage))
             {
                 ScheduleMessage = "Не удалось сгенерировать расписание (возможно, мало команд).";
             }
@@ -446,25 +358,24 @@ namespace SportHubBase.ViewModels
 
         private void Match_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-             if (e.PropertyName == nameof(Match.Status))
+             if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(Match.Status))
              {
                  UpdateStats();
                  FilteredMatches.Refresh(); // Обновить фильтр, если статус изменился
                  foreach(var r in Rounds) r.RefreshFilter();
              }
              // Если меняется номер матча - тоже обновить фильтрацию/поиск
-             if (e.PropertyName == nameof(Match.MatchNumber))
+             if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(Match.MatchNumber))
              {
                  FilteredMatches.Refresh();
                  foreach(var r in Rounds) r.RefreshFilter();
              }
              
-             if (IsGroupedView && (e.PropertyName == nameof(Match.Team1QuickScore) || e.PropertyName == nameof(Match.Team2QuickScore)))
+             if (IsGroupedView && (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(Match.Team1QuickScore) || e.PropertyName == nameof(Match.Team2QuickScore)))
              {
                  if (sender is Match m && _bracketMatchesMap.TryGetValue(m.Id, out var bMatch))
                  {
-                     bMatch.Score1 = m.Team1QuickScore;
-                     bMatch.Score2 = m.Team2QuickScore;
+                     bMatch.ApplyScore(m.Team1QuickScore, m.Team2QuickScore);
                  }
              }
         }
@@ -538,36 +449,7 @@ namespace SportHubBase.ViewModels
                     }
                 }
                 
-                // 2. Очистка старых матчей этого тура, если они были (перегенерация)
-                if (_tournament.Matches != null)
-                {
-                    _tournament.Matches.RemoveAll(m => m.Round == roundNumber);
-                }
-
-                // 3. Генерация
-                var newMatches = strategy.GenerateNextRound(_tournament, roundNumber);
-                if (newMatches == null || !newMatches.Any())
-                {
-                    System.Windows.MessageBox.Show(
-                        $"Невозможно сгенерировать тур {roundNumber}. Проверьте количество команд и историю встреч.",
-                        "Генерация тура",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (_tournament.Matches == null)
-                {
-                    _tournament.Matches = new List<Match>();
-                }
-
-                foreach (var match in newMatches)
-                {
-                    _tournament.Matches.Add(match);
-                }
-                
-                _matchService.AssignAutoNumbers(_tournament.Matches);
-                _storage.UpdateTournament(_tournament);
+                new SportHubBase.Services.TournamentScheduleService(_storage, _matchService).GenerateRound(_tournament, strategy, roundNumber);
                 LoadMatches();
 
                 System.Windows.MessageBox.Show(
@@ -578,7 +460,8 @@ namespace SportHubBase.ViewModels
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Ошибка при генерации тура: {ex.Message}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                System.Windows.MessageBox.Show($"Ошибка при генерации тура: {SportHubBase.Services.ErrorLog.UserMessage(ex)}", "Ошибка", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
     }

@@ -1,4 +1,4 @@
-// Services/Scheduling/RoundRobinBergerScheduleStrategy.cs
+﻿// Services/Scheduling/RoundRobinBergerScheduleStrategy.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,8 +28,7 @@ namespace SportHubBase.Services.Scheduling
             // Берём только названия команд, порядок как в турнире
             // Имя параметра лямбды не должно пересекаться с локальной переменной "n" ниже
             var teamNames = teams
-                .Select(t => t.Name)
-                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Where(t => !t.IsBye)
                 .ToList();
 
             if (teamNames.Count < 2)
@@ -39,7 +38,7 @@ namespace SportHubBase.Services.Scheduling
 
             // Если нечётное количество — добавляем "выходной" слот
             bool hasBye = false;
-            const string byeName = "Выходной";
+            Team byeName = null;
 
             if (teamNames.Count % 2 != 0)
             {
@@ -50,15 +49,15 @@ namespace SportHubBase.Services.Scheduling
             int n = teamNames.Count;
             int rounds = n - 1; // по Бергеру
 
-            var rotation = new List<string>(teamNames);
+            var rotation = new List<Team>(teamNames);
             var matches = new List<Match>();
 
             for (int round = 1; round <= rounds; round++)
             {
                 for (int i = 0; i < n / 2; i++)
                 {
-                    string home = rotation[i];
-                    string away = rotation[n - 1 - i];
+                    var home = rotation[i];
+                    var away = rotation[n - 1 - i];
 
                     // Если кто-то попал на выходной — матч не создаём
                     if (hasBye && (home == byeName || away == byeName))
@@ -67,8 +66,10 @@ namespace SportHubBase.Services.Scheduling
                     matches.Add(new Match
                     {
                         Round = round,
-                        Team1 = home,
-                        Team2 = away
+                        Team1Id = home.Id,
+                        Team2Id = away.Id,
+                        Team1 = home.Name,
+                        Team2 = away.Name
                     });
                 }
 

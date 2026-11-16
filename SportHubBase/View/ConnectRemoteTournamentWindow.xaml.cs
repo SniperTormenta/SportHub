@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Controls;
 using System.Windows.Media;
 using SportHubBase.Interfaces;
 using SportHubBase.Models;
@@ -12,6 +13,23 @@ namespace SportHubBase.View
     public partial class ConnectRemoteTournamentWindow : Window
     {
         private readonly IStorage _storage;
+        private string _loadedServerAddress;
+
+        private void ServerAddressTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _loadedServerAddress = null;
+            if (RemoteTournamentsGrid == null) return;
+            RemoteTournamentsGrid.ItemsSource = null;
+            if (ConnectButton != null) ConnectButton.IsEnabled = false;
+            StatusTextBlock.Text = "Введите адрес сервера и нажмите «Найти турниры».";
+            StatusTextBlock.Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139));
+        }
+
+        private void RemoteTournamentsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ConnectButton != null)
+                ConnectButton.IsEnabled = _loadedServerAddress != null && RemoteTournamentsGrid.SelectedItem is Tournament;
+        }
 
         public ConnectRemoteTournamentWindow()
         {
@@ -29,19 +47,24 @@ namespace SportHubBase.View
             string serverAddress = ServerAddressTextBox.Text != null ? ServerAddressTextBox.Text.Trim() : string.Empty;
             if (string.IsNullOrWhiteSpace(serverAddress))
             {
-                MessageBox.Show("Пожалуйста, введите адрес SQL Server.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Warning);
+                StatusTextBlock.Text = "Укажите адрес сервера для поиска турниров.";
+                ServerAddressTextBox.Focus();
                 return;
             }
 
             try
             {
                 Mouse.OverrideCursor = Cursors.Wait;
-                StatusTextBlock.Text = "Подключение к серверу " + serverAddress + "...";
+                _loadedServerAddress = null;
+                ConnectButton.IsEnabled = false;
+                RemoteTournamentsGrid.ItemsSource = null;
+                StatusTextBlock.Text = "Поиск турниров на сервере…";
                 StatusTextBlock.Foreground = new SolidColorBrush(Color.FromRgb(100, 116, 139));
 
                 DatabaseConfig.SqlServerAddress = serverAddress;
                 List<Tournament> remoteList = _storage.GetRemoteTournamentsList(serverAddress);
 
+                _loadedServerAddress = serverAddress;
                 RemoteTournamentsGrid.ItemsSource = remoteList;
 
                 if (remoteList.Count == 0)
@@ -51,21 +74,17 @@ namespace SportHubBase.View
                 }
                 else
                 {
-                    StatusTextBlock.Text = string.Format("Найдено турниров на сервере ({0}): {1}. Выберите турнир для подключения.", serverAddress, remoteList.Count);
+                    StatusTextBlock.Text = string.Format("Найдено турниров: {0}. Выберите турнир для добавления.", remoteList.Count);
                     StatusTextBlock.Foreground = new SolidColorBrush(Color.FromRgb(22, 101, 52));
                     RemoteTournamentsGrid.SelectedIndex = 0;
                 }
             }
             catch (Exception ex)
             {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
                 RemoteTournamentsGrid.ItemsSource = null;
-                StatusTextBlock.Text = "Не удалось подключиться к серверу: " + ex.Message;
+                StatusTextBlock.Text = "Не удалось подключиться к серверу: " + SportHubBase.Services.ErrorLog.UserMessage(ex);
                 StatusTextBlock.Foreground = new SolidColorBrush(Color.FromRgb(220, 38, 38));
-                MessageBox.Show(
-                    "Не удалось подключиться к серверу MS SQL Server (" + serverAddress + ").\n\n" + ex.Message,
-                    "Ошибка подключения",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
             }
             finally
             {
@@ -80,8 +99,11 @@ namespace SportHubBase.View
 
         private void RemoteTournamentsGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (RemoteTournamentsGrid.SelectedItem != null)
+            var source = e.OriginalSource as DependencyObject;
+            var row = source == null ? null : ItemsControl.ContainerFromElement(RemoteTournamentsGrid, source) as DataGridRow;
+            if (row != null && row.Item is Tournament)
             {
+                RemoteTournamentsGrid.SelectedItem = row.Item;
                 ConnectSelectedTournament();
             }
         }
@@ -89,13 +111,13 @@ namespace SportHubBase.View
         private void ConnectSelectedTournament()
         {
             var selected = RemoteTournamentsGrid.SelectedItem as Tournament;
-            if (selected == null)
+            if (selected == null || _loadedServerAddress == null)
             {
                 MessageBox.Show("Выберите турнир из списка для подключения.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            string serverAddress = ServerAddressTextBox.Text != null ? ServerAddressTextBox.Text.Trim() : "localhost";
+            string serverAddress = _loadedServerAddress;
 
             try
             {
@@ -106,8 +128,9 @@ namespace SportHubBase.View
             }
             catch (Exception ex)
             {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
                 MessageBox.Show(
-                    "Ошибка при подключении турнира:\n" + ex.Message,
+                    "Ошибка при подключении турнира:\n" + SportHubBase.Services.ErrorLog.UserMessage(ex),
                     "Ошибка",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

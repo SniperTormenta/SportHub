@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -100,8 +100,9 @@ namespace SportHubBase.View
             }
             catch (Exception ex)
             {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
                 MessageBox.Show(this,
-                    "Не удалось сохранить изображение таблицы.\n" + ex.Message,
+                    "Не удалось сохранить изображение таблицы.\n" + SportHubBase.Services.ErrorLog.UserMessage(ex),
                     "Ошибка экспорта",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

@@ -1,4 +1,4 @@
-// Services/SqliteStorageService.cs
+﻿// Services/SqliteStorageService.cs
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using SportHubBase.Interfaces;
@@ -68,6 +68,7 @@ namespace SportHubBase.Services
                 }
             }
 
+            foreach (var tournament in tournaments) TournamentIntegrityService.Normalize(tournament);
             return tournaments;
         }
 
@@ -95,6 +96,7 @@ namespace SportHubBase.Services
                     t.Matches = LoadMatchesForTournament(conn, t.Id);
                 }
 
+                if (t != null) TournamentIntegrityService.Normalize(t);
                 return t;
             }
         }
@@ -207,12 +209,19 @@ namespace SportHubBase.Services
 
         public void DeleteTournament(Guid tournamentId)
         {
+            DeleteTournament(tournamentId, null);
+        }
+
+        public void DeleteTournament(Guid tournamentId, long? expectedRevision)
+        {
+            _db.Backups.CreateBackup(true);
             using (var conn = OpenConnection())
             using (var cmd = conn.CreateCommand())
             {
-                cmd.CommandText = "UPDATE Tournaments SET IsDeleted = 1 WHERE Id = @Id";
+                cmd.CommandText = "UPDATE Tournaments SET IsDeleted = 1, Revision = Revision + 1 WHERE Id = @Id AND IsDeleted = 0 AND (@Revision IS NULL OR Revision = @Revision)";
                 cmd.Parameters.AddWithValue("@Id", tournamentId.ToString());
-                cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@Revision", expectedRevision.HasValue ? (object)expectedRevision.Value : DBNull.Value);
+                if (cmd.ExecuteNonQuery() == 0 && expectedRevision.HasValue) throw new StorageConflictException();
             }
         }
 
@@ -363,7 +372,7 @@ namespace SportHubBase.Services
                         cmd.Parameters.AddWithValue("@Place", row.Place);
                         cmd.Parameters.AddWithValue("@Wins", row.Wins);
                         cmd.Parameters.AddWithValue("@Losses", row.Losses);
-                        cmd.Parameters.AddWithValue("@Draws", 0);
+                        cmd.Parameters.AddWithValue("@Draws", row.Draws);
                         cmd.Parameters.AddWithValue("@SetsWon", row.SetsWon);
                         cmd.Parameters.AddWithValue("@SetsLost", row.SetsLost);
                         cmd.Parameters.AddWithValue("@PointsScored", row.PointsScored);
@@ -379,13 +388,19 @@ namespace SportHubBase.Services
         // ПРИВАТНЫЕ МЕТОДЫ — UPSERT / ЧТЕНИЕ
         // ─────────────────────────────────────────────────────────────────────────
 
-        private void UpsertTournamentCore(Tournament t)
+        public void CreateSafetyBackup() => _db.Backups.CreateBackup(true);
+        public void CacheTournament(Tournament tournament) => UpsertTournamentCore(tournament, true);
+
+        private void UpsertTournamentCore(Tournament t, bool cache = false)
         {
+            TournamentIntegrityService.Normalize(t);
+            _db.Backups.CreateBackup();
             using (var conn = OpenConnection())
             using (var tx = conn.BeginTransaction())
             {
                 try
                 {
+                    var nextRevision = TournamentRevisionService.Check(conn, tx, t, cache);
                     // UPSERT самого турнира
                     using (var cmd = conn.CreateCommand())
                     {
@@ -529,7 +544,9 @@ namespace SportHubBase.Services
                         delCmd.ExecuteNonQuery();
                     }
 
+                    TournamentRevisionService.Store(conn, tx, t.Id, nextRevision);
                     tx.Commit();
+                    t.Revision = nextRevision;
                 }
                 catch
                 {
@@ -631,18 +648,20 @@ namespace SportHubBase.Services
                 cmd.CommandText = @"
                     INSERT INTO Matches
                         (Id, TournamentId, Round, RoundName, MatchNumber,
-                         Team1, Team2, Status, Team1QuickScore, Team2QuickScore,
+                         Team1, Team2, Team1Id, Team2Id, Status, Team1QuickScore, Team2QuickScore,
                          SetsScore, SetsBySet, TotalScore, Duration,
                          Referee, Location, Mvp, MatchDate, StartTime, WinnerId, CreatedByUserId)
                     VALUES
                         (@Id, @TournamentId, @Round, @RoundName, @MatchNumber,
-                         @Team1, @Team2, @Status, @Team1QuickScore, @Team2QuickScore,
+                         @Team1, @Team2, @Team1Id, @Team2Id, @Status, @Team1QuickScore, @Team2QuickScore,
                          @SetsScore, @SetsBySet, @TotalScore, @Duration,
                          @Referee, @Location, @Mvp, @MatchDate, @StartTime, @WinnerId, @CreatedByUserId)
                     ON CONFLICT(Id) DO UPDATE SET
                         Round           = excluded.Round,
                         RoundName       = excluded.RoundName,
                         MatchNumber     = excluded.MatchNumber,
+                        Team1Id         = excluded.Team1Id,
+                        Team2Id         = excluded.Team2Id,
                         Team1           = excluded.Team1,
                         Team2           = excluded.Team2,
                         Status          = excluded.Status,
@@ -665,6 +684,8 @@ namespace SportHubBase.Services
                 cmd.Parameters.AddWithValue("@Round", match.Round);
                 cmd.Parameters.AddWithValue("@RoundName", DbValue(match.RoundName));
                 cmd.Parameters.AddWithValue("@MatchNumber", match.MatchNumber.HasValue ? (object)match.MatchNumber.Value : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Team1Id", match.Team1Id.HasValue ? (object)match.Team1Id.Value.ToString() : DBNull.Value);
+                cmd.Parameters.AddWithValue("@Team2Id", match.Team2Id.HasValue ? (object)match.Team2Id.Value.ToString() : DBNull.Value);
                 cmd.Parameters.AddWithValue("@Team1", DbValue(match.Team1));
                 cmd.Parameters.AddWithValue("@Team2", DbValue(match.Team2));
                 cmd.Parameters.AddWithValue("@Status", match.Status ?? "Не сыгран");
@@ -691,6 +712,7 @@ namespace SportHubBase.Services
         {
             var t = new Tournament
             {
+                Revision = Convert.ToInt64(r["Revision"]),
                 Id                    = Guid.Parse(r["Id"].ToString()),
                 Name                  = r["Name"].ToString(),
                 SportType             = ReadString(r, "SportType"),
@@ -858,6 +880,8 @@ namespace SportHubBase.Services
                             Id             = Guid.Parse(r["Id"].ToString()),
                             Round          = Convert.ToInt32(r["Round"]),
                             RoundName      = ReadString(r, "RoundName"),
+                            Team1Id = Guid.TryParse(ReadString(r, "Team1Id"), out var leftId) ? (Guid?)leftId : null,
+                            Team2Id = Guid.TryParse(ReadString(r, "Team2Id"), out var rightId) ? (Guid?)rightId : null,
                             Team1          = ReadString(r, "Team1"),
                             Team2          = ReadString(r, "Team2"),
                             Status         = r["Status"].ToString(),

@@ -1107,6 +1107,34 @@
                                 <TextBlock Text="Дополнительные действия" FontSize="18" FontWeight="Bold" Foreground="#111418" Margin="0,0,0,20"/>
 
                                 <StackPanel Orientation="Horizontal">
+                                    <Button Content="Экспорт в JSON"
+                                            Command="{Binding ExportTournamentJsonCommand}"
+                                            ToolTip="Экспорт полной структуры турнира, расписания, результатов и статистики в JSON-файл"
+                                            Background="#137FEC" Foreground="White"
+                                            FontSize="14" FontWeight="SemiBold"
+                                            Padding="16,10" BorderThickness="0"
+                                            Cursor="Hand" Margin="0,0,12,0">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}"
+                                                                   CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#0F66C2"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+
                                     <Button Content="Экспорт результатов" 
                                             Command="{Binding ExportResultsCommand}"
                                              Background="#10B981" Foreground="White" 

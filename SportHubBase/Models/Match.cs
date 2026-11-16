@@ -33,6 +33,12 @@ namespace SportHubBase.Models
 
         public Guid Id { get; set; } = Guid.NewGuid();
 
+        public Guid? Team1Id { get; set; }
+        public Guid? Team2Id { get; set; }
+
+        [Newtonsoft.Json.JsonIgnore]
+        public ScorePair Score => ScorePair.ForMatch(this);
+
         public Guid? CreatedByUserId { get; set; }
         
         public Guid? WinnerId { get; set; }
@@ -157,7 +163,7 @@ namespace SportHubBase.Models
         /// </summary>
         public bool IsBye
         {
-            get => _isBye;
+            get => _isBye || string.Equals(Team2, "BYE", StringComparison.OrdinalIgnoreCase);
             set => SetField(ref _isBye, value);
         }
 
@@ -199,8 +205,34 @@ namespace SportHubBase.Models
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private int _updateDepth;
+        private bool _pendingNotification;
+        public IDisposable BeginUpdate()
+        {
+            _updateDepth++;
+            return new UpdateScope(this);
+        }
+
+        private sealed class UpdateScope : IDisposable
+        {
+            private Match _match;
+            public UpdateScope(Match match) { _match = match; }
+            public void Dispose()
+            {
+                if (_match == null) return;
+                var match = _match;
+                _match = null;
+                if (--match._updateDepth == 0 && match._pendingNotification)
+                {
+                    match._pendingNotification = false;
+                    match.OnPropertyChanged(string.Empty);
+                }
+            }
+        }
+
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
+            if (_updateDepth > 0) { _pendingNotification = true; return; }
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 

@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -20,10 +23,30 @@ jobs:
         uses: nuget/setup-nuget@v2
 
       - name: Restore NuGet packages
-        run: nuget restore SportHubBase.sln
+        run: nuget restore SportHubBase/packages.config -PackagesDirectory packages -NonInteractive
+
+      - name: Установить версию приложения из тега
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $tagVersion = [version]($env:RELEASE_TAG -replace '^[vV]', '')
+          $version = [version]::new($tagVersion.Major, $tagVersion.Minor, [Math]::Max(0, $tagVersion.Build), [Math]::Max(0, $tagVersion.Revision))
+          if (@($version.Major, $version.Minor, $version.Build, $version.Revision).Where({ $_ -gt 65534 }).Count -gt 0) { throw 'Компоненты версии должны быть не больше 65534.' }
+          $path = 'SportHubBase/Properties/AssemblyInfo.cs'
+          $source = [IO.File]::ReadAllText($path)
+          $source = $source -replace 'AssemblyVersion\("[^"]+"\)', ('AssemblyVersion("' + $version + '")')
+          $source = $source -replace 'AssemblyFileVersion\("[^"]+"\)', ('AssemblyFileVersion("' + $version + '")')
+          [IO.File]::WriteAllText($path, $source, [Text.UTF8Encoding]::new($true))
 
       - name: Build Solution
-        run: msbuild SportHubBase.sln /p:Configuration=Release /p:Platform="Any CPU"
+        run: msbuild SportHubBase.Tests/SportHubBase.Tests.csproj /p:Configuration=Release /verbosity:minimal /nologo
+
+      - name: Проверить перед публикацией
+        shell: pwsh
+        run: |
+          & SportHubBase.Tests/bin/Release/SportHubBase.Tests.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Prepare Release ZIP and Manifest
         id: pack

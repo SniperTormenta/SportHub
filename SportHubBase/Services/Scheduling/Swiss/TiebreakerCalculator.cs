@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using SportHubBase.Models;
@@ -97,20 +97,14 @@ namespace SportHubBase.Services.Scheduling.Swiss
 
         private static (int left, int right)? ParsePair(string score)
         {
-            if (string.IsNullOrWhiteSpace(score)) return null;
-            var parts = score.Split(':');
-            if (parts.Length != 2) return null;
-            if (int.TryParse(parts[0].Trim(), out int l) && int.TryParse(parts[1].Trim(), out int r))
-                return (l, r);
-            return null;
+            var pair = ScorePair.Parse(score);
+            return pair == null ? ((int, int)?)null : (pair.Left, pair.Right);
         }
 
         private static (int left, int right)? ParsePair(string left, string right)
         {
-            if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right)) return null;
-            if (int.TryParse(left.Trim(), out int l) && int.TryParse(right.Trim(), out int r))
-                return (l, r);
-            return null;
+            var pair = ScorePair.Parse(left, right);
+            return pair == null ? ((int, int)?)null : (pair.Left, pair.Right);
         }
     }
 }

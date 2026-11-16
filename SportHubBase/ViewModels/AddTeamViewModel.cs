@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -213,8 +213,9 @@ namespace SportHubBase.ViewModels
                     LogoUrl = "base64:" + Convert.ToBase64String(normalizedPngBytes);
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show("Не удалось загрузить изображение аватарки команды:\n" + ex.Message,
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                    MessageBox.Show("Не удалось загрузить изображение аватарки команды:\n" + SportHubBase.Services.ErrorLog.UserMessage(ex),
                         "Ошибка загрузки", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -331,8 +332,9 @@ namespace SportHubBase.ViewModels
             }
             catch (Exception ex)
             {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
                 // Перехватываем ошибки БД
-                MessageBox.Show($"Произошла ошибка при сохранении команды в базу данных:\n{ex.Message}",
+                MessageBox.Show($"Произошла ошибка при сохранении команды в базу данных:\n{SportHubBase.Services.ErrorLog.UserMessage(ex)}",
                     "Ошибка БД", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

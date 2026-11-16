@@ -2,12 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Турниры — SportHub"
-        MinWidth="1200"
-        MinHeight="720"
+        Width="1180" MinWidth="960"
+        Height="760" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         WindowState="Normal"
         ResizeMode="CanResizeWithGrip"
-        Background="#F5F7FA">
+        Background="#F5F7FA" FontFamily="Segoe UI" UseLayoutRounding="True">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -23,66 +23,66 @@
             <!-- Футер -->
         </Grid.RowDefinitions>
 
-        <!-- 1. Хедер с фото -->
-        <Border Grid.Row="0"
-                Margin="40,20,40,40"
-                Height="260"
-                CornerRadius="20">
+        <!-- Служебные действия отделены от работы с турнирами. -->
+        <StackPanel Grid.Row="0">
+        <Border Background="White" BorderBrush="#E2E8F0"
+                BorderThickness="0,0,0,1" Padding="28,12">
+            <DockPanel>
+                <Menu DockPanel.Dock="Right" HorizontalAlignment="Right"
+                      VerticalAlignment="Center" Background="Transparent" FontSize="14">
+                    <MenuItem Header="_Настройки" Padding="12,8">
+                        <MenuItem Header="Резервные копии локальной базы">
+                            <MenuItem Header="Сохранить резервную копию…" Click="CreateBackup_Click"/>
+                            <MenuItem Header="Восстановить из копии…" Click="RestoreBackup_Click"/>
+                        </MenuItem>
+                        <Separator/>
+                        <MenuItem Header="Проверить обновления" Click="CheckUpdatesButton_Click"/>
+                    </MenuItem>
+                </Menu>
+                <TextBlock Text="SportHub" FontSize="20" FontWeight="Bold"
+                           Foreground="#1E293B" VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+        <Border Margin="28,20,28,0" Height="260" CornerRadius="20">
             <Border.Background>
                 <ImageBrush ImageSource="/Image/SportStadionUltraWitheMainLogo.jpeg"
                             Stretch="UniformToFill"/>
             </Border.Background>
             <Border Background="#80000000" CornerRadius="20"/>
         </Border>
+        </StackPanel>
 
-        <!-- 2. Заголовок + кнопки -->
-        <Grid Grid.Row="1" Margin="40,0,40,20">
+        <Grid Grid.Row="1" Margin="28,24,28,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-
-            <TextBlock Text="Турниры"
-                       FontSize="32"
-                       FontWeight="SemiBold"
-                       Foreground="#2D3748"
-                       VerticalAlignment="Center"/>
-
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button x:Name="CheckUpdatesButton"
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Турниры" FontSize="28" FontWeight="SemiBold" Foreground="#1E293B"/>
+                <TextBlock Text="Выберите турнир, чтобы продолжить работу"
+                           Margin="0,4,0,0" FontSize="13" Foreground="#64748B"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="ConnectRemoteButton" Content="Добавить с сервера"
                         Style="{StaticResource DefaultModernButton}"
-                        Content="🔄 Обновления"
-                        Margin="0,0,12,0"
-                        Padding="16,10"
-                        Click="CheckUpdatesButton_Click"/>
-
-                <Button x:Name="ConnectRemoteButton"
-                        Style="{StaticResource DefaultModernButton}"
-                        Content="🌐 Подключить с сервера"
-                        Margin="0,0,12,0"
-                        Padding="20,10"
-                        Click="ConnectRemoteButton_Click"/>
-
-                <Button x:Name="AddTurnament"
-                        Style="{StaticResource ModernAddButton}"
-                        Content="Добавить"
+                        Margin="0,0,12,0" Padding="16,10" Click="ConnectRemoteButton_Click"/>
+                <Button x:Name="AddTurnament" Content="Создать турнир"
+                        Style="{StaticResource ModernAddButton}" Padding="20,10"
                         Click="AddTurnament_Click"/>
             </StackPanel>
         </Grid>
-
         <!-- 3. Панель фильтров -->
         <Border Grid.Row="2"
                 Background="White"
-                Padding="40,20"
+                Padding="28,16"
                 BorderBrush="#E2E8F0"
                 BorderThickness="0,1,0,1">
 
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="280"/>
-                    <ColumnDefinition Width="200"/>
-                    <ColumnDefinition Width="220"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="190"/>
+                    <ColumnDefinition Width="220"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
@@ -90,7 +90,7 @@
                 <TextBox x:Name="SearchTextBox"
                          Grid.Column="0"
                          Style="{StaticResource ModernSearchBox}"
-                         Text=""
+                         Text="" ToolTip="Поиск по названию, городу или организатору" AutomationProperties.Name="Поиск турниров"
                          TextChanged="SearchTextBox_TextChanged"/>
 
                 <ComboBox x:Name="SportFilterComboBox"
@@ -117,8 +117,8 @@
                     <ComboBoxItem>Удалённые (Сервер)</ComboBoxItem>
                 </ComboBox>
 
-                <Button Grid.Column="4"
-                        Content="🔄 Обновить"
+                <Button Grid.Column="3" Margin="16,0,0,0"
+                        Content="Обновить список"
                         Style="{StaticResource DefaultModernButton}"
                         Padding="16,8"
                         Click="RefreshButton_Click"/>
@@ -127,7 +127,7 @@
 
         <!-- 4. Список турниров -->
         <ScrollViewer Grid.Row="3"
-                      Margin="40,24,40,20"
+                      Margin="28,16,28,12"
                       VerticalScrollBarVisibility="Auto">
             <ItemsControl x:Name="TournamentsPanel" ItemsSource="{Binding Tournaments}">
                 <ItemsControl.ItemTemplate>
@@ -135,7 +135,7 @@
                         <Border Background="White"
                                 CornerRadius="12"
                                 Margin="0,0,0,16"
-                                Padding="24"
+                                Padding="20,16"
                                 Cursor="Hand"
                                 MouseLeftButtonUp="TournamentItem_MouseLeftButtonUp"
                                 Tag="{Binding Id}">
@@ -161,7 +161,7 @@
                                            FontSize="18"
                                            FontWeight="SemiBold"
                                            Foreground="#1E293B"
-                                           Margin="16,0"
+                                           Margin="16,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"
                                            VerticalAlignment="Center"/>
 
                                 <!-- Бейдж режима хранения (Локальный / Сервер / Оффлайн-кэш) -->
@@ -179,7 +179,7 @@
 
                                 <!-- Организатор -->
                                 <TextBlock Grid.Column="3"
-                                           Text="{Binding OwnerName, StringFormat='Организатор: {0}', TargetNullValue='Организатор: Локальный'}"
+                                           MaxWidth="200" TextTrimming="CharacterEllipsis" ToolTip="{Binding OwnerName}" Text="{Binding OwnerName, StringFormat='Организатор: {0}', TargetNullValue='Организатор: Локальный'}"
                                            Foreground="#64748B"
                                            FontSize="14"
                                            VerticalAlignment="Center"/>
@@ -190,20 +190,32 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <!-- 5. Футер -->
-        <Border Grid.Row="4"
-                Background="White"
-                Padding="40,20"
-                BorderBrush="#E2E8F0"
-                BorderThickness="0,1,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Name="TxtAppVersion" Text="SportHub" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="1" Text="support@test.ru" Foreground="#94A3B8" VerticalAlignment="Center"/>
-            </Grid>
+        <Border Grid.Row="3" Margin="28,16,28,12" Background="White" CornerRadius="12">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Tournaments.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
+                <TextBlock Text="Нет турниров для отображения" FontSize="20" FontWeight="SemiBold"
+                           Foreground="#334155" TextAlignment="Center"/>
+                <TextBlock Text="Создайте турнир, добавьте его с сервера или измените условия поиска."
+                           Margin="0,8,0,0" Foreground="#64748B" TextWrapping="Wrap" TextAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="4" Padding="28,10" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0">
+            <DockPanel>
+                <TextBlock x:Name="TxtAppVersion" DockPanel.Dock="Right"
+                           Text="SportHub" Foreground="#64748B"/>
+                <TextBlock Text="{Binding Tournaments.Count, StringFormat='Показано турниров: {0}'}"
+                           Foreground="#64748B"/>
+            </DockPanel>
         </Border>
     </Grid>
 </Window>

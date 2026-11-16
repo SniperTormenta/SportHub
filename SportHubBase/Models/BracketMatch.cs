@@ -117,11 +117,16 @@ namespace SportHubBase.Models
         public string DisplayTeam2 => Team2?.Name ?? (IsBye ? "" : "Ожидание...");
 
         [JsonIgnore]
-        public Team Winner => IsBye ? Team1 :
-                              !IsCompleted ? null :
-                              string.IsNullOrEmpty(Score1) || string.IsNullOrEmpty(Score2) ? null :
-                              int.TryParse(Score1, out int s1) && int.TryParse(Score2, out int s2) ?
-                                  (s1 > s2 ? Team1 : (s2 > s1 ? Team2 : null)) : null;
+        public Team Winner
+        {
+            get
+            {
+                if (IsBye) return Team1;
+                var score = ScorePair.Parse(Score1, Score2);
+                if (!IsCompleted || score == null) return null;
+                return score.Left > score.Right ? Team1 : score.Right > score.Left ? Team2 : null;
+            }
+        }
 
         public void TryAdvance()
         {
@@ -150,6 +155,20 @@ namespace SportHubBase.Models
             // }
 
             OnPropertyChanged(nameof(Winner));
+        }
+
+        [JsonIgnore]
+        public bool IsUpdatingScore { get; private set; }
+
+        public void ApplyScore(string left, string right)
+        {
+            if (Score1 == left && Score2 == right) return;
+            if ((!string.IsNullOrWhiteSpace(left) || !string.IsNullOrWhiteSpace(right)) && ScorePair.Parse(left, right) == null)
+                throw new ArgumentException("Введите оба значения счёта целыми неотрицательными числами.");
+            IsUpdatingScore = true;
+            try { Score1 = left; Score2 = right; }
+            finally { IsUpdatingScore = false; }
+            OnPropertyChanged("Score");
         }
     }
 }

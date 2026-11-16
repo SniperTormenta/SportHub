@@ -1,4 +1,4 @@
-// ViewModels/TournamentViewModel.cs
+﻿// ViewModels/TournamentViewModel.cs
 
 // Вынести текущий расчёт из UpdateResultsFromMatches() в VolleyballResultsCalculator.
 // Создать фабрику и интерфейс.
@@ -20,6 +20,8 @@ using System.Windows.Input;
 using SportHubBase.Services.Results;
 using SportHubBase.Services.Statistics;
 using SportHubBase.Services.Results.Data;
+using SportHubBase.Services.Export;
+using SportHubBase.Services;
 
 namespace SportHubBase.ViewModels
 {
@@ -34,6 +36,7 @@ namespace SportHubBase.ViewModels
     {
         /// Сервис хранения. Инжектируется через конструктор.
         private readonly IStorage _storage;
+        private readonly TournamentOperationsService _operations;
 
         /// Фабрика стратегий расписания. Инжектируется через конструктор.
         private readonly IScheduleStrategyFactory _scheduleFactory;
@@ -49,6 +52,9 @@ namespace SportHubBase.ViewModels
 
         /// Сервис Excel. Инжектируется через конструктор.
         private readonly IExcelService _excelService;
+
+        /// Сервис экспорта турнира в JSON. Инжектируется через конструктор.
+        private readonly ITournamentJsonExportService _jsonExportService;
 
         private ScheduleViewModel _scheduleVM;
         public ScheduleViewModel ScheduleVM
@@ -623,6 +629,11 @@ namespace SportHubBase.ViewModels
         /// Команда скачивания шаблона для импорта команд.
         public ICommand DownloadTemplateCommand { get; }
 
+        /// <summary>
+        /// Команда экспорта всех данных текущего турнира в JSON-файл (для сайта).
+        /// </summary>
+        public ICommand ExportTournamentJsonCommand { get; }
+
         // Settings Tab Properties and Commands
         
         public List<string> AvailableAccessModes { get; } = new List<string> { "Доступно всем", "Приватный" };
@@ -794,15 +805,18 @@ namespace SportHubBase.ViewModels
             IStatisticsCalculatorFactory statisticsFactory,
             IImageEncoderStrategyFactory imageEncoderFactory,
             IMatchService matchService,
-            IExcelService excelService)
+            IExcelService excelService,
+            ITournamentJsonExportService jsonExportService = null)
         {
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _operations = new TournamentOperationsService(_storage);
             _scheduleFactory = scheduleFactory ?? throw new ArgumentNullException(nameof(scheduleFactory));
             _resultsFactory = resultsFactory ?? throw new ArgumentNullException(nameof(resultsFactory));
             _statisticsFactory = statisticsFactory ?? throw new ArgumentNullException(nameof(statisticsFactory));
             _imageEncoderFactory = imageEncoderFactory ?? throw new ArgumentNullException(nameof(imageEncoderFactory));
             _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
             _excelService = excelService ?? throw new ArgumentNullException(nameof(excelService));
+            _jsonExportService = jsonExportService ?? new TournamentJsonExportService();
 
             CurrentTournament = _storage.GetTournamentById(tournamentId);
 
@@ -849,7 +863,7 @@ namespace SportHubBase.ViewModels
                     SubscribeToBracket(Bracket);
                     if (CanEdit)
                     {
-                        _storage.UpdateTournament(CurrentTournament);
+                        _operations.Save(CurrentTournament);
                     }
                 }
 
@@ -865,6 +879,7 @@ namespace SportHubBase.ViewModels
             ImportTeamsExcelCommand = new RelayCommand(ImportTeamsExcel);
             ExportTeamsExcelCommand = new RelayCommand(ExportTeamsExcel);
             DownloadTemplateCommand = new RelayCommand(DownloadTemplate);
+            ExportTournamentJsonCommand = new RelayCommand(ExportTournamentJson);
             ApplyRecommendedRoundsCommand = new RelayCommand(_ => 
             {
                 var limits = GetSwissRoundsLimits(TeamsCount);
@@ -999,9 +1014,10 @@ namespace SportHubBase.ViewModels
                     ApplySelfCellImageData(base64Data);
                 }
                 catch (Exception ex)
-                {
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
                     MessageBox.Show(
-                        string.Format("Не удалось загрузить изображение (убедитесь, что файл является корректной картинкой PNG/JPG/BMP): {0}", ex.Message),
+                        string.Format("Не удалось загрузить изображение (убедитесь, что файл является корректной картинкой PNG/JPG/BMP): {0}", SportHubBase.Services.ErrorLog.UserMessage(ex)),
                         "Ошибка загрузки изображения",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -1040,7 +1056,7 @@ namespace SportHubBase.ViewModels
 
             if (CanEdit)
             {
-                _storage.UpdateTournament(CurrentTournament);
+                _operations.Save(CurrentTournament);
             }
 
             OnPropertyChanged(nameof(HasSelfCellImage));
@@ -1175,14 +1191,8 @@ namespace SportHubBase.ViewModels
             {
                 if (CurrentTournament != null)
                 {
-                    CurrentTournament.Status = "Завершён";
-                    // Если дата окончания не установлена или она в будущем, ставим текущую
-                    if (!CurrentTournament.EndDate.HasValue || CurrentTournament.EndDate.Value > DateTime.Now)
-                    {
-                        CurrentTournament.EndDate = DateTime.Now;
-                    }
-                    _storage.UpdateTournament(CurrentTournament);
-                    
+                    _operations.Finish(CurrentTournament, DateTime.Now);
+
                     OnPropertyChanged(nameof(TournamentStatusText));
                     OnPropertyChanged(nameof(DatesText));
                     OnPropertyChanged(nameof(IsLive)); // Обновит индикатор Live
@@ -1399,42 +1409,9 @@ namespace SportHubBase.ViewModels
 
         private double? GetOutcome(Match match)
         {
-            var fromSets = ParsePair(match.SetsScore);
-            if (fromSets.left.HasValue && fromSets.right.HasValue)
-                return CompareScores(fromSets.left.Value, fromSets.right.Value);
-
-            var fromQuick = ParsePair(match.Team1QuickScore, match.Team2QuickScore);
-            if (fromQuick.left.HasValue && fromQuick.right.HasValue)
-                return CompareScores(fromQuick.left.Value, fromQuick.right.Value);
-
-            return null;
+            var score = match.Score;
+            return score == null ? (double?)null : score.Left > score.Right ? 1d : score.Left < score.Right ? 0d : 0.5d;
         }
-
-        private (int? left, int? right) ParsePair(string score)
-        {
-            if (string.IsNullOrWhiteSpace(score)) return (null, null);
-            var parts = score.Split(':');
-            if (parts.Length != 2) return (null, null);
-            if (int.TryParse(parts[0].Trim(), out var left) && int.TryParse(parts[1].Trim(), out var right))
-                return (left, right);
-            return (null, null);
-        }
-
-        private (int? left, int? right) ParsePair(string leftRaw, string rightRaw)
-        {
-            if (string.IsNullOrWhiteSpace(leftRaw) || string.IsNullOrWhiteSpace(rightRaw)) return (null, null);
-            if (int.TryParse(leftRaw.Trim(), out var left) && int.TryParse(rightRaw.Trim(), out var right))
-                return (left, right);
-            return (null, null);
-        }
-
-        private double? CompareScores(int left, int right)
-        {
-            if (left > right) return 1d;
-            if (left < right) return 0d;
-            return 0.5d;
-        }
-
         private void UpdateStatistics()
         {
             if (CurrentTournament == null)
@@ -1516,7 +1493,7 @@ namespace SportHubBase.ViewModels
             try
             {
                 // Сохраняем в хранилище
-                _storage.UpdateTournament(CurrentTournament);
+                _operations.Save(CurrentTournament);
 
                 // Принудительный пересчёт
                 UpdateResultsFromMatches();
@@ -1535,7 +1512,8 @@ namespace SportHubBase.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при сохранении настроек: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                MessageBox.Show($"Ошибка при сохранении настроек: {SportHubBase.Services.ErrorLog.UserMessage(ex)}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1572,15 +1550,16 @@ namespace SportHubBase.ViewModels
             {
                 try
                 {
-                    _storage.DeleteTournament(CurrentTournament.Id);
+                    _operations.Delete(CurrentTournament);
                     MessageBox.Show("Турнир успешно удален.", "Удаление", MessageBoxButton.OK, MessageBoxImage.Information);
 
                     // Закрываем окно
                     Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.DataContext == this)?.Close();
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show($"Ошибка при удалении турнира: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                    MessageBox.Show($"Ошибка при удалении турнира: {SportHubBase.Services.ErrorLog.UserMessage(ex)}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -1607,10 +1586,84 @@ namespace SportHubBase.ViewModels
                     MessageBox.Show("Экспорт завершен успешно!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show(string.Format("Ошибка при экспорте: {0}", ex.Message), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                    MessageBox.Show(string.Format("Ошибка при экспорте: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex)), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        /// <summary>
+        /// Экспортирует все данные текущего турнира в JSON-файл для сайта.
+        /// </summary>
+        private void ExportTournamentJson(object parameter)
+        {
+            if (CurrentTournament == null)
+            {
+                MessageBox.Show("Нет данных о турнире для экспорта.", "Экспорт в JSON", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                SyncTournamentDataBeforeExport();
+
+                string savedFilePath = _jsonExportService.ExportWithDialog(CurrentTournament, CurrentResults, Statistics);
+
+                if (!string.IsNullOrWhiteSpace(savedFilePath))
+                {
+                    int teamsCount = CurrentTournament.Teams != null ? CurrentTournament.Teams.Count : 0;
+                    int matchesCount = CurrentTournament.Matches != null ? CurrentTournament.Matches.Count : 0;
+
+                    string message = string.Format(
+                        "Все данные турнира «{0}» успешно экспортированы в JSON-файл!\n\n" +
+                        "• Команд: {1}\n" +
+                        "• Матчей: {2}\n" +
+                        "• Файл: {3}\n\n" +
+                        "Данный JSON-файл содержит полную структуру турнира, расписание, сетку, таблицу результатов и статистику и готов для загрузки на сайт.",
+                        CurrentTournament.Name,
+                        teamsCount,
+                        matchesCount,
+                        savedFilePath);
+
+                    MessageBox.Show(message, "Экспорт в JSON завершён", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                MessageBox.Show(
+                    string.Format("Ошибка при экспорте турнира в JSON: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex)),
+                    "Ошибка экспорта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Актуализирует коллекцию команд, расписание и результаты перед экспортом.
+        /// </summary>
+        private void SyncTournamentDataBeforeExport()
+        {
+            if (CurrentTournament == null) return;
+
+            if (Teams != null && Teams.Count > 0)
+            {
+                CurrentTournament.Teams = Teams.ToList();
+            }
+
+            if (ScheduleVM != null && ScheduleVM.Matches != null && ScheduleVM.Matches.Count > 0)
+            {
+                CurrentTournament.Matches = ScheduleVM.Matches.ToList();
+            }
+
+            if (Bracket != null)
+            {
+                CurrentTournament.Bracket = Bracket;
+            }
+
+            UpdateResultsFromMatches();
+            UpdateStatistics();
         }
 
         private void ImportTeamsExcel(object parameter)
@@ -1637,24 +1690,10 @@ namespace SportHubBase.ViewModels
                     var importedTeams = _excelService.ImportTeams(ofd.FileName);
                     if (importedTeams.Any())
                     {
-                        // Очистка текущих данных
-                        CurrentTournament.Teams.Clear();
-                        if (CurrentTournament.Matches != null)
-                            CurrentTournament.Matches.Clear();
-                        
-                        CurrentTournament.Bracket = null;
+                        _operations.ReplaceTeams(CurrentTournament, importedTeams);
                         Bracket = null;
-                        
                         Teams.Clear();
-
-                        // Применение новых данных
-                        foreach (var team in importedTeams)
-                        {
-                            CurrentTournament.Teams.Add(team);
-                            Teams.Add(team);
-                        }
-                        
-                        _storage.UpdateTournament(CurrentTournament);
+                        foreach (var team in importedTeams) Teams.Add(team);
                         OnPropertyChanged(nameof(TeamsCount));
                         
                         // ВАЖНО: Загружаем свежий объект из базы для надёжной работы
@@ -1687,8 +1726,9 @@ namespace SportHubBase.ViewModels
                     }
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show(string.Format("Ошибка при импорте: {0}", ex.Message), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                    MessageBox.Show(string.Format("Ошибка при импорте: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex)), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -1709,8 +1749,9 @@ namespace SportHubBase.ViewModels
                     MessageBox.Show("Экспорт завершен успешно!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show(string.Format("Ошибка при экспорте: {0}", ex.Message), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                    MessageBox.Show(string.Format("Ошибка при экспорте: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex)), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -1731,8 +1772,9 @@ namespace SportHubBase.ViewModels
                     MessageBox.Show("Шаблон сохранен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show(string.Format("Ошибка при сохранении шаблона: {0}", ex.Message), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                    MessageBox.Show(string.Format("Ошибка при сохранении шаблона: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex)), "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -1747,7 +1789,7 @@ namespace SportHubBase.ViewModels
                 {
                     UpdateResultsFromMatches();
                     UpdateStatistics();
-                    _storage.UpdateTournament(CurrentTournament);
+                    _operations.Save(CurrentTournament);
                 }
             }
         }
@@ -1786,11 +1828,11 @@ namespace SportHubBase.ViewModels
         {
             if (!CanEdit) return;
 
-            if (e.PropertyName == nameof(Match.Team1QuickScore) || e.PropertyName == nameof(Match.Team2QuickScore) || e.PropertyName == nameof(Match.Status))
+            if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(Match.Team1QuickScore) || e.PropertyName == nameof(Match.Team2QuickScore) || e.PropertyName == nameof(Match.Status))
             {
                 UpdateResultsFromMatches();
                 UpdateStatistics();
-                _storage.UpdateTournament(CurrentTournament);
+                _operations.Save(CurrentTournament);
             }
         }
 
@@ -1816,16 +1858,16 @@ namespace SportHubBase.ViewModels
         private void OnBracketMatchPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             // Если изменился счёт, продвигаем победителя
-            if (e.PropertyName == "Score1" || e.PropertyName == "Score2")
+            if (CanEdit && (e.PropertyName == "Score" || e.PropertyName == "Score1" || e.PropertyName == "Score2"))
             {
                 var match = sender as BracketMatch;
-                if (match != null)
+                if (match != null && !match.IsUpdatingScore)
                 {
                     match.TryAdvance();
                     CurrentTournament.Bracket?.AutoAdvanceByes();
                     ScheduleVM.LoadMatches();
                     GenerateResults();
-                    _storage.UpdateTournament(CurrentTournament);
+                    _operations.Save(CurrentTournament);
                     UpdateStatistics();
                 }
             }
@@ -1845,7 +1887,7 @@ namespace SportHubBase.ViewModels
                 CurrentTournament.Bracket = Bracket;
                 Bracket.ReconnectReferences(); // после десериализации
                 SubscribeToBracket(Bracket);
-                _storage.UpdateTournament(CurrentTournament);
+                _operations.Save(CurrentTournament);
             }
         }
 

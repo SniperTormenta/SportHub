@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
@@ -115,29 +115,36 @@ namespace SportHubBase.ViewModels
 
         public override void ApplyChanges()
         {
-            base.ApplyChanges();
+            if (SetsList.Any(s => s.Score1 < 0 || s.Score2 < 0 || s.Score1 == s.Score2))
+                throw new ArgumentException("Счёт завершённого сета должен быть неотрицательным и без ничьей.");
+            using (_match.BeginUpdate())
+            {
+                base.ApplyChanges();
 
-            if (SetsList.Count == 0)
-            {
-                _match.SetsBySet = string.Empty;
-                _match.SetsScore = string.Empty;
-                _match.TotalScore = string.Empty;
-            }
-            else
-            {
-                _match.SetsBySet = string.Join(";", SetsList.Select(s => $"{s.Score1}:{s.Score2}"));
-                _match.SetsScore = $"{CalculateSetsWon(true)}:{CalculateSetsWon(false)}";
-                _match.TotalScore = $"{CalculateTotalScore(true)}:{CalculateTotalScore(false)}";
+                if (SetsList.Count == 0)
+                {
+                    _match.SetsBySet = string.Empty;
+                    _match.SetsScore = string.Empty;
+                    _match.TotalScore = string.Empty;
+                    _match.Team1QuickScore = string.Empty;
+                    _match.Team2QuickScore = string.Empty;
+                }
+                else
+                {
+                    _match.SetsBySet = string.Join(";", SetsList.Select(s => $"{s.Score1}:{s.Score2}"));
+                    _match.SetsScore = $"{CalculateSetsWon(true)}:{CalculateSetsWon(false)}";
+                    _match.TotalScore = $"{CalculateTotalScore(true)}:{CalculateTotalScore(false)}";
                 
-                _match.Team1QuickScore = CalculateSetsWon(true).ToString();
-                _match.Team2QuickScore = CalculateSetsWon(false).ToString();
-            }
+                    _match.Team1QuickScore = CalculateSetsWon(true).ToString();
+                    _match.Team2QuickScore = CalculateSetsWon(false).ToString();
+                }
 
-            if (SetsList.Any())
-            {
-                if (Status != "Техническое поражение")
-                    Status = "Сыгран";
-                _match.Status = Status;
+                if (SetsList.Any())
+                {
+                    if (Status != "Техническое поражение")
+                        Status = "Сыгран";
+                    _match.Status = Status;
+                }
             }
         }
     }

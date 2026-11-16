@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SportHubBase.Interfaces;
 using SportHubBase.Models;
 
@@ -39,13 +40,14 @@ namespace SportHubBase.Services
                             remote.ServerAddress = t.ServerAddress;
                             remote.IsOrganizerRemembered = t.IsOrganizerRemembered;
                             remote.IsOfflineCache = false;
-                            _sqlite.UpdateTournament(remote);
+                            _sqlite.CacheTournament(remote);
                             result.Add(remote);
                             continue;
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        ErrorLog.Write("Загрузка удалённого турнира", ex);
                         // Сервер недоступен — используем локальный оффлайн-кэш
                     }
 
@@ -78,12 +80,13 @@ namespace SportHubBase.Services
                         remote.ServerAddress = local.ServerAddress;
                         remote.IsOrganizerRemembered = local.IsOrganizerRemembered;
                         remote.IsOfflineCache = false;
-                        _sqlite.UpdateTournament(remote);
+                        _sqlite.CacheTournament(remote);
                         return remote;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    ErrorLog.Write("Синхронизация турнира", ex);
                     // Оффлайн-режим: возвращаем кэшированную копию из SQLite
                 }
 
@@ -115,7 +118,7 @@ namespace SportHubBase.Services
                 tournament.IsOrganizerRemembered = true;
                 tournament.IsOfflineCache = false;
                 _sessionUnlockedIds.Add(tournament.Id);
-                _sqlite.CreateTournament(tournament);
+                _sqlite.CacheTournament(tournament);
             }
             else
             {
@@ -130,9 +133,16 @@ namespace SportHubBase.Services
 
             if (tournament.IsRemote)
             {
+                if (!IsTournamentEditable(tournament))
+                    throw new InvalidOperationException("Турнир доступен только для чтения. Проверьте соединение и права организатора.");
                 _sqlServer.UpdateTournament(tournament);
                 tournament.IsOfflineCache = false;
-                _sqlite.UpdateTournament(tournament);
+                try { _sqlite.CacheTournament(tournament); }
+                catch (Exception ex)
+                {
+                    ErrorLog.Write("Обновление локального кэша", ex);
+                    throw new InvalidOperationException("Изменения сохранены на сервере, но локальный кэш не обновлён. Выполните синхронизацию турнира.", ex);
+                }
             }
             else
             {
@@ -142,21 +152,34 @@ namespace SportHubBase.Services
 
         public void DeleteTournament(Guid tournamentId)
         {
+            var tournament = _sqlite.GetTournamentById(tournamentId);
+            if (tournament != null) DeleteTournament(tournament);
+        }
+
+        public void DeleteTournament(Tournament tournament)
+        {
+            var tournamentId = tournament.Id;
+            if (!IsTournamentEditable(tournament)) throw new InvalidOperationException("Нет прав на удаление турнира.");
+            _sqlite.CreateSafetyBackup();
             var local = _sqlite.GetTournamentById(tournamentId);
             if (local != null && local.IsRemote)
             {
                 try
                 {
-                    _sqlServer.DeleteTournament(tournamentId, local.ServerAddress);
+                    _sqlServer.DeleteTournament(tournamentId, local.ServerAddress, tournament.Revision);
                 }
-                catch
+                catch (StorageConflictException) { throw; }
+                catch (Exception ex)
                 {
-                    // Если сервер недоступен, всё равно удаляем локально
+                    ErrorLog.Write("Удаление удалённого турнира", ex);
+                    throw new InvalidOperationException("Удалить турнир на сервере не удалось. Локальная копия сохранена. Для удаления только локальной копии используйте отключение турнира.", ex);
                 }
             }
-            _sqlite.DeleteTournament(tournamentId);
+            _sqlite.DeleteTournament(tournamentId, local != null && local.IsRemote ? (long?)null : tournament.Revision);
             _sessionUnlockedIds.Remove(tournamentId);
         }
+
+        public void CreateSafetyBackup() => _sqlite.CreateSafetyBackup();
 
         public void DisconnectLocalCopy(Guid tournamentId)
         {
@@ -181,7 +204,7 @@ namespace SportHubBase.Services
             remote.IsOfflineCache = false;
             remote.IsOrganizerRemembered = existingLocal != null && existingLocal.IsOrganizerRemembered;
 
-            _sqlite.UpdateTournament(remote);
+            _sqlite.CacheTournament(remote);
             return remote;
         }
 
@@ -210,13 +233,14 @@ namespace SportHubBase.Services
                     remote.ServerAddress = local.ServerAddress;
                     remote.IsOrganizerRemembered = local.IsOrganizerRemembered;
                     remote.IsOfflineCache = false;
-                    _sqlite.UpdateTournament(remote);
+                    _sqlite.CacheTournament(remote);
                     syncedTournament = remote;
                     return true;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                ErrorLog.Write("Синхронизация турнира", ex);
                 // Не удалось достучаться до сервера
             }
 
@@ -263,24 +287,14 @@ namespace SportHubBase.Services
             }
             else
             {
-                // Если турнир был создан в старой схеме БД без пароля организатора — устанавливаем введённые данные
-                tournament.OrganizerLogin = login.Trim();
-                tournament.OrganizerPasswordHash = PasswordHasher.HashPassword(password);
-                try
-                {
-                    _sqlServer.UpdateTournament(tournament);
-                }
-                catch (Exception ex)
-                {
-                    errorMessage = "Нет связи с сервером для сохранения прав организатора: " + ex.Message;
-                    return false;
-                }
+                errorMessage = "Для старого турнира не назначен организатор. Учётные данные должен назначить администратор сервера.";
+                return false;
             }
 
             _sessionUnlockedIds.Add(tournament.Id);
             tournament.IsOrganizerRemembered = rememberMe;
             _sqlite.SetOrganizerRemembered(tournament.Id, rememberMe);
-            _sqlite.UpdateTournament(tournament);
+            _sqlite.CacheTournament(tournament);
             return true;
         }
 
@@ -292,81 +306,57 @@ namespace SportHubBase.Services
             _sqlite.SetOrganizerRemembered(tournament.Id, false);
         }
 
-        public void AddTeam(Guid tournamentId, Team team)
+        private void Change(Guid tournamentId, Action<Tournament> change)
         {
-            var local = _sqlite.GetTournamentById(tournamentId);
-            if (local != null && local.IsRemote)
-            {
-                _sqlServer.AddTeam(tournamentId, team, local.ServerAddress);
-            }
-            _sqlite.AddTeam(tournamentId, team);
+            var tournament = GetTournamentById(tournamentId) ?? throw new InvalidOperationException("Турнир не найден.");
+            if (!IsTournamentEditable(tournament)) throw new InvalidOperationException("Турнир доступен только для чтения. Проверьте соединение и права организатора.");
+            change(tournament);
+            UpdateTournament(tournament);
         }
 
-        public void UpdateTeam(Guid tournamentId, Team team)
+        private Guid FindTeamTournament(Guid teamId)
         {
-            var local = _sqlite.GetTournamentById(tournamentId);
-            if (local != null && local.IsRemote)
-            {
-                _sqlServer.UpdateTeam(tournamentId, team, local.ServerAddress);
-            }
-            _sqlite.UpdateTeam(tournamentId, team);
+            var tournament = _sqlite.LoadTournaments().FirstOrDefault(t => t.Teams.Any(team => team.Id == teamId));
+            return tournament?.Id ?? throw new InvalidOperationException("Команда не найдена.");
         }
 
-        public void DeleteTeam(Guid tournamentId, Guid teamId)
+        public void AddTeam(Guid tournamentId, Team team) => Change(tournamentId, t => t.Teams.Add(team));
+        public void UpdateTeam(Guid tournamentId, Team team) => Change(tournamentId, t =>
         {
-            var local = _sqlite.GetTournamentById(tournamentId);
-            if (local != null && local.IsRemote)
-            {
-                _sqlServer.DeleteTeam(tournamentId, teamId, local.ServerAddress);
-            }
-            _sqlite.DeleteTeam(tournamentId, teamId);
-        }
-
-        public void AddPlayer(Guid teamId, Player player)
+            var index = t.Teams.FindIndex(x => x.Id == team.Id);
+            if (index < 0) throw new InvalidOperationException("Команда не найдена.");
+            t.Teams[index] = team;
+        });
+        public void DeleteTeam(Guid tournamentId, Guid teamId) => Change(tournamentId, t =>
         {
-            _sqlite.AddPlayer(teamId, player);
-        }
-
-        public void UpdatePlayer(Guid teamId, Player player)
+            t.Teams.RemoveAll(x => x.Id == teamId);
+            t.Matches.RemoveAll(x => x.Team1Id == teamId || x.Team2Id == teamId);
+        });
+        public void AddPlayer(Guid teamId, Player player) => Change(FindTeamTournament(teamId), t => t.Teams.Single(x => x.Id == teamId).Players.Add(player));
+        public void UpdatePlayer(Guid teamId, Player player) => Change(FindTeamTournament(teamId), t =>
         {
-            _sqlite.UpdatePlayer(teamId, player);
-        }
-
-        public void DeletePlayer(Guid teamId, Guid playerId)
+            var players = t.Teams.Single(x => x.Id == teamId).Players;
+            var index = players.FindIndex(x => x.Id == player.Id);
+            if (index < 0) throw new InvalidOperationException("Игрок не найден.");
+            players[index] = player;
+        });
+        public void DeletePlayer(Guid teamId, Guid playerId) => Change(FindTeamTournament(teamId), t => t.Teams.Single(x => x.Id == teamId).Players.RemoveAll(x => x.Id == playerId));
+        public void SaveMatch(Guid tournamentId, Match match) => Change(tournamentId, t =>
         {
-            _sqlite.DeletePlayer(teamId, playerId);
-        }
-
-        public void SaveMatch(Guid tournamentId, Match match)
-        {
-            var local = _sqlite.GetTournamentById(tournamentId);
-            if (local != null && local.IsRemote)
-            {
-                _sqlServer.SaveMatch(tournamentId, match, local.ServerAddress);
-            }
-            _sqlite.SaveMatch(tournamentId, match);
-        }
-
+            var index = t.Matches.FindIndex(x => x.Id == match.Id);
+            if (index < 0) t.Matches.Add(match); else t.Matches[index] = match;
+        });
         public void DeleteMatch(Guid matchId)
         {
-            _sqlite.DeleteMatch(matchId);
+            var tournament = _sqlite.LoadTournaments().FirstOrDefault(t => t.Matches.Any(m => m.Id == matchId));
+            if (tournament != null) Change(tournament.Id, t => t.Matches.RemoveAll(m => m.Id == matchId));
         }
-
         public void SaveStandings(Guid tournamentId, IEnumerable<ResultRow> rows)
         {
+            var list = rows.ToList();
             var local = _sqlite.GetTournamentById(tournamentId);
-            if (local != null && local.IsRemote)
-            {
-                try
-                {
-                    _sqlServer.SaveStandings(tournamentId, rows, local.ServerAddress);
-                }
-                catch
-                {
-                    // Игнорируем ошибку записи стендингов при оффлайне
-                }
-            }
-            _sqlite.SaveStandings(tournamentId, rows);
+            if (local != null && local.IsRemote) _sqlServer.SaveStandings(tournamentId, list, local.ServerAddress);
+            _sqlite.SaveStandings(tournamentId, list);
         }
     }
 }

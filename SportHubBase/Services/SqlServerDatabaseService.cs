@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using Microsoft.Data.SqlClient;
 using SportHubBase.Models;
@@ -11,53 +11,45 @@ namespace SportHubBase.Services
 
         public string GetConnectionString(string serverAddress = null, int timeoutSeconds = 4)
         {
-            string input = !string.IsNullOrWhiteSpace(serverAddress)
-                ? serverAddress.Trim()
-                : DatabaseConfig.SqlConnectionString?.Trim();
+            string input = !string.IsNullOrWhiteSpace(serverAddress) ? serverAddress.Trim() : DatabaseConfig.SqlConnectionString?.Trim();
+            string configured = Environment.GetEnvironmentVariable("SPORTHUB_SQL_CONNECTION_STRING");
+            if (string.IsNullOrWhiteSpace(input)) input = configured;
+            if (string.IsNullOrWhiteSpace(input)) throw new InvalidOperationException("Не указан адрес SQL Server.");
 
-            if (string.IsNullOrWhiteSpace(input))
+            SqlConnectionStringBuilder builder;
+            if (input.Contains("="))
             {
-                throw new InvalidOperationException("Не указан адрес SQL Server.");
+                builder = new SqlConnectionStringBuilder(input);
             }
-
-            // 1. Введена полная строка подключения
-            if (input.IndexOf("Server=", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                input.IndexOf("Data Source=", StringComparison.OrdinalIgnoreCase) >= 0)
+            else if (!string.IsNullOrWhiteSpace(configured))
             {
-                if (input.IndexOf("Connect Timeout=", StringComparison.OrdinalIgnoreCase) < 0 &&
-                    input.IndexOf("Connection Timeout=", StringComparison.OrdinalIgnoreCase) < 0)
-                {
-                    return input.TrimEnd(';') + string.Format(";Connect Timeout={0};", timeoutSeconds);
-                }
-                return input;
+                builder = new SqlConnectionStringBuilder(configured) { DataSource = input };
             }
-
-            // 2. Локальный SQL Server (Windows-авторизация)
-            if (input.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-                input.Equals("127.0.0.1") ||
-                input.Equals(".") ||
+            else if (input.Equals("localhost", StringComparison.OrdinalIgnoreCase) || input == "127.0.0.1" || input == "." ||
                 input.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
-                (input.Contains("\\") && !input.StartsWith("tcp:", StringComparison.OrdinalIgnoreCase)))
+                input.StartsWith("(localdb)\\", StringComparison.OrdinalIgnoreCase) ||
+                input.StartsWith(".\\", StringComparison.OrdinalIgnoreCase) || input.StartsWith("localhost\\", StringComparison.OrdinalIgnoreCase))
             {
-                return string.Format("Server={0};Database=SportHub;Integrated Security=True;TrustServerCertificate=True;Connect Timeout={1};", input, timeoutSeconds);
+                builder = new SqlConnectionStringBuilder { DataSource = input, InitialCatalog = "SportHub", IntegratedSecurity = true, TrustServerCertificate = true };
             }
-
-            // 3. Внешний адрес (IP, домен, tcp:)
-            string dbUser = "Seek";
-            string dbPass = "SSSzxcgoule";
-
-            return string.Format("Server={0};Database=SportHub;User Id={1};Password={2};TrustServerCertificate=True;Connect Timeout={3};", input, dbUser, dbPass, timeoutSeconds);
+            else
+            {
+                throw new InvalidOperationException("Для удалённого сервера задайте переменную окружения SPORTHUB_SQL_CONNECTION_STRING. Встроенные реквизиты больше не используются.");
+            }
+            builder.ConnectTimeout = timeoutSeconds;
+            return builder.ConnectionString;
         }
-
         public SqlConnection OpenConnection(string serverAddress = null, int timeoutSeconds = 4)
         {
             string connStr = GetConnectionString(serverAddress, timeoutSeconds);
             var conn = new SqlConnection(connStr);
-            conn.Open();
+            try { conn.Open(); }
+            catch { conn.Dispose(); throw; }
 
             if (!_initializedServers.ContainsKey(connStr))
             {
-                EnsureSchema(conn);
+                try { EnsureSchema(conn); }
+                catch { conn.Dispose(); throw; }
                 _initializedServers[connStr] = true;
             }
 
@@ -71,6 +63,7 @@ namespace SportHubBase.Services
                 BEGIN
                     CREATE TABLE dbo.Tournaments (
                         Id NVARCHAR(64) NOT NULL PRIMARY KEY,
+                        Revision BIGINT NOT NULL DEFAULT 0,
                         Name NVARCHAR(255) NOT NULL,
                         SportType NVARCHAR(100) NULL,
                         Type NVARCHAR(100) NULL,
@@ -101,6 +94,8 @@ namespace SportHubBase.Services
                     );
                 END
 
+                IF COL_LENGTH('dbo.Tournaments', 'Revision') IS NULL
+                    ALTER TABLE dbo.Tournaments ADD Revision BIGINT NOT NULL DEFAULT 0;
                 IF COL_LENGTH('dbo.Tournaments', 'TotalRounds') IS NULL
                     ALTER TABLE dbo.Tournaments ADD TotalRounds INT NOT NULL DEFAULT 0;
                 IF COL_LENGTH('dbo.Tournaments', 'TieBreakerRule') IS NULL
@@ -170,6 +165,10 @@ namespace SportHubBase.Services
                     );
                 END
 
+                IF COL_LENGTH('dbo.Matches', 'Team1Id') IS NULL
+                    ALTER TABLE dbo.Matches ADD Team1Id NVARCHAR(64) NULL;
+                IF COL_LENGTH('dbo.Matches', 'Team2Id') IS NULL
+                    ALTER TABLE dbo.Matches ADD Team2Id NVARCHAR(64) NULL;
                 IF COL_LENGTH('dbo.Matches', 'MatchDate') IS NULL
                     ALTER TABLE dbo.Matches ADD MatchDate NVARCHAR(64) NULL;
                 IF COL_LENGTH('dbo.Matches', 'StartTime') IS NULL
@@ -201,9 +200,10 @@ namespace SportHubBase.Services
                     cmd.ExecuteNonQuery();
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Если у пользователя на сервере нет прав DDL (но таблицы уже созданы), не роняем подключение
+                ErrorLog.Write("Миграция SQL Server", ex);
+                throw new InvalidOperationException("Не удалось проверить или обновить схему SQL Server. Обратитесь к администратору сервера.", ex);
             }
         }
     }

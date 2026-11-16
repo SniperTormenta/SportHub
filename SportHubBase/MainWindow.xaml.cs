@@ -14,6 +14,32 @@ namespace SportHubBase
     public partial class MainWindow : Window
     {
         private readonly IStorage _storage;
+        private void CreateBackup_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog { Filter = "Резервная копия SportHub (*.db)|*.db", FileName = "SportHub-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".db" };
+            if (dialog.ShowDialog() != true) return;
+            try
+            {
+                var db = App.Container.GetInstance<SportHubBase.Services.SqliteDatabaseService>();
+                SportHubBase.Services.DatabaseBackupService.CopyDatabase(db.DatabasePath, dialog.FileName);
+                MessageBox.Show("Резервная копия сохранена.");
+            }
+            catch (Exception ex) { SportHubBase.Services.ErrorLog.Write("Создание резервной копии", ex); MessageBox.Show(SportHubBase.Services.ErrorLog.UserMessage(ex)); }
+        }
+
+        private void RestoreBackup_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Резервная копия SportHub (*.db)|*.db" };
+            if (dialog.ShowDialog() != true) return;
+            if (MessageBox.Show("Локальные данные будут заменены резервной копией при следующем запуске. Данные на сервере не изменятся. Приложение закроется; текущая база будет автоматически сохранена перед восстановлением. Продолжить?", "Восстановление", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+            try
+            {
+                var db = App.Container.GetInstance<SportHubBase.Services.SqliteDatabaseService>();
+                db.Backups.StageRestore(dialog.FileName);
+                Application.Current.Shutdown();
+            }
+            catch (Exception ex) { SportHubBase.Services.ErrorLog.Write("Подготовка восстановления", ex); MessageBox.Show(SportHubBase.Services.ErrorLog.UserMessage(ex)); }
+        }
         private readonly IUpdateService _updateService;
         private List<Tournament> _allTournaments = new List<Tournament>();
         public ObservableCollection<Tournament> Tournaments { get; set; } = new ObservableCollection<Tournament>();

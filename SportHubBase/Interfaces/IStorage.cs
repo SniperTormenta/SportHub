@@ -6,8 +6,8 @@ using System.Collections.Generic;
 namespace SportHubBase.Interfaces
 {
     /// <summary>
-    /// Контракт хранилища данных. Реализуется JsonStorageService (JSON) или SqliteStorageService (SQLite).
-    /// Все методы синхронные — JsonStorage/SQLite работают локально без I/O-задержек.
+    /// Контракт хранилища данных. В приложении используется маршрутизация между SQLite и SQL Server.
+    /// Операции синхронные и могут выполнять сетевой ввод-вывод. Сохранение турнира проверяет его Revision.
     /// </summary>
     public interface IStorage
     {

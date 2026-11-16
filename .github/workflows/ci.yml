@@ -1,0 +1,29 @@
+name: Сборка и проверки
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Получить исходники
+        uses: actions/checkout@v4
+      - name: Настроить MSBuild
+        uses: microsoft/setup-msbuild@v2
+      - name: Настроить NuGet
+        uses: nuget/setup-nuget@v2
+      - name: Восстановить существующие зависимости
+        run: nuget restore SportHubBase/packages.config -PackagesDirectory packages -NonInteractive
+      - name: Собрать приложение и проверки
+        run: msbuild SportHubBase.Tests/SportHubBase.Tests.csproj /p:Configuration=Release /verbosity:minimal /nologo
+      - name: Запустить проверки
+        shell: pwsh
+        run: |
+          & SportHubBase.Tests/bin/Release/SportHubBase.Tests.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

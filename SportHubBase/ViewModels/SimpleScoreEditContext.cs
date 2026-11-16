@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SportHubBase.Models;
 
 namespace SportHubBase.ViewModels
@@ -51,16 +51,25 @@ namespace SportHubBase.ViewModels
 
         public override void ApplyChanges()
         {
-            base.ApplyChanges();
-            _match.Team1QuickScore = Team1QuickScore;
-            _match.Team2QuickScore = Team2QuickScore;
-            
-            // Если введен счет, то статус завершен
-            if (!string.IsNullOrWhiteSpace(Team1QuickScore) || !string.IsNullOrWhiteSpace(Team2QuickScore))
+            bool hasScore = !string.IsNullOrWhiteSpace(Team1QuickScore) || !string.IsNullOrWhiteSpace(Team2QuickScore);
+            if (hasScore && ScorePair.Parse(Team1QuickScore, Team2QuickScore) == null)
+                throw new ArgumentException("Введите оба значения счёта целыми неотрицательными числами.");
+            using (_match.BeginUpdate())
             {
-                if (Status != "Техническое поражение")
-                    Status = "Сыгран";
-                _match.Status = Status;
+                base.ApplyChanges();
+                _match.SetsScore = string.Empty;
+                _match.SetsBySet = string.Empty;
+                _match.TotalScore = hasScore ? ScorePair.Parse(Team1QuickScore, Team2QuickScore).ToString() : string.Empty;
+                _match.Team1QuickScore = Team1QuickScore;
+                _match.Team2QuickScore = Team2QuickScore;
+
+                // Если введен счет, то статус завершен
+                if (!string.IsNullOrWhiteSpace(Team1QuickScore) || !string.IsNullOrWhiteSpace(Team2QuickScore))
+                {
+                    if (Status != "Техническое поражение")
+                        Status = "Сыгран";
+                    _match.Status = Status;
+                }
             }
         }
     }

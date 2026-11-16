@@ -23,6 +23,7 @@ namespace SportHubBase.Models
         // Статистика команды
         public int Wins { get; set; } // В - выигранные матчи
         public int Losses { get; set; } // П - проигранные матчи
+        public int Draws { get; set; }
         public int SetsWon { get; set; } // ВП - выигранные партии/сеты
         public int SetsLost { get; set; } // ПП - проигранные партии/сеты
         public int Points { get; set; } // Очки по итальянской системе

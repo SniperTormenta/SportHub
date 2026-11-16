@@ -1,108 +1,38 @@
 using System;
+using System.Diagnostics;
 using System.Windows;
-using AutoUpdaterDotNET;
+using SportHubBase.Models;
+using SportHubBase.Services;
 
 namespace SportHubBase.View
 {
-    /// <summary>
-    /// Окно уведомления о доступности обновления приложения (WPF).
-    /// </summary>
     public partial class UpdateAvailableWindow : Window
     {
-        private readonly UpdateInfoEventArgs _args;
+        private readonly UpdateRelease _release;
 
-        /// <summary>
-        /// Конструктор окна обновления.
-        /// </summary>
-        /// <param name="args">Аргументы информации об обновлении от AutoUpdater.NET.</param>
-        public UpdateAvailableWindow(UpdateInfoEventArgs args)
+        public UpdateAvailableWindow(UpdateRelease release, Version installed)
         {
+            _release = release ?? throw new ArgumentNullException(nameof(release));
             InitializeComponent();
-
-            if (args == null)
-            {
-                throw new ArgumentNullException(nameof(args));
-            }
-
-            _args = args;
-
-            TxtVersionInfo.Text = string.Format(
-                "Установленная версия: {0}   ➔   Новая версия: {1}",
-                _args.InstalledVersion != null ? _args.InstalledVersion.ToString() : "—",
-                _args.CurrentVersion != null ? _args.CurrentVersion : "—"
-            );
-
-            // Если обновление обязательное — скрываем кнопки пропуска и откладывания
-            if (_args.Mandatory != null && _args.Mandatory.Value)
-            {
-                BtnSkip.Visibility = Visibility.Collapsed;
-                BtnRemindLater.Visibility = Visibility.Collapsed;
-            }
-
-            // Загрузка чейнджлога, если указан URL
-            if (!string.IsNullOrEmpty(_args.ChangelogURL))
-            {
-                try
-                {
-                    ChangelogBrowser.Navigate(_args.ChangelogURL);
-                }
-                catch
-                {
-                    TxtEmptyChangelog.Visibility = Visibility.Visible;
-                }
-            }
-            else
-            {
-                TxtEmptyChangelog.Visibility = Visibility.Visible;
-            }
+            TxtVersionInfo.Text = "Установлена: " + installed + "   →   Новая версия: " + release.Version;
+            TxtReleaseNotes.Text = string.IsNullOrWhiteSpace(release.Notes) ? "Описание изменений не предоставлено." : release.Notes;
         }
 
         private void BtnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = true;
-            Close();
-
             try
             {
-                if (AutoUpdater.DownloadUpdate(_args))
-                {
-                    Application.Current.Shutdown();
-                }
+                Process.Start(new ProcessStartInfo(_release.DownloadUrl.AbsoluteUri) { UseShellExecute = true });
+                DialogResult = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    string.Format("Не удалось запустить процесс обновления: {0}", ex.Message),
-                    "Ошибка обновления",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ErrorLog.Write("Открытие скачивания GitHub", ex);
+                MessageBox.Show(this, "Не удалось открыть браузер. Ссылка для скачивания:\n" + _release.DownloadUrl.AbsoluteUri,
+                    "Обновление SportHub", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
-        private void BtnRemindLater_Click(object sender, RoutedEventArgs e)
-        {
-            if (AutoUpdater.PersistenceProvider != null)
-            {
-                AutoUpdater.PersistenceProvider.SetRemindLater(DateTime.Now.AddDays(2));
-            }
-
-            DialogResult = false;
-            Close();
-        }
-
-        private void BtnSkip_Click(object sender, RoutedEventArgs e)
-        {
-            if (AutoUpdater.PersistenceProvider != null && !string.IsNullOrEmpty(_args.CurrentVersion))
-            {
-                Version versionToSkip;
-                if (Version.TryParse(_args.CurrentVersion, out versionToSkip))
-                {
-                    AutoUpdater.PersistenceProvider.SetSkippedVersion(versionToSkip);
-                }
-            }
-
-            DialogResult = false;
-            Close();
-        }
+        private void BtnSkip_Click(object sender, RoutedEventArgs e) => DialogResult = false;
     }
 }

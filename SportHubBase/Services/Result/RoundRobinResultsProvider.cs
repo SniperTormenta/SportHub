@@ -1,4 +1,4 @@
-// Services/Results/RoundRobinResultsProvider.cs
+﻿// Services/Results/RoundRobinResultsProvider.cs
 using SportHubBase.Models;
 using SportHubBase.Interfaces;
 using SportHubBase.Services.Results.Data;
@@ -21,6 +21,7 @@ namespace SportHubBase.Services.Results
 
         public ResultsData ComputeResults(Tournament tournament, ObservableCollection<Match> schedule)
         {
+            if (tournament != null) TournamentIntegrityService.Normalize(tournament, schedule);
             var data = new RoundRobinResultsData();
 
             if (tournament == null)
@@ -166,6 +167,7 @@ namespace SportHubBase.Services.Results
                 row.Place = place;
                 row.Wins = stats.Wins;
                 row.Losses = stats.Losses;
+                row.Draws = stats.Draws;
                 row.SetsWon = stats.SetsWon;
                 row.SetsLost = stats.SetsLost;
                 row.Points = stats.Points;
@@ -205,6 +207,7 @@ namespace SportHubBase.Services.Results
 
             if (sets.s1 > sets.s2) { s1.Wins++; s2.Losses++; }
             else if (sets.s1 < sets.s2) { s1.Losses++; s2.Wins++; }
+            else { s1.Draws++; s2.Draws++; }
         }
 
         private void UpdateCells(CellResult c1, CellResult c2, int s1, int s2, bool isTech)
@@ -240,20 +243,14 @@ namespace SportHubBase.Services.Results
 
         private static (int left, int right)? ParsePair(string score)
         {
-            if (string.IsNullOrWhiteSpace(score)) return null;
-            var parts = score.Split(':');
-            if (parts.Length != 2) return null;
-            if (int.TryParse(parts[0].Trim(), out int l) && int.TryParse(parts[1].Trim(), out int r))
-                return (l, r);
-            return null;
+            var pair = ScorePair.Parse(score);
+            return pair == null ? ((int, int)?)null : (pair.Left, pair.Right);
         }
 
         private static (int left, int right)? ParsePair(string left, string right)
         {
-            if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right)) return null;
-            if (int.TryParse(left.Trim(), out int l) && int.TryParse(right.Trim(), out int r))
-                return (l, r);
-            return null;
+            var pair = ScorePair.Parse(left, right);
+            return pair == null ? ((int, int)?)null : (pair.Left, pair.Right);
         }
 
         private class ResultRowComparer : IComparer<ResultRow>

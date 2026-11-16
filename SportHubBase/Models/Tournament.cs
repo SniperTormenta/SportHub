@@ -10,6 +10,9 @@ namespace SportHubBase.Models
         [JsonProperty("id")]
         public Guid Id { get; set; } = Guid.NewGuid();
 
+        [JsonProperty("revision")]
+        public long Revision { get; set; }
+
         [JsonProperty("name")]
         public string Name { get; set; }
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -363,9 +363,10 @@ namespace SportHubBase.ViewModels
                     }
                 }
                 catch (Exception ex)
-                {
+            {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
                     MessageBox.Show(
-                        "Не удалось загрузить фоновое изображение:\n" + ex.Message,
+                        "Не удалось загрузить фоновое изображение:\n" + SportHubBase.Services.ErrorLog.UserMessage(ex),
                         "Ошибка загрузки фона",
                         MessageBoxButton.OK,
                         MessageBoxImage.Error);

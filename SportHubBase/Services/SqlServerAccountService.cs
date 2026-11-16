@@ -60,7 +60,8 @@ namespace SportHubBase.Services
             }
             catch (Exception ex)
             {
-                errorMessage = string.Format("Ошибка при регистрации: {0}", ex.Message);
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                errorMessage = string.Format("Ошибка при регистрации: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex));
                 return false;
             }
         }
@@ -103,7 +104,8 @@ namespace SportHubBase.Services
             }
             catch (Exception ex)
             {
-                errorMessage = string.Format("Ошибка при входе: {0}", ex.Message);
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                errorMessage = string.Format("Ошибка при входе: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex));
                 return false;
             }
         }
@@ -184,7 +186,8 @@ namespace SportHubBase.Services
             }
             catch (Exception ex)
             {
-                errorMessage = string.Format("Ошибка при входе: {0}", ex.Message);
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                errorMessage = string.Format("Ошибка при входе: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex));
                 return false;
             }
         }
@@ -292,7 +295,8 @@ namespace SportHubBase.Services
             }
             catch (Exception ex)
             {
-                errorMessage = string.Format("Ошибка при смене пароля: {0}", ex.Message);
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                errorMessage = string.Format("Ошибка при смене пароля: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex));
                 return false;
             }
         }
@@ -321,7 +325,8 @@ namespace SportHubBase.Services
             }
             catch (Exception ex)
             {
-                errorMessage = string.Format("Ошибка при удалении аккаунта: {0}", ex.Message);
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
+                errorMessage = string.Format("Ошибка при удалении аккаунта: {0}", SportHubBase.Services.ErrorLog.UserMessage(ex));
                 return false;
             }
         }

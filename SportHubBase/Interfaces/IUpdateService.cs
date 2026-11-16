@@ -8,7 +8,7 @@ namespace SportHubBase.Interfaces
     public interface IUpdateService
     {
         /// <summary>
-        /// Инициализирует модуль обновления, криптографические протоколы (TLS 1.2/1.3) и провайдер хранения настроек.
+        /// Инициализирует проверку GitHub Releases. Пропуск хранится только до завершения приложения.
         /// </summary>
         void Initialize();
 

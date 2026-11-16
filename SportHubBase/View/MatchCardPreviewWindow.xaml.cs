@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -94,8 +94,9 @@ namespace SportHubBase.View
             }
             catch (Exception ex)
             {
+                SportHubBase.Services.ErrorLog.Write("Ошибка операции", ex);
                 MessageBox.Show(this,
-                    "Не удалось сохранить карточку матча.\n" + ex.Message,
+                    "Не удалось сохранить карточку матча.\n" + SportHubBase.Services.ErrorLog.UserMessage(ex),
                     "Ошибка экспорта",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

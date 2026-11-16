@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using SportHubBase.Interfaces;
@@ -190,22 +190,9 @@ namespace SportHubBase.Services.Statistics
             foreach (var m in playedMatches)
             {
                 bool isTeam1 = m.Team1 == teamName;
-                // Определяем победителя. Для волейбола ничьих нет, но код должен быть устойчив.
-                // Смотрим SetsScore "3:1"
-                // Или используем логику из ViewModel (GetOutcome)
-                
-                // Простая логика парсинга SetsScore
-                int s1 = 0, s2 = 0;
-                if (!string.IsNullOrWhiteSpace(m.SetsScore))
-                {
-                    var parts = m.SetsScore.Split(':');
-                    if (parts.Length == 2)
-                    {
-                        int.TryParse(parts[0], out s1);
-                        int.TryParse(parts[1], out s2);
-                    }
-                }
-
+                var score = m.Score;
+                if (score == null) continue;
+                int s1 = score.Left, s2 = score.Right;
                 if (isTeam1)
                 {
                     if (s1 > s2) form.Add("W");
