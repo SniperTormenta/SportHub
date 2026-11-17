@@ -71,6 +71,7 @@ namespace SportHubBase.ViewModels
         private Dictionary<Guid, BracketMatch> _bracketMatchesMap = new Dictionary<Guid, BracketMatch>();
 
         private string _searchQuery;
+        private bool _isExactSearch;
         private MatchFilterType _filter;
         private string _scheduleMessage;
 
@@ -117,6 +118,21 @@ namespace SportHubBase.ViewModels
                     OnPropertyChanged();
                     FilteredMatches.Refresh();
                     foreach(var round in Rounds) round.RefreshFilter();
+                }
+            }
+        }
+
+        public bool IsExactSearch
+        {
+            get => _isExactSearch;
+            set
+            {
+                if (_isExactSearch != value)
+                {
+                    _isExactSearch = value;
+                    OnPropertyChanged();
+                    FilteredMatches.Refresh();
+                    foreach (var round in Rounds) round.RefreshFilter();
                 }
             }
         }
@@ -296,7 +312,7 @@ namespace SportHubBase.ViewModels
                                 Team1QuickScore = bMatch.Score1,
                                 Team2QuickScore = bMatch.Score2,
                                 Status = bMatch.IsCompleted ? "Сыгран" : "Не сыгран",
-                                MatchNumber = number++
+                                MatchNumber = bMatch.MatchNumber ?? number++
                             };
                             _bracketMatchesMap[m.Id] = bMatch;
                             Matches.Add(m);
@@ -318,7 +334,7 @@ namespace SportHubBase.ViewModels
                                 Team1QuickScore = bMatch.Score1,
                                 Team2QuickScore = bMatch.Score2,
                                 Status = bMatch.IsCompleted ? "Сыгран" : "Не сыгран",
-                                MatchNumber = number++
+                                MatchNumber = bMatch.MatchNumber ?? number++
                             };
                             _bracketMatchesMap[m.Id] = bMatch;
                             Matches.Add(m);
@@ -409,8 +425,14 @@ namespace SportHubBase.ViewModels
             // 2. Поиск
             if (string.IsNullOrWhiteSpace(_searchQuery)) return true;
 
-            string q = _searchQuery.Trim(); // Case insensitive is default usually? BaseViewModel doesn't specify.
-            // Используем StringComparison.OrdinalIgnoreCase как в правилах
+            string q = _searchQuery.Trim();
+
+            if (_isExactSearch)
+            {
+                return string.Equals(match.Team1?.Trim(), q, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(match.Team2?.Trim(), q, StringComparison.OrdinalIgnoreCase)
+                    || (match.MatchNumber.HasValue && match.MatchNumber.Value.ToString() == q);
+            }
 
             if (match.Team1 != null && match.Team1.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) return true;
             if (match.Team2 != null && match.Team2.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) return true;

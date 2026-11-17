@@ -1333,6 +1333,8 @@ namespace SportHubBase.ViewModels
                         {
                             Teams.Add(t);
                         }
+                        Bracket = updated.Bracket;
+                        SubscribeToBracket(Bracket);
                     }
                     OnPropertyChanged(nameof(TeamsCount));
  

@@ -16,6 +16,8 @@ namespace SportHubBase.Services
 
         public void Prepare(Tournament tournament, IScheduleStrategy strategy)
         {
+            // После снятия команды сохраняем даже пустое расписание, не генерируя пары заново.
+            if (tournament.PreserveSchedule) return;
             TournamentIntegrityService.Normalize(tournament);
             var previous = tournament.Matches ?? new List<Match>();
             if (!_storage.IsTournamentEditable(tournament)) return;

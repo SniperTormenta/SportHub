@@ -12,6 +12,9 @@ namespace SportHubBase.Models
     /// </summary>
     public class TournamentBracket
     {
+        [JsonProperty("preserveStructure")]
+        public bool PreserveStructure { get; set; }
+
         /// <summary>
         /// Список раундов (столбцов) сетки.
         /// </summary>
@@ -31,7 +34,7 @@ namespace SportHubBase.Models
         /// </summary>
         public void ReconnectReferences()
         {
-            RestoreStructuralReferences();
+            if (!PreserveStructure) RestoreStructuralReferences();
 
             // Собираем все матчи в плоский словарь для быстрого поиска
             var allMatches = Rounds
@@ -47,15 +50,20 @@ namespace SportHubBase.Models
                 {
                     match.NextMatch = next;
                 }
+                else if (PreserveStructure) match.NextMatch = null;
 
                 if (match.BronzeLoserTargetId.HasValue && allMatches.TryGetValue(match.BronzeLoserTargetId.Value, out var bronze))
                 {
                     match.BronzeLoserTarget = bronze;
                 }
+                else if (PreserveStructure) match.BronzeLoserTarget = null;
             }
 
-            AutoAdvanceByes();
-            ReplayCompletedMatches();
+            if (!PreserveStructure)
+            {
+                AutoAdvanceByes();
+                ReplayCompletedMatches();
+            }
         }
 
         public void AutoAdvanceByes()

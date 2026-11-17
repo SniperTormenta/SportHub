@@ -342,7 +342,8 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Grid.Column="0" Background="White" CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1" Height="48" Margin="0,0,16,0">
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <Border Background="White" CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1" Height="48">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -355,18 +356,23 @@
                                              Tag="Поиск..."/>
                                 </Grid>
                             </Border>
+                            <CheckBox Content="Точное совпадение"
+                                      IsChecked="{Binding ScheduleVM.IsExactSearch}"
+                                      Margin="0,8,0,0"
+                                      ToolTip="Полное название команды или номер матча, без учёта регистра и пробелов по краям"/>
+                            </StackPanel>
 
                             <Button Grid.Column="1" Content="↻" 
                                     Command="{Binding ScheduleVM.RefreshCommand}"
                                     Style="{StaticResource DefaultModernButton}"
                                     Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibilityConverter}}"
-                                    Padding="12,0" Height="48" Margin="0,0,16,0"
+                                    Padding="12,0" Height="48" Margin="0,0,16,0" VerticalAlignment="Top"
                                     ToolTip="Обновить расписание"/>
 
                             <ComboBox Grid.Column="2" 
                                       ItemsSource="{Binding ScheduleVM.FilterOptions}"
                                       SelectedItem="{Binding ScheduleVM.Filter}"
-                                      Height="48" MinWidth="150"
+                                      Height="48" MinWidth="150" VerticalAlignment="Top"
                                       Style="{StaticResource ModernComboBox}"/>
                         </Grid>
 

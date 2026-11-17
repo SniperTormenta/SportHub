@@ -98,6 +98,8 @@ namespace SportHubBase.Services
                     ALTER TABLE dbo.Tournaments ADD Revision BIGINT NOT NULL DEFAULT 0;
                 IF COL_LENGTH('dbo.Tournaments', 'TotalRounds') IS NULL
                     ALTER TABLE dbo.Tournaments ADD TotalRounds INT NOT NULL DEFAULT 0;
+                IF COL_LENGTH('dbo.Tournaments', 'PreserveSchedule') IS NULL
+                    ALTER TABLE dbo.Tournaments ADD PreserveSchedule BIT NOT NULL DEFAULT 0;
                 IF COL_LENGTH('dbo.Tournaments', 'TieBreakerRule') IS NULL
                     ALTER TABLE dbo.Tournaments ADD TieBreakerRule NVARCHAR(100) NULL;
                 IF COL_LENGTH('dbo.Tournaments', 'OrganizerLogin') IS NULL

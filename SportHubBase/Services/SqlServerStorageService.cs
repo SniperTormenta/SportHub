@@ -1,4 +1,4 @@
-﻿// Services/SqlServerStorageService.cs
+// Services/SqlServerStorageService.cs
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using SportHubBase.Interfaces;
@@ -393,7 +393,7 @@ namespace SportHubBase.Services
                                     LogoUrl = @LogoUrl, CardBackgroundData = @CardBackgroundData, InviteCode = @InviteCode, StartDate = @StartDate, EndDate = @EndDate,
                                     OwnerId = @OwnerId, AllowedUserIds = @AllowedUserIds, ScoringSystem = @ScoringSystem,
                                     CustomWinPoints = @CustomWinPoints, CustomDrawPoints = @CustomDrawPoints, 
-                                    CustomLossPoints = @CustomLossPoints, TotalRounds = @TotalRounds, TieBreakerRule = @TieBreakerRule,
+                                    CustomLossPoints = @CustomLossPoints, TotalRounds = @TotalRounds, PreserveSchedule = @PreserveSchedule, TieBreakerRule = @TieBreakerRule,
                                     OrganizerLogin = @OrganizerLogin, OrganizerPasswordHash = @OrganizerPasswordHash,
                                     BracketJson = @BracketJson, IsDeleted = 0
                                 WHERE Id = @Id
@@ -401,9 +401,9 @@ namespace SportHubBase.Services
                             ELSE
                             BEGIN
                                 INSERT INTO Tournaments
-                                    (Id, Name, SportType, Type, Status, EditMode, AccessMode, IsPublic, NoScore, Description, City, Contacts, LogoUrl, CardBackgroundData, InviteCode, StartDate, EndDate, OwnerId, AllowedUserIds, ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, TotalRounds, TieBreakerRule, OrganizerLogin, OrganizerPasswordHash, BracketJson, IsDeleted)
+                                    (Id, Name, SportType, Type, Status, EditMode, AccessMode, IsPublic, NoScore, Description, City, Contacts, LogoUrl, CardBackgroundData, InviteCode, StartDate, EndDate, OwnerId, AllowedUserIds, ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, TotalRounds, PreserveSchedule, TieBreakerRule, OrganizerLogin, OrganizerPasswordHash, BracketJson, IsDeleted)
                                 VALUES
-                                    (@Id, @Name, @SportType, @Type, @Status, @EditMode, @AccessMode, @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @CardBackgroundData, @InviteCode, @StartDate, @EndDate, @OwnerId, @AllowedUserIds, @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @TotalRounds, @TieBreakerRule, @OrganizerLogin, @OrganizerPasswordHash, @BracketJson, 0)
+                                    (@Id, @Name, @SportType, @Type, @Status, @EditMode, @AccessMode, @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @CardBackgroundData, @InviteCode, @StartDate, @EndDate, @OwnerId, @AllowedUserIds, @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @TotalRounds, @PreserveSchedule, @TieBreakerRule, @OrganizerLogin, @OrganizerPasswordHash, @BracketJson, 0)
                             END";
 
                         string bracketJson = t.Bracket != null ? JsonConvert.SerializeObject(t.Bracket, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }) : null;
@@ -433,6 +433,7 @@ namespace SportHubBase.Services
                         cmd.Parameters.AddWithValue("@CustomDrawPoints", t.CustomDrawPoints);
                         cmd.Parameters.AddWithValue("@CustomLossPoints", t.CustomLossPoints);
                         cmd.Parameters.AddWithValue("@TotalRounds", t.TotalRounds);
+                        cmd.Parameters.AddWithValue("@PreserveSchedule", t.PreserveSchedule);
                         cmd.Parameters.AddWithValue("@TieBreakerRule", DbValue(t.TieBreakerRule));
                         cmd.Parameters.AddWithValue("@OrganizerLogin", DbValue(t.OrganizerLogin));
                         cmd.Parameters.AddWithValue("@OrganizerPasswordHash", DbValue(t.OrganizerPasswordHash));
@@ -632,6 +633,8 @@ namespace SportHubBase.Services
 
             if (HasColumn(r, "TotalRounds") && r["TotalRounds"] != DBNull.Value)
                 t.TotalRounds = Convert.ToInt32(r["TotalRounds"]);
+            if (HasColumn(r, "PreserveSchedule") && r["PreserveSchedule"] != DBNull.Value)
+                t.PreserveSchedule = Convert.ToBoolean(r["PreserveSchedule"]);
             if (HasColumn(r, "TieBreakerRule") && r["TieBreakerRule"] != DBNull.Value)
                 t.TieBreakerRule = ReadString(r, "TieBreakerRule") ?? "По разнице мячей";
             if (HasColumn(r, "OrganizerLogin"))

@@ -1,4 +1,4 @@
-﻿// Services/SqliteStorageService.cs
+// Services/SqliteStorageService.cs
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using SportHubBase.Interfaces;
@@ -407,13 +407,13 @@ namespace SportHubBase.Services
                         cmd.Transaction = tx;
                         cmd.CommandText = @"
                             INSERT INTO Tournaments
-                                (Id, Name, SportType, Type, TotalRounds, Status, EditMode, AccessMode,
+                                (Id, Name, SportType, Type, TotalRounds, PreserveSchedule, Status, EditMode, AccessMode,
                                  IsPublic, NoScore, Description, City, Contacts, LogoUrl, CardBackgroundData, InviteCode,
                                  StartDate, EndDate, OwnerId, AllowedUserIds,
                                  ScoringSystem, CustomWinPoints, CustomDrawPoints, CustomLossPoints, TieBreakerRule,
                                  BracketJson, IsRemote, ServerAddress, OrganizerLogin, OrganizerPasswordHash, IsOrganizerRemembered, IsDeleted)
                             VALUES
-                                (@Id, @Name, @SportType, @Type, @TotalRounds, @Status, @EditMode, @AccessMode,
+                                (@Id, @Name, @SportType, @Type, @TotalRounds, @PreserveSchedule, @Status, @EditMode, @AccessMode,
                                  @IsPublic, @NoScore, @Description, @City, @Contacts, @LogoUrl, @CardBackgroundData, @InviteCode,
                                  @StartDate, @EndDate, @OwnerId, @AllowedUserIds,
                                  @ScoringSystem, @CustomWinPoints, @CustomDrawPoints, @CustomLossPoints, @TieBreakerRule,
@@ -423,6 +423,7 @@ namespace SportHubBase.Services
                                 SportType             = excluded.SportType,
                                 Type                  = excluded.Type,
                                 TotalRounds           = excluded.TotalRounds,
+                                PreserveSchedule      = excluded.PreserveSchedule,
                                 Status                = excluded.Status,
                                 EditMode              = excluded.EditMode,
                                 AccessMode            = excluded.AccessMode,
@@ -467,6 +468,7 @@ namespace SportHubBase.Services
                         cmd.Parameters.AddWithValue("@SportType", DbValue(t.SportType));
                         cmd.Parameters.AddWithValue("@Type", DbValue(t.Type));
                         cmd.Parameters.AddWithValue("@TotalRounds", t.TotalRounds);
+                        cmd.Parameters.AddWithValue("@PreserveSchedule", t.PreserveSchedule);
                         cmd.Parameters.AddWithValue("@Status", t.Status ?? "Не начат");
                         cmd.Parameters.AddWithValue("@EditMode", DbValue(t.EditMode));
                         cmd.Parameters.AddWithValue("@AccessMode", DbValue(t.AccessMode));
@@ -718,6 +720,7 @@ namespace SportHubBase.Services
                 SportType             = ReadString(r, "SportType"),
                 Type                  = ReadString(r, "Type"),
                 TotalRounds           = ReadInt(r, "TotalRounds"),
+                PreserveSchedule      = ReadInt(r, "PreserveSchedule") != 0,
                 Status                = r["Status"].ToString(),
                 EditMode              = ReadString(r, "EditMode"),
                 AccessMode            = ReadString(r, "AccessMode"),

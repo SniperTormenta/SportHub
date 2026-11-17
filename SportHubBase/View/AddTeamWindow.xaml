@@ -238,7 +238,8 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0"
-                        Content="Удалить команду"
+                        Content="Убрать из турнира"
+                        ToolTip="Удалить команду и все её встречи, сохранив расписание остальных команд"
                         Command="{Binding DeleteTeamCommand}"
                         Style="{StaticResource ColoredModernButton}"
                         Background="#EF4444"

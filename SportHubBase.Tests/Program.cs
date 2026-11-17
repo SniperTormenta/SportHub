@@ -46,6 +46,9 @@ internal static class Program
             Run("Восстановление: посторонняя база отклоняется", InvalidBackup);
             Run("Загрузка швейцарки не удаляет проведённые туры", LoadSwiss);
             Run("Круговое расписание сохраняет счёт при смене сторон", ReverseSchedule);
+            Run("Снятие команды: матчи, таблица и сохранение расписания после загрузки", RemoveTeam);
+            Run("Снятие команды: конфликт откатывает модель", RemoveTeamRollback);
+            Run("Снятие команды: сетка не перестраивается при загрузке", RemoveBracketTeam);
             Run("Генерация тура: конфликт сохраняет предыдущую модель", RoundRollback);
             Run("SQLite: одновременная запись двух клиентов", ConcurrentSqlite);
             Run("Запуск: проверка настоящего контейнера приложения", Composition);
@@ -335,6 +338,64 @@ internal static class Program
         long revision = t.Revision;
         new TournamentScheduleService(store, new MatchService()).Prepare(t, new RoundRobinBergerScheduleStrategy());
         Check(t.Revision == revision);
+    }
+    private static void RemoveTeam()
+    {
+        var store = new SqliteStorageService(Database()); var t = Tournament(4);
+        var removedId = t.Teams[0].Id;
+        var kept = Played(t, 1, 2, "3", "1", 5);
+        kept.MatchNumber = 17; kept.MatchDate = new DateTime(2026, 10, 15); kept.Location = "Зал";
+        var future = new Match { Team1Id = t.Teams[2].Id, Team2Id = t.Teams[3].Id,
+            Team1 = t.Teams[2].Name, Team2 = t.Teams[3].Name, Round = 6, MatchNumber = 24 };
+        t.Matches.AddRange(new[] { Played(t, 0, 1), kept, future,
+            new Match { Team1 = t.Teams[0].Name, Team2 = t.Teams[3].Name } });
+        store.CreateTournament(t);
+        // Проверяем совместимость со старыми записями без ссылок по ID.
+        t.Matches.Last().Team1Id = null; t.Matches.Last().Team2Id = null;
+        new TournamentOperationsService(store).RemoveTeam(t, removedId);
+        Check(t.Matches.Count == 2 && ReferenceEquals(t.Matches[0], kept) && t.Teams.Count == 3);
+        t = store.GetTournamentById(t.Id);
+        Check(t.PreserveSchedule && t.Matches.Count == 2 && t.Teams.All(x => x.Id != removedId));
+        var before = Newtonsoft.Json.JsonConvert.SerializeObject(t.Matches);
+        new TournamentScheduleService(store, new MatchService()).Prepare(t, new RoundRobinBergerScheduleStrategy());
+        Check(before == Newtonsoft.Json.JsonConvert.SerializeObject(t.Matches));
+        var saved = t.Matches.Single(m => m.Id == kept.Id);
+        Check(saved.Round == 5 && saved.MatchNumber == 17 && saved.MatchDate == kept.MatchDate
+            && saved.Team1QuickScore == "3" && saved.Team2QuickScore == "1" && saved.Location == "Зал");
+        var rows = ((RoundRobinResultsData)new RoundRobinResultsProvider().ComputeResults(t, new ObservableCollection<Match>(t.Matches))).Rows;
+        Check(rows.Count == 3 && rows.Sum(r => r.Wins) == 1 && rows.Sum(r => r.Losses) == 1);
+        new TournamentOperationsService(store).RemoveTeam(t, t.Teams.Single(x => x.Id == kept.Team2Id).Id);
+        t = store.GetTournamentById(t.Id);
+        Check(t.Teams.Count == 2 && t.Matches.Count == 0);
+        new TournamentScheduleService(store, new MatchService()).Prepare(t, new RoundRobinBergerScheduleStrategy());
+        Check(t.Matches.Count == 0);
+    }
+    private static void RemoveTeamRollback()
+    {
+        var store = new SqliteStorageService(Database()); var t = Tournament();
+        t.Matches.Add(Played(t, 0, 1)); store.CreateTournament(t);
+        var stale = store.GetTournamentById(t.Id); t.Name = "Новее"; store.UpdateTournament(t);
+        var teams = stale.Teams; var matches = stale.Matches;
+        Throws<StorageConflictException>(() => new TournamentOperationsService(store).RemoveTeam(stale, stale.Teams[0].Id));
+        Check(ReferenceEquals(teams, stale.Teams) && ReferenceEquals(matches, stale.Matches) && !stale.PreserveSchedule);
+        Check(store.GetTournamentById(t.Id).Teams.Count == 4);
+    }
+    private static void RemoveBracketTeam()
+    {
+        var store = new SqliteStorageService(Database()); var t = Tournament(); t.Type = "Олимпийский";
+        var removed = new BracketMatch { Team1 = t.Teams[0], Team2 = t.Teams[1] };
+        var kept = new BracketMatch { Team1 = t.Teams[2], Team2 = t.Teams[3], Score1 = "2", Score2 = "0" };
+        var final = new BracketMatch { Team1 = t.Teams[0], Team2 = t.Teams[2] };
+        removed.NextMatch = final; kept.NextMatch = final;
+        t.Bracket = new TournamentBracket();
+        t.Bracket.Rounds.Add(new BracketRound { Matches = new ObservableCollection<BracketMatch> { removed, kept } });
+        t.Bracket.Rounds.Add(new BracketRound { Matches = new ObservableCollection<BracketMatch> { final } });
+        store.CreateTournament(t);
+        new TournamentOperationsService(store).RemoveTeam(t, t.Teams[0].Id);
+        t = store.GetTournamentById(t.Id);
+        Check(t.Bracket.PreserveStructure && t.Bracket.Rounds[1].Matches.Count == 0);
+        var match = t.Bracket.Rounds[0].Matches.Single();
+        Check(match.Id == kept.Id && match.Score1 == "2" && match.Score2 == "0" && match.MatchNumber == 2 && match.NextMatch == null);
     }
     private static void RoundRollback()
     {

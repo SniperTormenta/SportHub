@@ -138,6 +138,7 @@ namespace SportHubBase.Services
                 // Автоматическое обновление существующей БД
                 TryAddColumn(connection, "Tournaments", "IsDeleted", "INTEGER NOT NULL DEFAULT 0");
                 TryAddColumn(connection, "Tournaments", "TotalRounds", "INTEGER NOT NULL DEFAULT 0");
+                TryAddColumn(connection, "Tournaments", "PreserveSchedule", "INTEGER NOT NULL DEFAULT 0");
                 TryAddColumn(connection, "Tournaments", "TieBreakerRule", "TEXT");
                 TryAddColumn(connection, "Tournaments", "IsRemote", "INTEGER NOT NULL DEFAULT 0");
                 TryAddColumn(connection, "Tournaments", "ServerAddress", "TEXT");

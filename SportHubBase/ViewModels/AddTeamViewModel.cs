@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -341,40 +341,26 @@ namespace SportHubBase.ViewModels
 
         private void DeleteTeam()
         {
-            if (!IsEditMode || _existingTeam == null)
-                return;
-
+            if (!IsEditMode || _existingTeam == null) return;
             var result = MessageBox.Show(
-                "Вы уверены, что хотите удалить эту команду?",
-                "Удаление команды",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result != MessageBoxResult.Yes)
-                return;
-
-            var tournament = _storage.GetTournamentById(_tournamentId);
-            if (tournament != null)
+                "Убрать команду из турнира и удалить все её встречи, включая сыгранные?\n\n" +
+                "Таблица будет пересчитана по оставшимся матчам. Их пары, туры, номера, даты и счёт сохранятся.",
+                "Снятие команды", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result != MessageBoxResult.Yes) return;
+            try
             {
-                var teamToRemove = tournament.Teams.FirstOrDefault(t => t.Id == _existingTeam.Id);
-
-                // Fallback для старых данных
-                if (teamToRemove == null && _existingTeam.Id == Guid.Empty)
-                {
-                    teamToRemove = tournament.Teams
-                        .FirstOrDefault(t => t.Name == _existingTeam.Name && t.Captain == _existingTeam.Captain);
-                }
-
-                if (teamToRemove != null)
-                {
-                    tournament.Teams.Remove(teamToRemove);
-                    _storage.UpdateTournament(tournament);
-                }
+                var tournament = _storage.GetTournamentById(_tournamentId)
+                    ?? throw new InvalidOperationException("Турнир не найден.");
+                new SportHubBase.Services.TournamentOperationsService(_storage).RemoveTeam(tournament, _existingTeam.Id);
+                RequestClose?.Invoke(true);
             }
-
-            RequestClose?.Invoke(true);
+            catch (Exception ex)
+            {
+                SportHubBase.Services.ErrorLog.Write("Снятие команды", ex);
+                MessageBox.Show(SportHubBase.Services.ErrorLog.UserMessage(ex),
+                    "Не удалось убрать команду", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
-
         private void ImportExcel()
         {
             var dialog = new Microsoft.Win32.OpenFileDialog

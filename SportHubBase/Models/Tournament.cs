@@ -13,6 +13,9 @@ namespace SportHubBase.Models
         [JsonProperty("revision")]
         public long Revision { get; set; }
 
+        [JsonProperty("preserveSchedule")]
+        public bool PreserveSchedule { get; set; }
+
         [JsonProperty("name")]
         public string Name { get; set; }
 
